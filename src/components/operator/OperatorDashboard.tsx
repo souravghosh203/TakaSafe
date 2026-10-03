@@ -576,7 +576,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                           className="inline-flex items-center gap-1.5 bg-[#0054A6] hover:bg-[#004284] text-white font-bold py-1.5 px-3 rounded-lg text-xs shadow-2xs transition-all cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5 text-amber-300" />
-                          <span>Investigate (SHAP)</span>
+                          <span>Investigate</span>
                         </button>
                       </td>
                     </tr>

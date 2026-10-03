@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Transaction, CustomerBaseline, AuthUser } from '../../types';
+import { MoneyPathInvestigationGraph } from './MoneyPathInvestigationGraph';
 import {
   X,
   Sparkles,
   ShieldAlert,
+  ShieldCheck,
   CheckCircle,
   Clock,
   Smartphone,
@@ -14,6 +16,7 @@ import {
   Loader2,
   AlertTriangle,
   UserCheck,
+  Zap,
 } from 'lucide-react';
 
 interface InvestigationModalProps {
@@ -131,7 +134,7 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
                 )}
               </div>
               <h2 className="text-xl font-bold mt-0.5 tracking-tight text-white">
-                Explainable Investigation & Decision Dossier
+                Investigate
               </h2>
             </div>
           </div>
@@ -154,75 +157,122 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-6 text-xs text-slate-700 flex-1">
-          {/* Top Comparison: Baseline vs Attempted Event */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Customer Baseline */}
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-slate-800 uppercase tracking-wide text-[11px]">
-                  Customer Historical Baseline
-                </span>
-                <span className="text-[11px] text-slate-500">Learned via Isolation Forest</span>
-              </div>
-              <div className="space-y-1.5 text-slate-600">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Account Owner:</span>
-                  <span className="font-semibold text-slate-800">{customerProfile.name} ({customerProfile.wallet})</span>
+          {/* Section 1: Transaction Guardian Anomaly Detection & Baseline */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between pb-1">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-[#0054A6]/10 flex items-center justify-center text-[#0054A6]">
+                  <ShieldCheck className="w-3.5 h-3.5" />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">90-Day Avg Amount:</span>
-                  <span className="font-mono font-semibold text-slate-800">৳{customerProfile.avgAmount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Normal Transacting Window:</span>
-                  <span className="font-medium text-slate-800">{customerProfile.usualHours}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Usual Geolocation:</span>
-                  <span className="font-medium text-slate-800">{customerProfile.homeDistrict}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Registered Device:</span>
-                  <span className="font-medium text-slate-800">{customerProfile.knownDevices[0]}</span>
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+                    1. Transaction Guardian: Behavioral Anomaly & Fraud Baseline
+                  </h3>
+                  <p className="text-[10px] text-slate-500">
+                    Dual-Engine Detection: XGBoost Gradient-Boosted Classifier + Isolation Forest
+                  </p>
                 </div>
               </div>
+              <span className="text-[10px] font-mono font-bold bg-blue-50 text-[#0054A6] px-2.5 py-0.5 rounded-full border border-blue-200">
+                Guardian Score: {transaction.fusedRiskScore}/100
+              </span>
             </div>
 
-            {/* Current Flagged Transaction */}
-            <div className="bg-rose-50/60 p-4 rounded-2xl border border-rose-200">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-rose-900 uppercase tracking-wide text-[11px]">
-                  Flagged Transaction Event
-                </span>
-                <span className="text-[11px] font-mono text-rose-700">{transaction.timestamp}</span>
+            {/* Top Comparison: Baseline vs Attempted Event */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Customer Baseline */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-slate-800 uppercase tracking-wide text-[11px]">
+                    Customer Historical Baseline
+                  </span>
+                  <span className="text-[11px] text-slate-500">Learned via Isolation Forest</span>
+                </div>
+                <div className="space-y-1.5 text-slate-600">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Account Owner:</span>
+                    <span className="font-semibold text-slate-800">{customerProfile.name} ({customerProfile.wallet})</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">90-Day Avg Amount:</span>
+                    <span className="font-mono font-semibold text-slate-800">৳{customerProfile.avgAmount.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Normal Transacting Window:</span>
+                    <span className="font-medium text-slate-800">{customerProfile.usualHours}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Usual Geolocation:</span>
+                    <span className="font-medium text-slate-800">{customerProfile.homeDistrict}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Registered Device:</span>
+                    <span className="font-medium text-slate-800">{customerProfile.knownDevices[0]}</span>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1.5 text-slate-700">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Amount Attempted:</span>
-                  <span className="font-mono font-black text-rose-700 text-sm">
-                    ৳{transaction.amount.toLocaleString()} (53.3x baseline)
+
+              {/* Current Flagged Transaction */}
+              <div className="bg-rose-50/60 p-4 rounded-2xl border border-rose-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-rose-900 uppercase tracking-wide text-[11px]">
+                    Flagged Transaction Event
                   </span>
+                  <span className="text-[11px] font-mono text-rose-700">{transaction.timestamp}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Recipient Target:</span>
-                  <span className="font-semibold text-rose-800">
-                    {transaction.receiverName} ({transaction.receiverWallet})
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Execution Time:</span>
-                  <span className="font-mono font-semibold text-rose-700">03:20 AM (Nocturnal anomaly)</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Originating IP Location:</span>
-                  <span className="font-semibold text-rose-800">{transaction.senderLocation}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Hardware Fingerprint:</span>
-                  <span className="font-semibold text-rose-800">{transaction.senderDevice}</span>
+                <div className="space-y-1.5 text-slate-700">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Amount Attempted:</span>
+                    <span className="font-mono font-black text-rose-700 text-sm">
+                      ৳{transaction.amount.toLocaleString()} (53.3x baseline)
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Recipient Target:</span>
+                    <span className="font-semibold text-rose-800">
+                      {transaction.receiverName} ({transaction.receiverWallet})
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Execution Time:</span>
+                    <span className="font-mono font-semibold text-rose-700">03:20 AM (Nocturnal anomaly)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Originating IP Location:</span>
+                    <span className="font-semibold text-rose-800">{transaction.senderLocation}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Hardware Fingerprint:</span>
+                    <span className="font-semibold text-rose-800">{transaction.senderDevice}</span>
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Section 2: Investigate - Money Paths & Fund Flow Graph */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between pb-1">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/80 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                  <Zap className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+                    Investigate: Money Paths & Agent Network Flow
+                  </h3>
+                  <p className="text-[10px] text-slate-500">
+                    Forensic fund-tracing graph linking source victim to intermediate relays, aggregator hub, and physical OTC cash-out agents
+                  </p>
+                </div>
+              </div>
+            </div>
+            <MoneyPathInvestigationGraph
+              transaction={transaction}
+              onFreezeNode={(nodeId, nodeName) => {
+                handleAction('FREEZE_WALLET');
+              }}
+            />
           </div>
 
           {/* SHAP Feature Attribution Waterfall */}
