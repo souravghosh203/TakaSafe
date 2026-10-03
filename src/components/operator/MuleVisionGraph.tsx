@@ -454,28 +454,28 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({ cluster, onFre
                       className="cursor-pointer"
                     />
 
-                    {/* Aggregator Threat Radar Pulse */}
+                    {/* Aggregator Threat Radar Halo */}
                     {isAggregator && (
                       <>
                         <circle
                           cx={pos.x}
                           cy={pos.y}
-                          r="32"
+                          r="30"
                           fill="none"
                           stroke="#DC2626"
-                          strokeWidth="1.6"
-                          opacity="0.3"
-                          className="animate-ping pointer-events-none"
+                          strokeWidth="1.2"
+                          opacity="0.35"
+                          className="pointer-events-none"
                         />
                         <circle
                           cx={pos.x}
                           cy={pos.y}
-                          r="26"
+                          r="25"
                           fill="none"
                           stroke="#DC2626"
                           strokeWidth="1.4"
                           strokeDasharray="4 3"
-                          opacity="0.8"
+                          opacity="0.65"
                           className="pointer-events-none"
                         />
                       </>

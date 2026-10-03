@@ -26,6 +26,11 @@ import {
   Moon,
   Sparkles,
   Palette,
+  ChevronUp,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Move,
 } from 'lucide-react';
 
 interface GeospatialIntelligenceMapProps {
@@ -540,6 +545,10 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
   const svgRef = useRef<SVGSVGElement>(null);
   const zoomBehaviorRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
+  // Map transform state for mouse movement and scaling
+  const [mapTransform, setMapTransform] = useState<{ k: number; x: number; y: number }>({ k: 1, x: 0, y: 0 });
+  const [isMapDragging, setIsMapDragging] = useState<boolean>(false);
+
   // View state
   const [heatmapMode, setHeatmapMode] = useState<HeatmapMode>('COMBINED');
   const [mapTheme, setMapTheme] = useState<MapVisualTheme>('CLEAN_SLATE');
@@ -621,38 +630,60 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
     return d3.geoPath().projection(projection);
   }, [projection]);
 
-  // Setup D3 Zoom
+  // Setup D3 Zoom & Drag handling with React state synchronization
   useEffect(() => {
     if (!svgRef.current) return;
     const svg = d3.select(svgRef.current);
 
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.85, 4.0])
+      .scaleExtent([0.65, 4.5])
+      .on('start', () => setIsMapDragging(true))
       .on('zoom', (event) => {
-        svg.select('.map-zoom-group').attr('transform', event.transform);
-      });
+        setMapTransform({
+          k: event.transform.k,
+          x: event.transform.x,
+          y: event.transform.y,
+        });
+      })
+      .on('end', () => setIsMapDragging(false));
 
     zoomBehaviorRef.current = zoom;
     svg.call(zoom);
   }, []);
 
+  const handlePan = (dx: number, dy: number) => {
+    if (!svgRef.current || !zoomBehaviorRef.current) return;
+    d3.select(svgRef.current)
+      .transition()
+      .duration(200)
+      .call(zoomBehaviorRef.current.translateBy, dx, dy);
+  };
+
   const handleZoomIn = () => {
     if (!svgRef.current || !zoomBehaviorRef.current) return;
-    d3.select(svgRef.current).transition().duration(300).call(zoomBehaviorRef.current.scaleBy, 1.35);
+    d3.select(svgRef.current).transition().duration(250).call(zoomBehaviorRef.current.scaleBy, 1.3);
   };
 
   const handleZoomOut = () => {
     if (!svgRef.current || !zoomBehaviorRef.current) return;
-    d3.select(svgRef.current).transition().duration(300).call(zoomBehaviorRef.current.scaleBy, 0.74);
+    d3.select(svgRef.current).transition().duration(250).call(zoomBehaviorRef.current.scaleBy, 0.75);
   };
 
   const handleResetZoom = () => {
     if (!svgRef.current || !zoomBehaviorRef.current) return;
     d3.select(svgRef.current)
       .transition()
-      .duration(350)
+      .duration(300)
       .call(zoomBehaviorRef.current.transform, d3.zoomIdentity);
+  };
+
+  const handleZoomScale = (scaleValue: number) => {
+    if (!svgRef.current || !zoomBehaviorRef.current) return;
+    d3.select(svgRef.current)
+      .transition()
+      .duration(150)
+      .call(zoomBehaviorRef.current.scaleTo, scaleValue);
   };
 
   // Handle Liquidity Dispatch with visual feedback

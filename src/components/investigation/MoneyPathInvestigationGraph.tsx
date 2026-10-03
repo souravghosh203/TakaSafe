@@ -27,6 +27,9 @@ import {
   RefreshCw,
   Search,
   Move,
+  ChevronUp,
+  ChevronDown,
+  ChevronLeft,
 } from 'lucide-react';
 
 export interface GraphNode {
@@ -34,7 +37,7 @@ export interface GraphNode {
   name: string;
   agentName?: string;
   agentLicense?: string;
-  role: 'VICTIM' | 'MULE_RELAY' | 'AGGREGATOR' | 'CASH_OUT_AGENT' | 'OFFSHORE_EXIT';
+  role: 'VICTIM' | 'MULE_RELAY' | 'AGGREGATOR' | 'CASH_OUT_AGENT';
   roleLabel: string;
   entityType: string;
   walletOrId: string;
@@ -192,9 +195,9 @@ export const MoneyPathInvestigationGraph: React.FC<MoneyPathInvestigationGraphPr
       description: 'Physical brick-and-mortar MFS shop. Processed BDT 250,000 cash-out at 03:40 AM without standard customer verification. Agent cash float depleted to critical 12% reserve.',
       timestamp: '03:40:15 AM',
       elapsedMinutes: 16,
-      x: 745,
-      y: 75,
-      radius: 27,
+      x: 740,
+      y: 110,
+      radius: 28,
     },
     {
       id: 'AGT-882',
@@ -217,37 +220,13 @@ export const MoneyPathInvestigationGraph: React.FC<MoneyPathInvestigationGraphPr
       description: 'Remote coastal ferry terminal agent. Received BDT 280,000 split tranche from Hub W302 within 2 minutes of Agent 881 cash-out. Physical cash collected by runner.',
       timestamp: '03:42:50 AM',
       elapsedMinutes: 18,
-      x: 745,
-      y: 190,
-      radius: 27,
-    },
-    {
-      id: 'W401',
-      name: 'Digital P2P Settlement Bridge',
-      agentName: 'Cross-Border Liquidity Bridge',
-      role: 'OFFSHORE_EXIT',
-      roleLabel: lang === 'BN' ? 'সীমান্ত পারিপার্শ্বিক এক্সিট' : 'Cross-Border Settlement Exit Node',
-      entityType: 'Offshore P2P Liquidation Bridge',
-      walletOrId: 'W401 (Merchant Settlement ID)',
-      location: 'Offshore Channel (Kuala Lumpur / Dubai P2P Swap)',
-      deviceOrChannel: 'Merchant API Gateway & Crypto P2P Bridge',
-      amountIn: 195000,
-      amountOut: 195000,
-      currentBalance: 195000,
-      riskScore: 94,
-      riskLevel: 'CRITICAL',
-      status: 'FLAGGED',
-      tags: ['Cross-Border P2P', 'Offshore Liquidation', 'BFIU STR Triggered'],
-      description: 'Offshore exit route utilized to swap MFS digital funds into international remittance units or crypto P2P vouchers, permanently severing domestic recovery.',
-      timestamp: '03:45:10 AM',
-      elapsedMinutes: 21,
-      x: 745,
-      y: 305,
-      radius: 27,
+      x: 740,
+      y: 270,
+      radius: 28,
     },
   ];
 
-  // Graph Edges with flow paths
+  // Graph Edges with flow paths (Only 2 physical cash-out exits from Hub W302)
   const edges: GraphEdge[] = [
     {
       id: 'e1',
@@ -299,19 +278,6 @@ export const MoneyPathInvestigationGraph: React.FC<MoneyPathInvestigationGraphPr
       channel: 'OTC Split Cash-Out',
       status: 'COMPLETED',
       notes: 'Parallel split cash-out at Abul Kalam’s Galachipa coastal ghat storefront.',
-      curveType: 'curveMid',
-    },
-    {
-      id: 'e5',
-      source: 'W302',
-      target: 'W401',
-      amount: 195000,
-      timestamp: '03:45:10 AM',
-      velocityMinutes: 21,
-      elapsedLabel: '+21m from origin',
-      channel: 'Offshore P2P Bridge',
-      status: 'COMPLETED',
-      notes: 'Digital float liquidation into cross-border merchant settlement gateway.',
       curveType: 'curveDown',
     },
   ];
@@ -365,14 +331,6 @@ export const MoneyPathInvestigationGraph: React.FC<MoneyPathInvestigationGraphPr
           glow: 'rgba(2, 132, 199, 0.4)',
           bgBadge: 'bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800',
           icon: Store,
-        };
-      case 'OFFSHORE_EXIT':
-        return {
-          fill: '#8B5CF6',
-          stroke: '#7C3AED',
-          glow: 'rgba(139, 92, 246, 0.4)',
-          bgBadge: 'bg-purple-50 text-purple-700 border-purple-300 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800',
-          icon: Building2,
         };
     }
   };
@@ -449,7 +407,7 @@ export const MoneyPathInvestigationGraph: React.FC<MoneyPathInvestigationGraphPr
       setPan({ x: newX, y: newY });
     }
 
-    const rect = containerRef.current?.getBoundingClientRect();
+    const rect = canvasRef.current?.getBoundingClientRect();
     if (rect) {
       setHoverPos({
         x: e.clientX - rect.left,
@@ -463,16 +421,48 @@ export const MoneyPathInvestigationGraph: React.FC<MoneyPathInvestigationGraphPr
   };
 
   const handleMouseLeave = () => {
-    setIsDragging(false);
     setHoveredNodeId(null);
     setHoverPos(null);
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
-    setZoomLevel((prev) => Math.min(2.5, Math.max(0.5, Number((prev * zoomFactor).toFixed(2)))));
-  };
+  // Window listeners for dragging outside container
+  useEffect(() => {
+    if (!isDragging) return;
+    const onWindowMove = (e: MouseEvent) => {
+      const newX = e.clientX - dragStartRef.current.x;
+      const newY = e.clientY - dragStartRef.current.y;
+      if (Math.hypot(newX - pan.x, newY - pan.y) > 2) {
+        didDragRef.current = true;
+      }
+      setPan({ x: newX, y: newY });
+    };
+    const onWindowUp = () => {
+      setIsDragging(false);
+    };
+    window.addEventListener('mousemove', onWindowMove);
+    window.addEventListener('mouseup', onWindowUp);
+    return () => {
+      window.removeEventListener('mousemove', onWindowMove);
+      window.removeEventListener('mouseup', onWindowUp);
+    };
+  }, [isDragging, pan.x, pan.y]);
+
+  // Non-passive wheel handler on canvas for smooth mouse wheel zooming
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const wheelHandler = (e: WheelEvent) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
+      setZoomLevel((prev) => Math.min(2.4, Math.max(0.6, Number((prev * zoomFactor).toFixed(2)))));
+    };
+    el.addEventListener('wheel', wheelHandler, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', wheelHandler);
+    };
+  }, []);
+
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   return (
     <div
@@ -581,13 +571,13 @@ export const MoneyPathInvestigationGraph: React.FC<MoneyPathInvestigationGraphPr
         </div>
         <span className="text-slate-400">➔</span>
         <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-400">
-          <span className="w-2.5 h-2.5 rounded-full bg-rose-600 shadow-xs animate-pulse" />
+          <span className="w-2.5 h-2.5 rounded-full bg-rose-600 shadow-xs" />
           <span>Stage 3: Syndicate Central Hub</span>
         </div>
         <span className="text-slate-400">➔</span>
         <div className="flex items-center gap-1.5 text-sky-700 dark:text-sky-400">
           <span className="w-2.5 h-2.5 rounded-full bg-sky-500 shadow-xs" />
-          <span>Stage 4: Coastal Cash-Out Points & Exit</span>
+          <span>Stage 4: OTC Cash-Out Terminus (AGT-881 &amp; AGT-882)</span>
         </div>
       </div>
 
@@ -603,15 +593,119 @@ export const MoneyPathInvestigationGraph: React.FC<MoneyPathInvestigationGraphPr
 
       {/* Main Network Graph Canvas Area with Precision Grid */}
       <div
+        ref={canvasRef}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
-        onWheel={handleWheel}
         className={`relative rounded-2xl bg-gradient-to-br from-[#F8FAFC] via-[#F1F5F9] to-[#E2E8F0] dark:from-[#0A0E1A] dark:via-[#0F1424] dark:to-[#080C16] border border-slate-200 dark:border-slate-800 overflow-hidden min-h-[420px] flex items-center justify-center select-none ${
           isDragging ? 'cursor-grabbing' : 'cursor-grab'
         }`}
       >
+        {/* On-Canvas Pan & Zoom Navigation Controls for Mouse Adjustment */}
+        <div className="absolute top-3 right-3 z-20 flex items-center gap-2 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs text-xs">
+          {/* Directional Nudge Pad */}
+          <div className="grid grid-cols-3 gap-0.5 w-[58px] h-[58px] p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg">
+            <div />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setPan((p) => ({ ...p, y: p.y + 45 }));
+              }}
+              className="p-1 flex items-center justify-center hover:bg-white dark:hover:bg-slate-700 rounded text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              title="Pan Up"
+            >
+              <ChevronUp className="w-3.5 h-3.5" />
+            </button>
+            <div />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setPan((p) => ({ ...p, x: p.x + 45 }));
+              }}
+              className="p-1 flex items-center justify-center hover:bg-white dark:hover:bg-slate-700 rounded text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              title="Pan Left"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setPan({ x: 0, y: 0 });
+                setZoomLevel(1);
+              }}
+              className="p-0.5 flex items-center justify-center hover:bg-white dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-400 text-[9px] font-bold cursor-pointer"
+              title="Reset Position"
+            >
+              <RotateCcw className="w-3 h-3" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setPan((p) => ({ ...p, x: p.x - 45 }));
+              }}
+              className="p-1 flex items-center justify-center hover:bg-white dark:hover:bg-slate-700 rounded text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              title="Pan Right"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+            <div />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setPan((p) => ({ ...p, y: p.y - 45 }));
+              }}
+              className="p-1 flex items-center justify-center hover:bg-white dark:hover:bg-slate-700 rounded text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              title="Pan Down"
+            >
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+            <div />
+          </div>
+
+          <div className="h-10 w-[1px] bg-slate-200 dark:bg-slate-800" />
+
+          {/* Zoom Slider & Percent */}
+          <div className="flex flex-col gap-1 pr-1.5">
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-600 dark:text-slate-400">
+              <span className="font-semibold">Zoom</span>
+              <span className="font-bold text-[#0054A6] dark:text-blue-400">{Math.round(zoomLevel * 100)}%</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setZoomLevel((z) => Math.max(0.6, Number((z - 0.1).toFixed(2))));
+                }}
+                className="w-5 h-5 rounded flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold cursor-pointer"
+                title="Zoom Out"
+              >
+                -
+              </button>
+              <input
+                type="range"
+                min="0.6"
+                max="2.2"
+                step="0.05"
+                value={zoomLevel}
+                onChange={(e) => setZoomLevel(parseFloat(e.target.value))}
+                className="w-16 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#0054A6]"
+                title="Adjust Zoom by Mouse Slider"
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setZoomLevel((z) => Math.min(2.2, Number((z + 0.1).toFixed(2))));
+                }}
+                className="w-5 h-5 rounded flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold cursor-pointer"
+                title="Zoom In"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Subtle Blueprint Grid Pattern */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -901,9 +995,9 @@ export const MoneyPathInvestigationGraph: React.FC<MoneyPathInvestigationGraphPr
         </svg>
 
         {/* Moveable Map Navigation Badge */}
-        <div className="absolute bottom-3 left-3 pointer-events-none bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] text-slate-600 dark:text-slate-300 font-medium flex items-center gap-2 shadow-2xs">
+        <div className="absolute bottom-3 left-3 pointer-events-none bg-white/95 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] text-slate-700 dark:text-slate-300 font-medium flex items-center gap-2 shadow-2xs">
           <Move className="w-3.5 h-3.5 text-[#0054A6] dark:text-blue-400" />
-          <span>Click &amp; drag map to move • Mouse wheel to zoom</span>
+          <span>Adjustable Map • Drag mouse to pan • Wheel to zoom ({Math.round(zoomLevel * 100)}%)</span>
         </div>
 
         {/* Dynamic Floating Tooltip on Hover (Moving cursor over node shows details and flow) */}
