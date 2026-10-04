@@ -42,6 +42,7 @@ interface QRCodeScannerModalProps {
   onWalletLinked: (newWallet: LinkedWallet) => void;
   onPaymentQRScanned?: (recipientWallet: string, amount?: number, note?: string) => void;
   scanMode?: 'LINK' | 'PAYMENT' | 'AGENT';
+  initialTab?: 'SCANNER' | 'MY_QR';
   lang: 'EN' | 'BN';
 }
 
@@ -52,6 +53,7 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
   onWalletLinked,
   onPaymentQRScanned,
   scanMode = 'LINK',
+  initialTab = 'SCANNER',
   lang,
 }) => {
   const transactionScan = scanMode !== 'LINK';
@@ -68,6 +70,10 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
   const [myQRCodeDataUrl, setMyQRCodeDataUrl] = useState<string>('');
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) setModalTab(initialTab);
+  }, [isOpen, initialTab]);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);

@@ -473,6 +473,7 @@ export default function App() {
           {activeView === 'LOGIN' && (
             <LoginPage
               showBackButton={Boolean(currentUser)}
+              onOpenInfo={(modal) => setActiveModal(modal)}
               onLogin={(user) => {
                 setCurrentUser(user);
                 recordCustomerLogin(user);

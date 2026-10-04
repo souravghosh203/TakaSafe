@@ -699,15 +699,14 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
               <Smartphone className="w-8 h-8 text-amber-300" />
             </div>
             <div>
-              <h4 className="font-bold text-slate-900 text-sm">Download TakaSafe MFS Mobile App</h4>
-              <p className="text-xs text-slate-500 mt-1">Available for Android & iOS devices with built-in ScamShield AI protection.</p>
+              <h4 className="font-bold text-slate-900 text-sm">TakaSafe Web App Demo</h4>
+              <p className="text-xs text-slate-500 mt-1">This project is a browser-based demonstration. A mobile app and app-store download are not available.</p>
             </div>
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 inline-block">
-              {/* QR Mockup */}
-              <div className="w-32 h-32 bg-white p-2 rounded-xl border border-slate-300 mx-auto flex items-center justify-center font-mono text-[9px] text-slate-400 text-center">
-                [ SCAN QR CODE TO INSTALL TAKASAFE APP ]
+              <div className="w-32 h-32 bg-white p-2 rounded-xl border border-slate-300 mx-auto flex items-center justify-center text-xs text-slate-500 text-center">
+                No mobile app download
               </div>
-              <span className="text-[10px] text-slate-500 block mt-2 font-medium">Scan with your smartphone camera</span>
+              <span className="text-[10px] text-slate-500 block mt-2 font-medium">Use the web simulator on this site</span>
             </div>
             <div className="flex items-center justify-center gap-3">
               <button
@@ -717,9 +716,27 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
                 }}
                 className="bg-[#0054A6] hover:bg-[#004080] text-white px-5 py-2 rounded-xl text-xs font-bold transition-all shadow"
               >
-                Launch Web App Simulator
+                Open Web App Simulator
               </button>
             </div>
+          </div>
+        );
+
+      case 'TERMS':
+        return (
+          <div className="space-y-3 text-xs text-slate-700">
+            <p><strong>Demonstration only.</strong> TakaSafe is a software prototype for evaluation. It does not provide banking, payment, fraud prevention, or regulatory services.</p>
+            <p>Sign-in uses sample profiles. Passwords are not authenticated, and customer transactions change simulated balances and browser or local demo records only. Do not enter real credentials or rely on displayed decisions for financial activity.</p>
+            <p>Use of this demo is at your discretion. Sample data and generated reports may be incomplete or inaccurate.</p>
+          </div>
+        );
+
+      case 'PRIVACY_POLICY':
+        return (
+          <div className="space-y-3 text-xs text-slate-700">
+            <p><strong>Demo data only.</strong> Use the sample profiles and fictional information. Do not submit real passwords, account details, identity documents, or other sensitive personal information.</p>
+            <p>The demo may store its session, theme, and sample customer activity in this browser. When run with its development server, sample activity and audit actions can also be written to local CSV files in the project. Those files are not a secure production data store.</p>
+            <p>Clearing this browser's site data removes browser-stored demo records. This prototype has no production account, data export, or deletion service.</p>
           </div>
         );
 
