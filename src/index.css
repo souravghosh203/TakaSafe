@@ -282,7 +282,6 @@ textarea:focus-visible,
   outline-offset: 3px;
 }
 
-button:not(:disabled) { transition-property: transform, background-color, border-color, color, box-shadow; }
 button:not(:disabled):active { transform: scale(.98); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -295,7 +294,7 @@ button:not(:disabled):active { transform: scale(.98); }
     transition-duration: 0.01ms !important;
   }
   .page-enter, .modal-backdrop-enter, .modal-panel-enter, .alert-arrive, .metric-change, .skeleton-shimmer { animation: none !important; }
-  .interactive-lift:hover, .interactive-lift:active { transform: none; }
+  .interactive-lift:hover, .interactive-lift:active, button:not(:disabled):active { transform: none; }
 }
 
 /* =========================================================
