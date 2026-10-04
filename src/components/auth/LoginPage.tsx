@@ -307,7 +307,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
               aria-pressed={selectedRole === 'ADMIN'}
               className={`login-role-option flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedRole === 'ADMIN'
-                  ? 'bg-white text-slate-950 shadow-md ring-1 ring-slate-900/10'
+                  ? 'bg-blue-50 text-slate-950 shadow-md ring-1 ring-blue-700/15'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -322,7 +322,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
               aria-pressed={selectedRole === 'USER'}
               className={`login-role-option flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedRole === 'USER'
-                  ? 'bg-white text-slate-950 shadow-md ring-1 ring-slate-900/10'
+                  ? 'bg-emerald-50 text-slate-950 shadow-md ring-1 ring-emerald-700/15'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
