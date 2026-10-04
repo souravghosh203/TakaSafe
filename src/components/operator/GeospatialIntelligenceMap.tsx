@@ -741,8 +741,8 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
               {lang === 'BN'
-                ? 'রিয়েল-টাইম লেনদেন ঘনত্ব, জেলাভিত্তিক ফ্রড নেটওয়ার্ক, নদী চ্যানেল ও সাইক্লোন রিমাল ট্র্যাক'
-                : 'Real-time transaction density, cross-district fraud rings, waterway corridors & Cyclone Remal trajectory'}
+                ? 'রিয়েল-টাইম লেনদেন ঘনত্ব, জেলাভিত্তিক ফ্রড নেটওয়ার্ক, নদী চ্যানেল ও সাইক্লোন ট্র্যাক'
+                : 'Real-time transaction density, cross-district fraud rings, waterway corridors & Cyclone trajectory'}
             </p>
           </div>
         </div>
@@ -962,7 +962,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
             }`}
           >
             <Wind className="w-3.5 h-3.5" />
-            <span>{lang === 'BN' ? 'সাইক্লোন রিমাল' : 'Cyclone Remal'}</span>
+            <span>{lang === 'BN' ? 'ঘূর্ণিঝড়' : 'Cyclone'}</span>
           </button>
 
           <button
@@ -1619,7 +1619,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                       fontFamily="monospace"
                       fontWeight="bold"
                     >
-                      CYCLONE REMAL: 48km/h · 2.8m SURGE
+                      CYCLONE: 48km/h · 2.8m SURGE
                     </text>
                   </g>
                 </g>

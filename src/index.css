@@ -522,10 +522,7 @@ html.dark {
   isolation: isolate;
   overflow: hidden;
   background:
-    radial-gradient(ellipse at 50% 42%, rgba(255,255,255,.94) 0%, rgba(248,250,252,.72) 48%, transparent 78%),
-    radial-gradient(rgba(22, 78, 61, .075) .7px, transparent .7px);
-  background-size: auto, 22px 22px;
-  background-position: center, center;
+    radial-gradient(ellipse at 50% 42%, rgba(255,255,255,.94) 0%, rgba(248,250,252,.72) 48%, transparent 78%);
 }
 
 .login-glow {
@@ -555,81 +552,13 @@ html.dark {
 
 .login-card {
   z-index: 0;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 32px 80px -42px rgba(15, 23, 42, .34), 0 12px 30px -22px rgba(15, 23, 42, .24);
+  box-shadow: 0 32px 80px -42px rgba(15, 23, 42, .34), 0 12px 30px -22px rgba(15, 23, 42, .24);
   animation: login-card-arrive 620ms cubic-bezier(.22, 1, .36, 1) both;
   transition: box-shadow 300ms ease, border-color 300ms ease, transform 300ms cubic-bezier(.22, 1, .36, 1);
 }
 
-.login-brand-panel {
-  background: linear-gradient(145deg, #092f29 0%, #0e5142 54%, #08745c 100%);
-  box-shadow: 0 32px 80px -42px rgba(15, 23, 42, .42), inset 0 1px 0 rgba(255,255,255,.18);
-}
-
-.login-brand-admin { --brand-accent: #93c5fd; }
-.login-brand-user { --brand-accent: #6ee7b7; }
-.login-brand-grid {
-  opacity: .22;
-  background-image: linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px);
-  background-size: 34px 34px;
-  mask-image: linear-gradient(135deg, black, transparent 72%);
-}
-.login-brand-mark { color: var(--brand-accent); }
-.login-network-card { perspective: 1000px; transform-style: preserve-3d; transition: transform 500ms cubic-bezier(.2,.8,.2,1), box-shadow 500ms ease; box-shadow: 0 24px 40px -30px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.12); }
-.login-network-card:hover { transform: rotateX(2deg) rotateY(-2deg) translateY(-2px); box-shadow: 0 32px 54px -30px rgba(0,0,0,.72), inset 0 1px 0 rgba(255,255,255,.16); }
-.login-visual-stage { perspective: 900px; transform-style: preserve-3d; }
-.login-network-svg { transform: rotateX(7deg) translateZ(18px); transform-style: preserve-3d; animation: network-float 6s ease-in-out infinite; filter: drop-shadow(0 18px 10px rgba(0,0,0,.12)); }
-.login-float-chip { backdrop-filter: blur(10px); transform-style: preserve-3d; }
-.login-float-payment { top: 12%; right: 1%; animation: chip-float 5s ease-in-out infinite; }
-.login-float-risk { bottom: 8%; left: 1%; animation: chip-float 5.8s ease-in-out -1.8s infinite; }
-.login-orbit-art {
-  position: absolute;
-  z-index: 1;
-  top: 2.2rem;
-  right: 1.35rem;
-  width: 4.4rem;
-  height: 4.4rem;
-  display: grid;
-  place-items: center;
-  transform-style: preserve-3d;
-  animation: login-orbit-float 5.5s ease-in-out infinite;
-  pointer-events: none;
-}
-.login-orbit-core {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  width: 2.7rem;
-  height: 2.7rem;
-  color: #d1fae5;
-  border: 1px solid rgba(209,250,229,.62);
-  border-radius: 1rem;
-  background: linear-gradient(145deg, rgba(167,243,208,.35), rgba(15,118,90,.28));
-  box-shadow: 0 0 26px rgba(110,231,183,.35), inset 0 1px 0 rgba(255,255,255,.5), 0 8px 18px rgba(2,20,17,.32);
-  transform: rotateY(-18deg) rotateX(12deg) translateZ(12px);
-  backdrop-filter: blur(5px);
-}
-.login-orbit-ring {
-  position: absolute;
-  inset: .42rem -.25rem;
-  border: 1px solid rgba(167,243,208,.66);
-  border-radius: 50%;
-  transform-style: preserve-3d;
-}
-.login-orbit-ring-back { transform: rotateX(66deg) rotateZ(-22deg); box-shadow: 0 0 12px rgba(110,231,183,.16); }
-.login-orbit-ring-front { inset: .55rem -.34rem; border-color: rgba(147,197,253,.5); transform: rotateX(66deg) rotateZ(54deg); animation: login-orbit-spin 12s linear infinite; }
-.login-orbit-spark { position: absolute; width: .38rem; height: .38rem; border-radius: 50%; background: #d1fae5; box-shadow: 0 0 12px #6ee7b7; }
-.login-orbit-spark-one { top: .3rem; right: .5rem; }
-.login-orbit-spark-two { bottom: .5rem; left: .1rem; width: .27rem; height: .27rem; background: #bfdbfe; box-shadow: 0 0 10px #93c5fd; }
-.network-line { stroke: rgba(210,255,237,.34); stroke-width: 1.5; stroke-dasharray: 5 7; }
-.network-node { fill: #a7f3d0; filter: drop-shadow(0 0 5px rgba(167,243,208,.8)); }
-.network-pulse { stroke: var(--brand-accent); stroke-width: 1; opacity: .45; animation: network-pulse 3.2s ease-out infinite; transform-origin: 210px 103px; }
-.login-status-dot { box-shadow: 0 0 0 0 rgba(110,231,183,.55); animation: status-glow 2.4s ease-out infinite; }
-.login-input-admin:focus { border-color: #0054a6; box-shadow: 0 0 0 4px rgba(0,84,166,.12), 0 3px 10px -6px rgba(0,84,166,.35); }
-.login-input-user:focus { border-color: #164e3d; box-shadow: 0 0 0 4px rgba(22,78,61,.12), 0 3px 10px -6px rgba(22,78,61,.35); }
-
 .login-card:hover {
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 38px 88px -44px rgba(15, 23, 42, .4), 0 14px 34px -22px rgba(15, 23, 42, .27);
+  box-shadow: 0 38px 88px -44px rgba(15, 23, 42, .4), 0 14px 34px -22px rgba(15, 23, 42, .27);
 }
 
 .login-role-option {
@@ -643,6 +572,11 @@ html.dark {
 
 .login-input {
   transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.login-input:focus {
+  border-color: #164E3D;
+  box-shadow: 0 0 0 4px rgba(22, 78, 61, .12), 0 3px 10px -6px rgba(22, 78, 61, .35);
 }
 
 .login-submit {
@@ -703,40 +637,9 @@ html.dark {
   to { transform: translate3d(14px, 12px, 0) scale(1.05); }
 }
 
-@keyframes network-pulse {
-  0% { opacity: .5; transform: scale(.72); }
-  70%, 100% { opacity: 0; transform: scale(1.55); }
-}
-
-@keyframes status-glow {
-  70%, 100% { box-shadow: 0 0 0 6px rgba(110,231,183,0); }
-}
-
-@keyframes network-float {
-  0%, 100% { transform: rotateX(7deg) translate3d(0,0,18px); }
-  50% { transform: rotateX(4deg) translate3d(0,-5px,24px); }
-}
-
-@keyframes chip-float {
-  0%, 100% { transform: translate3d(0,0,28px) rotateY(-8deg) rotateZ(-2deg); }
-  50% { transform: translate3d(0,-8px,42px) rotateY(4deg) rotateZ(1deg); }
-}
-
-@keyframes login-orbit-float {
-  0%, 100% { transform: translateY(0) rotateX(-3deg) rotateY(5deg); }
-  50% { transform: translateY(-7px) rotateX(5deg) rotateY(-7deg); }
-}
-
-@keyframes login-orbit-spin {
-  from { transform: rotateX(66deg) rotateZ(54deg); }
-  to { transform: rotateX(66deg) rotateZ(414deg); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .login-glow, .login-card, .login-privileges, .login-error, .network-pulse, .login-status-dot, .login-orbit-art, .login-orbit-ring-front, .login-network-svg, .login-float-chip { animation: none !important; }
-  .login-card, .login-role-option, .login-input, .login-submit, .login-profile, .login-network-card { transition: none !important; }
-  .login-network-svg { transform: none; }
-  .login-network-card:hover { transform: none; }
+  .login-glow, .login-card, .login-privileges, .login-error { animation: none !important; }
+  .login-card, .login-role-option, .login-input, .login-submit, .login-profile { transition: none !important; }
   .login-card:hover, .login-role-option:hover, .login-role-option:active,
   .login-submit:hover:not(:disabled), .login-submit:active:not(:disabled), .login-profile:hover { transform: none; }
 }

@@ -591,7 +591,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
 
       {/* Tab 2: MuleVision Graph */}
       {activeTab === 'MULEVISION' && (
-        <MuleVisionGraph cluster={muleCluster} onFreezeWallet={onFreezeWallet} />
+        <MuleVisionGraph cluster={muleCluster} onFreezeWallet={onFreezeWallet} lang={lang} />
       )}
 
       {/* Tab 3: Geospatial Intelligence (D3 Geographic Heatmap) */}

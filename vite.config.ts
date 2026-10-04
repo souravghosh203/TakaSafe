@@ -3,10 +3,8 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
-export default defineConfig(({ mode }) => {
-  // Surge hosts this app at the domain root. Keep that build independent of
-  // the /TakaSafe/ base path used by the GitHub Pages workflow.
-  const base = mode === 'surge' ? '/' : process.env.VITE_BASE_PATH || '/';
+export default defineConfig(() => {
+  const base = process.env.VITE_BASE_PATH || '/';
 
   return {
     base,

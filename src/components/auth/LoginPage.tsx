@@ -199,83 +199,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
   };
 
   return (
-    <div className="login-scene min-h-[85vh] flex items-center justify-center py-8 px-4 sm:px-6 font-sans">
+    <div className="login-scene min-h-[85vh] flex items-center justify-center py-10 px-4 sm:px-6 font-sans">
       <div className="login-glow login-glow-one" aria-hidden="true" />
       <div className="login-glow login-glow-two" aria-hidden="true" />
-      <div className="login-layout w-full max-w-6xl grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] items-stretch gap-5 lg:gap-7 relative">
-      <aside className={`login-brand-panel relative overflow-hidden rounded-3xl p-7 sm:p-9 lg:p-11 text-white flex flex-col justify-between min-h-[350px] lg:min-h-full ${selectedRole === 'ADMIN' ? 'login-brand-admin' : 'login-brand-user'}`}>
-        <div className="absolute inset-0 login-brand-grid" aria-hidden="true" />
-        <div className="relative z-10">
-          <div className="flex items-center gap-3">
-            <span className="login-brand-mark flex items-center justify-center w-11 h-11 rounded-2xl bg-white/12 border border-white/20">
-              {selectedRole === 'ADMIN' ? <ShieldCheck className="w-6 h-6" /> : <User className="w-6 h-6" />}
-            </span>
-            <div>
-              <div className="mfs-logo-text flex items-baseline tracking-tight select-none" aria-label="টাকা Safe">
-                <span className="mfs-brand-word mfs-brand-taka font-['Hind_Siliguri','Noto_Sans_Bengali',sans-serif] text-xl sm:text-2xl font-black text-[#FAB915] leading-none">
-                  টাকা
-                </span>
-                <span className="mfs-brand-word mfs-brand-safe font-['Times_New_Roman',Times,serif] text-[22px] sm:text-[25px] font-bold text-white leading-none ml-0.5 sm:ml-1 tracking-tight">
-                  Safe
-                </span>
-              </div>
-              <div className="text-[10px] uppercase tracking-[.22em] text-white/65">Trust in every transaction</div>
-            </div>
-          </div>
-          <div className="mt-12 lg:mt-16 max-w-md">
-            <p className="text-[10px] font-bold uppercase tracking-[.24em] text-emerald-200">Security that moves with you</p>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-black leading-tight tracking-tight">Confidence in every <span className="text-emerald-200">payment.</span></h2>
-            <p className="mt-4 text-sm leading-relaxed text-white/75">TakaSafe watches transaction patterns, surfaces risk early, and helps protect Bangladesh’s digital payments.</p>
-          </div>
-        </div>
-
-        <div className="login-network relative z-10 my-7 flex-1 min-h-[270px] sm:min-h-[320px] flex items-center" aria-hidden="true">
-          <div className="login-network-card relative w-full h-full rounded-3xl border border-white/15 bg-slate-950/20 p-4 sm:p-5 flex flex-col justify-center">
-          <div className="login-orbit-art" aria-hidden="true">
-            <div className="login-orbit-ring login-orbit-ring-back" />
-            <div className="login-orbit-ring login-orbit-ring-front" />
-            <div className="login-orbit-core"><ShieldCheck className="h-8 w-8" /></div>
-            <span className="login-orbit-spark login-orbit-spark-one" />
-            <span className="login-orbit-spark login-orbit-spark-two" />
-          </div>
-          <div className="flex items-center justify-between px-1 pb-2">
-            <span className="text-[9px] font-bold uppercase tracking-[.2em] text-white/60">Transaction intelligence</span>
-            <span className="flex items-center gap-1.5 text-[9px] font-semibold text-emerald-200"><span className="login-status-dot h-1.5 w-1.5 rounded-full bg-emerald-300" /> MONITORING</span>
-          </div>
-          <div className="login-visual-stage relative">
-          <div className="login-float-chip login-float-payment absolute z-10 rounded-2xl border border-white/20 bg-[#f4fffb]/95 px-3 py-2 text-slate-800 shadow-xl">
-            <div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-xs font-black text-emerald-800">৳</span><span><span className="block text-[8px] font-semibold uppercase tracking-wider text-slate-500">Payment secured</span><span className="block text-xs font-black">৳ 1,250.00</span></span></div>
-          </div>
-          <div className="login-float-chip login-float-risk absolute z-10 rounded-xl border border-emerald-100/30 bg-emerald-950/90 px-3 py-2 text-white shadow-xl">
-            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,.8)]"/><span className="text-[8px] font-bold uppercase tracking-wider">Risk check</span><span className="rounded-md bg-emerald-300/15 px-1.5 py-0.5 text-[8px] font-black text-emerald-200">CLEAR</span></div>
-          </div>
-          <svg viewBox="0 0 440 170" className="login-network-svg relative z-0 w-full h-40 sm:h-48" fill="none" role="presentation">
-            <path className="network-line" d="M42 112 128 66l82 37 88-57 100 47M128 66l24 70 58-33 51 39 37-96M42 112l110 24 68 22 51-16 127-49" />
-            <circle className="network-pulse" cx="210" cy="103" r="34" />
-            <path d="M210 81 226 87v14c0 12-7 21-16 25-9-4-16-13-16-25V87l16-6Z" fill="currentColor" fillOpacity=".2" stroke="currentColor" strokeWidth="2" />
-            <path d="m203 101 5 5 10-11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            {[[42,112],[128,66],[152,136],[292,46],[398,93],[261,142],[278,126]].map(([cx,cy], i) => <circle key={i} cx={cx} cy={cy} r={i === 0 || i === 4 ? 5 : 3.5} className="network-node" />)}
-          </svg>
-          </div>
-          <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-3">
-            <div className="rounded-xl bg-white/[.06] px-2.5 py-2"><div className="text-[9px] text-white/50">SIGNALS</div><div className="mt-1 text-sm font-bold">24<span className="ml-1 text-[9px] font-medium text-emerald-200">live</span></div></div>
-            <div className="rounded-xl bg-white/[.06] px-2.5 py-2"><div className="text-[9px] text-white/50">NETWORK</div><div className="mt-1 text-sm font-bold">Connected</div></div>
-            <div className="rounded-xl bg-white/[.06] px-2.5 py-2"><div className="text-[9px] text-white/50">COVERAGE</div><div className="mt-1 text-sm font-bold">24 / 7</div></div>
-          </div>
-          <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-200/10 bg-emerald-200/[.06] px-3 py-2.5">
-            <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-200" />
-            <span className="text-[10px] leading-relaxed text-white/70">Every transfer checked against a connected network of risk signals.</span>
-            <span className="ml-auto shrink-0 text-[9px] font-semibold text-emerald-200">SECURE</span>
-          </div>
-          </div>
-        </div>
-
-        <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-t border-white/15 pt-4">
-          <div className="flex items-center gap-2 text-xs font-semibold"><ShieldCheck className="w-4 h-4 text-emerald-200" /> Protected by TakaSafe</div>
-          <span className="rounded-full border border-amber-200/35 bg-amber-200/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-100">Demo environment</span>
-        </div>
-      </aside>
-      <div className="login-card w-full bg-white rounded-3xl shadow-xl border border-slate-200/80 p-6 sm:p-8 lg:p-9 relative card-hover-lift">
+      <div className="login-card w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-200/80 p-8 sm:p-10 relative card-hover-lift">
         {/* Top Back Navigation */}
         {showBackButton && (
           <button
@@ -315,7 +242,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
               aria-pressed={selectedRole === 'ADMIN'}
               className={`login-role-option flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedRole === 'ADMIN'
-                  ? 'bg-blue-50 text-slate-950 shadow-md ring-1 ring-blue-700/15'
+                  ? 'bg-white text-slate-950 shadow-md ring-1 ring-slate-900/10'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -330,7 +257,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
               aria-pressed={selectedRole === 'USER'}
               className={`login-role-option flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedRole === 'USER'
-                  ? 'bg-emerald-50 text-slate-950 shadow-md ring-1 ring-emerald-700/15'
+                  ? 'bg-white text-slate-950 shadow-md ring-1 ring-slate-900/10'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -502,7 +429,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
                 placeholder="Enter Your Email"
                 autoComplete="off"
                 required
-                className={`login-input ${selectedRole === 'ADMIN' ? 'login-input-admin' : 'login-input-user'} w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all`}
+                className="login-input w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#164E3D] focus:border-transparent transition-all"
               />
             </div>
             <p className="mt-1 text-[10px] text-slate-500">Use an email shown on a demo profile button below. The password is not verified.</p>
@@ -519,7 +446,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter Your Password"
                 required
-                className={`login-input ${selectedRole === 'ADMIN' ? 'login-input-admin' : 'login-input-user'} w-full px-3.5 py-2.5 pr-10 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all`}
+                className="login-input w-full px-3.5 py-2.5 pr-10 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#164E3D] focus:border-transparent transition-all"
               />
               <button
                 type="button"
@@ -600,7 +527,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
             ))}
           </div>
         </div>
-      </div>
       </div>
     </div>
   );
