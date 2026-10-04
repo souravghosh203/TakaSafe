@@ -129,6 +129,7 @@ app.post('/api/alert-feedback', async (req: Request, res: Response) => {
     const headers = ['timestamp', 'case_id', 'transaction_id', 'analyst', 'outcome', 'risk_score', 'notes'];
     const values = [new Date().toISOString(), caseId.trim(), transactionId.trim(), analyst.trim(), outcome, Number(riskScore), notes];
     await fs.appendFile(alertFeedbackCsv, `${needsHeader ? `${headers.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`, 'utf8');
+    publishServerEvent('state-change', { kind: 'alert-feedback', caseId: caseId.trim() });
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

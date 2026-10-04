@@ -133,15 +133,6 @@ export const LiveWebSocketTicker: React.FC<LiveWebSocketTickerProps> = ({
 
         {/* Right: Actions (Simulate Spike & Compliance Export) */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* Pause / Resume Ticker */}
-          <button
-            onClick={() => setIsPaused(!isPaused)}
-            className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer shadow-2xs"
-            title={isPaused ? 'Resume live WebSocket stream' : 'Pause live WebSocket stream'}
-          >
-            {isPaused ? <Play className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Pause className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />}
-          </button>
-
           {/* Simulate High-Risk Attack Spike Button */}
           <button
             onClick={onSimulateSpike}

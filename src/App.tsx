@@ -152,7 +152,7 @@ export default function App() {
   const [agents, setAgents] = useState<AgentLiquidityNode[]>(MOCK_AGENTS_BARISHAL);
   const [regionalMetrics, setRegionalMetrics] = useState<RegionalRiskMetric[]>(REGIONAL_RADAR_METRICS);
   const [auditLogs, setAuditLogs] = useState<any[]>(INITIAL_AUDIT_LOGS);
-  const realtime = useRealtimeSync((snapshot) => {
+  const realtime = useRealtimeSync<Transaction[], any[]>((snapshot) => {
     setTransactions(snapshot.transactions);
     setAuditLogs(snapshot.auditLogs);
   });
@@ -576,6 +576,7 @@ export default function App() {
                 initialTab={operatorTab}
                 onTabChange={navigateToOperatorTab}
                 lang={lang}
+                connectionStatus={realtime.status}
               />
             )
           )}
