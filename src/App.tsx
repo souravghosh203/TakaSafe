@@ -547,7 +547,7 @@ export default function App() {
                     { title: 'Safer transactions', description: 'Built-in protections help identify suspicious activity and reduce scams.' },
                     { title: 'Service access', description: 'Explore customer services and account tools after signing in.' },
                   ].map((item) => (
-                    <button key={item.title} onClick={() => setActiveView('LOGIN')} className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-900">
+                    <button key={item.title} onClick={() => setActiveView('LOGIN')} className="interactive-lift rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-900">
                       <h2 className="font-bold text-[#0054A6] dark:text-blue-300">{item.title}</h2>
                       <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{item.description}</p>
                       <span className="mt-4 inline-block text-xs font-bold text-amber-700 dark:text-amber-300">Sign in to use this feature →</span>

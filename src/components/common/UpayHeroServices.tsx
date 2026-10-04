@@ -111,7 +111,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
               {/* Right Visual Card */}
               <div
                 onClick={() => onOpenModal?.('ABOUT_US')}
-                className="w-full max-w-[270px] h-48 sm:max-w-xs sm:h-56 bg-white/70 backdrop-blur-sm rounded-3xl p-5 border-2 border-amber-300 shadow-xl flex flex-col justify-between relative overflow-hidden cursor-pointer hover:border-amber-400 transition-colors"
+                className="interactive-lift w-full max-w-[270px] h-48 sm:max-w-xs sm:h-56 bg-white/70 backdrop-blur-sm rounded-3xl p-5 border-2 border-amber-300 shadow-xl flex flex-col justify-between relative overflow-hidden cursor-pointer hover:border-amber-400 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-[#0054A6]">TakaSafe Digital Trust</span>
