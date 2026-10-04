@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AuthUser, UserRole } from '../../types';
+import shababAvatar from '../../../assets/shabab.png';
 import {
   ShieldCheck,
   User,
@@ -72,7 +73,7 @@ export const DEMO_PROFILES: AuthUser[] = [
     phone: '+880 1912-403922',
     role: 'ADMIN',
     designation: 'Model Architecture & Explainability Lead',
-    avatar: './assets/shabab.png'
+    avatar: shababAvatar,
     permissions: adminPermissions,
   },
   {
