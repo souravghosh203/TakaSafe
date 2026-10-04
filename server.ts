@@ -29,6 +29,7 @@ const customerTransactionsCsv = path.resolve(process.cwd(), 'dataset', 'customer
 const customerLoginsCsv = path.resolve(process.cwd(), 'dataset', 'customer_logins.csv');
 const alertFeedbackCsv = path.resolve(process.cwd(), 'dataset', 'alert_feedback.csv');
 const customerTransactionHeaders = ['user_id', 'wallet', 'amount', 'recipient', 'timestamp', 'reference', 'status', 'risk_score', 'service_type', 'direction', 'fee'];
+const customerTransactionThreatHeaders = [...customerTransactionHeaders, 'is_threat', 'suspicious_reason', 'device'];
 const toCsvCell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
 const parseCsvLine = (line: string): string[] => {
   const cells: string[] = [];
@@ -72,6 +73,29 @@ app.post('/api/customer-logins/:userId', async (req: Request, res: Response) => 
     return res.status(400).json({ error: 'Invalid customer login record' });
   }
   try {
+    let alert: Record<string, unknown> | null = null;
+    const txnCsv = await fs.readFile(customerTransactionsCsv, 'utf8').catch((error: NodeJS.ErrnoException) => error.code === 'ENOENT' ? '' : Promise.reject(error));
+    const txnLines = txnCsv.split(/\r?\n/).filter(Boolean);
+    if (txnLines.length > 1) {
+      const txnHeaders = parseCsvLine(txnLines.shift()!);
+      const records = txnLines.map((line) => { const cells = parseCsvLine(line); return Object.fromEntries(txnHeaders.map((header, index) => [header, cells[index] || ''])); });
+      const owned = records.filter((row) => row.user_id === userId && row.direction !== 'IN' && row.service_type === 'SEND_MONEY' && ['COMPLETED', 'PROCEEDED'].includes(row.status));
+      const hour = (value: string) => (new Date(value).getUTCHours() + 6) % 24;
+      const prior = owned.filter((row) => row.is_threat !== 'true');
+      const amounts = prior.map((row) => Number(row.amount)).filter(Number.isFinite).sort((a, b) => a - b);
+      const median = amounts.length ? amounts[Math.floor(amounts.length / 2)] : 0;
+      const txn = [...owned].reverse().find((row) => row.is_threat !== 'true');
+      if (txn && median > 0 && Number(txn.amount) >= Math.max(median * 3, 10000) && hour(txn.timestamp) < 6) {
+        const txHour = hour(txn.timestamp);
+        const reason = `Large transaction at ${String(txHour).padStart(2, '0')}:${String(new Date(txn.timestamp).getUTCMinutes()).padStart(2, '0')} Bangladesh time, outside usual activity; amount is ${(Number(txn.amount) / median).toFixed(1)}x the customer's median.`;
+        const devices = ['Samsung Galaxy A54', 'Xiaomi Redmi Note 12', 'Infinix Hot 30', 'iPhone 13'];
+        const alertDevice = devices[[...userId].reduce((sum, char) => sum + char.charCodeAt(0), 0) % devices.length];
+        const updated = records.map((row) => row === txn ? { ...row, is_threat: 'true', suspicious_reason: reason, device: alertDevice } : row);
+        await fs.writeFile(customerTransactionsCsv, `${customerTransactionThreatHeaders.join(',')}\r\n${updated.map((row) => customerTransactionThreatHeaders.map((header) => toCsvCell(row[header] || '')).join(',')).join('\r\n')}\r\n`, 'utf8');
+        alert = { amount: Number(txn.amount), timestamp: txn.timestamp, device: alertDevice, reason };
+        publishServerEvent('state-change', { kind: 'suspicious-transaction', userId });
+      }
+    }
     await fs.mkdir(path.dirname(customerLoginsCsv), { recursive: true });
     const headers = ['user_id', 'wallet', 'timestamp', 'device'];
     let needsHeader = false;
@@ -94,7 +118,7 @@ app.post('/api/customer-logins/:userId', async (req: Request, res: Response) => 
     const values = [userId, wallet.trim(), date.toISOString(), device];
     await fs.appendFile(customerLoginsCsv, `${needsHeader ? `${headers.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`, 'utf8');
     publishServerEvent('state-change', { kind: 'customer-login', userId });
-    res.json({ success: true });
+    res.json({ success: true, alert });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -353,6 +377,17 @@ app.get('/api/events', (req: Request, res: Response) => {
     clearInterval(heartbeat);
     eventClients.delete(res);
   });
+});
+
+app.get('/api/suspicious-transactions', async (_req: Request, res: Response) => {
+  try {
+    const csv = await fs.readFile(customerTransactionsCsv, 'utf8').catch((error: NodeJS.ErrnoException) => error.code === 'ENOENT' ? '' : Promise.reject(error));
+    const lines = csv.split(/\r?\n/).filter(Boolean);
+    const headers = lines.length ? parseCsvLine(lines.shift()!) : customerTransactionThreatHeaders;
+    const transactions = lines.map(parseCsvLine).map((cells) => Object.fromEntries(headers.map((header, index) => [header, cells[index] || ''])))
+      .filter((row) => row.is_threat === 'true');
+    res.json({ success: true, transactions });
+  } catch (error: any) { res.status(500).json({ error: error.message }); }
 });
 
 // Health Check

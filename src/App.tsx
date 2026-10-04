@@ -191,6 +191,23 @@ export default function App() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ wallet: user.phone, timestamp, device: navigator.userAgent }),
+    }).then((response) => response.ok ? response.json() : null).then((data) => {
+      if (data?.alert) {
+        const alert = data.alert;
+        showToast(`Threat alert: BDT ${Number(alert.amount).toLocaleString()} transaction at ${new Date(alert.timestamp).toLocaleString()} from ${alert.device}.`);
+        fetch('/api/suspicious-transactions', { cache: 'no-store' }).then((result) => result.ok ? result.json() : null).then((feed) => {
+          const rows = Array.isArray(feed?.transactions) ? feed.transactions : [];
+          const added = rows.map((row: any, index: number) => ({
+            id: `CSV-${row.user_id}-${index}`, timestamp: row.timestamp, senderWallet: row.wallet,
+            senderName: row.user_id, senderLocation: 'Customer transaction history', senderDevice: row.device || 'Known device',
+            receiverWallet: row.recipient, receiverName: 'Recipient', receiverLocation: 'Unknown', amount: Number(row.amount), fee: 0,
+            channel: 'TakaSafe App' as const, status: 'HELD' as const, fusedRiskScore: 85, riskBand: 'HIGH' as const,
+            fraudProb: 0.85, anomalyProb: 0.85, networkRisk: 0, velocityRisk: 0, deviceRisk: 0.2,
+            isMuleConnected: false, shapFeatures: [],
+          }));
+          setTransactions((current) => [...added, ...current.filter((txn) => !added.some((item: Transaction) => item.id === txn.id))]);
+        }).catch(() => undefined);
+      }
     }).catch(() => undefined);
   };
   const [activeModal, setActiveModal] = useState<string | null>(null);
