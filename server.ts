@@ -29,6 +29,7 @@ const customerTransactionsCsv = path.resolve(process.cwd(), 'dataset', 'customer
 const customerLoginsCsv = path.resolve(process.cwd(), 'dataset', 'customer_logins.csv');
 const alertFeedbackCsv = path.resolve(process.cwd(), 'dataset', 'alert_feedback.csv');
 const customerProfilesCsv = path.resolve(process.cwd(), 'dataset', 'customer_profiles.csv');
+const customerProfileHistoryCsv = path.resolve(process.cwd(), 'dataset', 'customer_profile_changes.csv');
 const customerTransactionHeaders = ['user_id', 'wallet', 'amount', 'recipient', 'timestamp', 'reference', 'status', 'risk_score', 'service_type', 'direction', 'fee'];
 const toCsvCell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
 const parseCsvLine = (line: string): string[] => {
@@ -47,6 +48,11 @@ const parseCsvLine = (line: string): string[] => {
 };
 
 const profileHeaders = ['user_id', 'name', 'email', 'phone', 'avatar', 'updated_at'];
+const profileHistoryHeaders = [
+  'user_id', 'changed_at',
+  'previous_name', 'updated_name', 'previous_email', 'updated_email',
+  'previous_phone', 'updated_phone', 'previous_avatar', 'updated_avatar',
+];
 app.get('/api/customer-profiles/:userId', async (req: Request, res: Response) => {
   const userId = String(req.params.userId || '').trim();
   if (!userId || userId.length > 64) return res.status(400).json({ error: 'Invalid user ID' });
@@ -80,8 +86,33 @@ app.put('/api/customer-profiles/:userId', async (req: Request, res: Response) =>
     const [headerLine, ...lines] = csv.split(/\r?\n/).filter(Boolean);
     const headers = headerLine ? parseCsvLine(headerLine) : profileHeaders;
     const existingRows = lines.map(parseCsvLine).map((cells) => Object.fromEntries(headers.map((header, index) => [header, cells[index] || ''])));
-    const updatedRow = { user_id: userId, name: name.trim(), email: email.trim(), phone: phone.trim(), avatar, updated_at: new Date().toISOString() };
+    const changedAt = new Date().toISOString();
+    const updatedRow = { user_id: userId, name: name.trim(), email: email.trim(), phone: phone.trim(), avatar, updated_at: changedAt };
     const index = existingRows.findIndex((row) => row.user_id === userId);
+    const previousRow = index >= 0 ? existingRows[index] : { name: '', email: '', phone: '', avatar: '' };
+    const hasChanges = ['name', 'email', 'phone', 'avatar'].some((field) => String(previousRow[field] || '') !== updatedRow[field as keyof typeof updatedRow]);
+    if (hasChanges) {
+      const historyCsv = await fs.readFile(customerProfileHistoryCsv, 'utf8').catch((error: NodeJS.ErrnoException) => {
+        if (error.code === 'ENOENT') return '';
+        throw error;
+      });
+      const historyRows = historyCsv.split(/\r?\n/).filter(Boolean);
+      const historyHeaders = historyRows.length ? parseCsvLine(historyRows[0]) : profileHistoryHeaders;
+      const historyRow: Record<string, string> = {
+        user_id: userId,
+        changed_at: changedAt,
+        previous_name: previousRow.name || '', updated_name: updatedRow.name,
+        previous_email: previousRow.email || '', updated_email: updatedRow.email,
+        previous_phone: previousRow.phone || '', updated_phone: updatedRow.phone,
+        previous_avatar: previousRow.avatar || '', updated_avatar: updatedRow.avatar,
+      };
+      const historyContents = [
+        historyRows.length ? historyRows[0] : profileHistoryHeaders.join(','),
+        ...historyRows.slice(1),
+        historyHeaders.map((header) => toCsvCell(historyRow[header] || '')).join(','),
+      ].join('\r\n') + '\r\n';
+      await fs.writeFile(customerProfileHistoryCsv, historyContents, 'utf8');
+    }
     if (index >= 0) existingRows[index] = updatedRow;
     else existingRows.push(updatedRow);
     const contents = [profileHeaders.join(','), ...existingRows.map((row) => profileHeaders.map((header) => toCsvCell(row[header])).join(','))].join('\r\n') + '\r\n';
