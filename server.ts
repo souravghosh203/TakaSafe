@@ -84,7 +84,7 @@ app.post('/api/customer-logins/:userId', async (req: Request, res: Response) => 
       const prior = owned.filter((row) => row.is_threat !== 'true');
       const amounts = prior.map((row) => Number(row.amount)).filter(Number.isFinite).sort((a, b) => a - b);
       const median = amounts.length ? amounts[Math.floor(amounts.length / 2)] : 0;
-      const txn = [...owned].reverse().find((row) => row.is_threat !== 'true');
+      const txn = [...owned].reverse()[0];
       if (txn && median > 0 && Number(txn.amount) >= Math.max(median * 3, 10000) && hour(txn.timestamp) < 6) {
         const txHour = hour(txn.timestamp);
         const reason = `Large transaction at ${String(txHour).padStart(2, '0')}:${String(new Date(txn.timestamp).getUTCMinutes()).padStart(2, '0')} Bangladesh time, outside usual activity; amount is ${(Number(txn.amount) / median).toFixed(1)}x the customer's median.`;
@@ -254,26 +254,26 @@ app.post('/api/customer-history/:wallet', async (req: Request, res: Response) =>
         const existing = await fs.readFile(customerTransactionsCsv, 'utf8');
         const [headerLine, ...oldLines] = existing.split(/\r?\n/).filter(Boolean);
         const oldHeaders = parseCsvLine(headerLine);
-        if (customerTransactionHeaders.some((header) => !oldHeaders.includes(header))) {
+        if (customerTransactionThreatHeaders.some((header) => !oldHeaders.includes(header))) {
           const migrated = oldLines.map((line) => {
             const oldCells = parseCsvLine(line);
             const oldRow = Object.fromEntries(oldHeaders.map((header, index) => [header, oldCells[index] || '']));
             return [
               oldRow.user_id || oldRow.wallet, oldRow.wallet, oldRow.amount, oldRow.recipient, oldRow.timestamp,
               oldRow.reference, oldRow.status, oldRow.risk_score, oldRow.service_type || 'SEND_MONEY',
-              oldRow.direction || 'OUT', oldRow.fee || 0,
+              oldRow.direction || 'OUT', oldRow.fee || 0, oldRow.is_threat || '', oldRow.suspicious_reason || '', oldRow.device || '',
             ]
               .map(toCsvCell).join(',');
           });
-          await fs.writeFile(customerTransactionsCsv, `${customerTransactionHeaders.join(',')}\r\n${migrated.join('\r\n')}${migrated.length ? '\r\n' : ''}`, 'utf8');
+          await fs.writeFile(customerTransactionsCsv, `${customerTransactionThreatHeaders.join(',')}\r\n${migrated.join('\r\n')}${migrated.length ? '\r\n' : ''}`, 'utf8');
         }
       }
     } catch (error: any) { if (error.code === 'ENOENT') needsHeader = true; else throw error; }
     const values = [
       wallet, customerWallet.trim(), Number(amount), recipient.trim(), date.toISOString(), reference, status,
-      Math.max(0, Math.min(100, Number(riskScore))), serviceType, direction, Number(fee),
+      Math.max(0, Math.min(100, Number(riskScore))), serviceType, direction, Number(fee), '', '', '',
     ];
-    const content = `${needsHeader ? `${customerTransactionHeaders.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`;
+    const content = `${needsHeader ? `${customerTransactionThreatHeaders.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`;
     await fs.appendFile(customerTransactionsCsv, content, 'utf8');
     publishServerEvent('state-change', { kind: 'customer-transaction', timestamp: date.toISOString() });
     res.json({ success: true });

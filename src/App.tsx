@@ -238,6 +238,20 @@ export default function App() {
         }
       }
       if (detail.kind === 'alert-feedback') window.dispatchEvent(new Event('takasafe-alert-feedback'));
+      if (detail.kind === 'suspicious-transaction') {
+        fetch('/api/suspicious-transactions', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null).then((feed) => {
+          const rows = Array.isArray(feed?.transactions) ? feed.transactions : [];
+          const flagged = rows.map((row: any) => ({
+            id: `CSV-${row.user_id}-${row.timestamp}`, timestamp: row.timestamp, senderWallet: row.wallet,
+            senderName: row.user_id, senderLocation: 'Customer transaction history', senderDevice: row.device || 'Known device',
+            receiverWallet: row.recipient, receiverName: 'Recipient', receiverLocation: 'Unknown', amount: Number(row.amount), fee: 0,
+            channel: 'TakaSafe App' as const, status: 'HELD' as const, fusedRiskScore: 85, riskBand: 'HIGH' as const,
+            fraudProb: 0.85, anomalyProb: 0.85, networkRisk: 0, velocityRisk: 0, deviceRisk: 0.2,
+            isMuleConnected: false, shapFeatures: [],
+          }));
+          setTransactions((current) => [...flagged, ...current.filter((txn) => !flagged.some((item: Transaction) => item.id === txn.id))]);
+        }).catch(() => undefined);
+      }
     });
 
     return () => {
