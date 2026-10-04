@@ -364,22 +364,24 @@ a:focus-visible {
   --brand-base: #ffffff;
 }
 
-.group:hover .mfs-brand-word {
+.mfs-brand-word {
   color: transparent;
   background-image: linear-gradient(
     105deg,
     var(--brand-base) 0%,
-    var(--brand-base) 35%,
+    var(--brand-base) 34%,
     #fff4c2 50%,
-    var(--brand-base) 65%,
+    var(--brand-base) 66%,
     var(--brand-base) 100%
   );
   background-size: 220% 100%;
   background-clip: text;
   -webkit-background-clip: text;
+}
+
+.group:hover .mfs-brand-word {
   animation: mfsBrandShimmer 850ms ease-out both;
   filter: drop-shadow(0 0 7px rgba(250, 185, 21, 0.42));
-  transform: translateY(-1px);
 }
 
 .group:hover .mfs-dot-wink {
