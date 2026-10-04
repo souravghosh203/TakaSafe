@@ -675,6 +675,49 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
     return agents.filter((a) => a.division === selectedDivision);
   }, [agents, selectedDivision]);
 
+  // Dynamic Visual Geographic Scale Bar & Zoom Scope HUD calculation
+  const geographicScale = useMemo(() => {
+    const k = mapTransform.k || 1.0;
+    // Real-world calibration: at center latitude 23.75°N, 1° lon ~102 km.
+    // In D3 Mercator projection (scale 4450), 1° lon = 77.67 px at 1.0x scale.
+    // Base scale ratio = 0.7615 pixels per km at k = 1.0.
+    const pxPerKm = 0.7615 * k;
+
+    let km = 100;
+    if (k >= 4.0) {
+      km = 20;
+    } else if (k >= 2.5) {
+      km = 30;
+    } else if (k >= 1.6) {
+      km = 50;
+    } else {
+      km = 100;
+    }
+
+    const barWidth = Math.round(km * pxPerKm);
+    const miles = Math.round(km * 0.621371);
+
+    // Geographical scope hierarchy
+    let scopeLabel = lang === 'BN' ? 'জাতীয় পরিসর' : 'National Scope';
+    let scopeDetail = lang === 'BN' ? 'সমগ্র বাংলাদেশ (৮টি বিভাগ)' : 'All Bangladesh (8 Divisions)';
+    if (k >= 2.6) {
+      scopeLabel = lang === 'BN' ? 'স্থানীয় ক্লাস্টার' : 'Local Cluster';
+      scopeDetail = lang === 'BN' ? 'জেলা ও এজেন্ট ফ্লিট নোড' : 'District & Agent Fleet Nodes';
+    } else if (k >= 1.5) {
+      scopeLabel = lang === 'BN' ? 'আঞ্চলিক কোরিডোর' : 'Regional Scope';
+      scopeDetail = lang === 'BN' ? 'আন্তঃজেলা লেনদেন চ্যানেল' : 'Cross-District Channels';
+    }
+
+    return {
+      k,
+      km,
+      miles,
+      barWidth: Math.max(48, Math.min(130, barWidth)),
+      scopeLabel,
+      scopeDetail,
+    };
+  }, [mapTransform.k, lang]);
+
   return (
     <div className="bg-white dark:bg-[#0F172A] text-slate-900 dark:text-slate-100 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden font-sans">
       {/* Top Header Command Bar */}
@@ -1066,7 +1109,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
 
           {/* Dynamic Hover Tooltip Overlay */}
           {hoveredEntity && (
-            <div className="absolute bottom-4 left-4 z-20 bg-slate-900/95 backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-slate-700 shadow-2xl text-xs pointer-events-none max-w-xs transition-opacity duration-200">
+            <div className="absolute bottom-28 left-3 z-20 bg-slate-900/95 backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-slate-700 shadow-2xl text-xs pointer-events-none max-w-xs transition-opacity duration-200">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[10px] font-mono text-indigo-400 uppercase tracking-wider font-semibold">
                   {hoveredEntity.type.replace(/_/g, ' ')}
@@ -1978,6 +2021,53 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#0054A6] dark:bg-indigo-400 inline-block"></span>
                 <span>Agent Fleet</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Visual Geographic Scale & Zoom Level HUD Indicator */}
+          <div className="absolute bottom-3 left-3 z-10 select-none">
+            <div className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] text-slate-800 dark:text-slate-200 flex flex-col gap-1.5 shadow-xs min-w-[155px]">
+              {/* Scope Title & Zoom Multiplier Badge */}
+              <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0054A6] dark:bg-indigo-400"></span>
+                  <span className="text-[10.5px] tracking-tight">{geographicScale.scopeLabel}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleResetZoom}
+                  title={lang === 'BN' ? '১.০x জুমে রিসেট করুন' : 'Click to reset to 1.0x full view'}
+                  className="px-1.5 py-0.5 rounded bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:hover:bg-blue-900/70 text-[#0054A6] dark:text-blue-300 font-mono font-extrabold text-[9.5px] border border-blue-200 dark:border-blue-800/60 transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <span>{mapTransform.k.toFixed(1)}x</span>
+                </button>
+              </div>
+
+              {/* Graphic Scale Ruler Bar with Distance Indicators */}
+              <div className="flex flex-col gap-1 font-mono pt-0.5">
+                <div className="flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400">
+                  <span>0</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                    {geographicScale.km} {lang === 'BN' ? 'কিমি' : 'km'}
+                  </span>
+                  <span className="text-[8px] text-slate-400 dark:text-slate-500">
+                    ({geographicScale.miles} {lang === 'BN' ? 'মাইল' : 'mi'})
+                  </span>
+                </div>
+                {/* Physical Calibration Scale Bar */}
+                <div
+                  className="h-1.5 relative border-b-2 border-l-2 border-r-2 border-slate-700 dark:border-slate-300 rounded-b-[1px] transition-all duration-200"
+                  style={{ width: `${geographicScale.barWidth}px` }}
+                >
+                  {/* Half-distance center tick */}
+                  <div className="absolute left-1/2 bottom-0 w-[1px] h-1 bg-slate-500 dark:bg-slate-400" />
+                </div>
+              </div>
+
+              {/* Scope Subtitle Description */}
+              <span className="text-[8.5px] text-slate-400 dark:text-slate-500 leading-tight">
+                {geographicScale.scopeDetail}
               </span>
             </div>
           </div>
