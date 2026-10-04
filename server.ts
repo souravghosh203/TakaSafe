@@ -571,6 +571,12 @@ async function startServer() {
     const distPath = path.resolve(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req: Request, res: Response) => {
+      // Only serve the SPA shell for browser routes. Returning index.html for a
+      // missing asset makes tools such as curl save HTML under a .js/.css name.
+      if (path.extname(req.path)) {
+        res.sendStatus(404);
+        return;
+      }
       res.sendFile(path.resolve(distPath, 'index.html'));
     });
   }
