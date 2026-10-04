@@ -787,7 +787,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
       case 'LIMITS_CHARGES': return lang === 'BN' ? 'লিমিট ও সার্ভিস চার্জ' : 'Limits and Service Charges';
       case 'LIVE_CHAT': return lang === 'BN' ? '২৪/৭ লাইভ সাপোর্ট সহকারী' : '24/7 Live Support Assistant';
       case 'SEARCH': return lang === 'BN' ? 'দ্রুত অনুসন্ধান' : 'Quick Search Directory';
-      case 'APP_DOWNLOAD': return 'Download TakaSafe App';
+      case 'APP_DOWNLOAD': return 'TakaSafe Web App Demo';
       case 'MEDIA': return 'Press Releases & Media';
       case 'NEED_HELP': return 'Customer Help & Support';
       case 'PARTNER': return 'Partner & Merchant Enrollment';

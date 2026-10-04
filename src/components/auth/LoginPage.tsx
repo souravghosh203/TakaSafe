@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 interface LoginPageProps {
-  onLogin: (user: AuthUser) => void;
+  onLogin: (user: AuthUser, remember: boolean) => void;
   onCancel: () => void;
   showBackButton?: boolean;
   lang: 'EN' | 'BN';
@@ -120,11 +120,11 @@ export const DEMO_ACCOUNTS: Record<UserRole, AuthUser> = {
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBackButton = true, lang, onOpenInfo }) => {
   const [selectedRole, setSelectedRole] = useState<UserRole>('ADMIN');
-  const [selectedProfileId, setSelectedProfileId] = useState<string>(DEMO_ACCOUNTS.ADMIN.id);
   const [email, setEmail] = useState<string>(DEMO_ACCOUNTS.ADMIN.email);
   const [password, setPassword] = useState<string>('••••••••••••');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showMatrixModal, setShowMatrixModal] = useState<boolean>(false);
+  const [remember, setRemember] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -132,7 +132,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
   const handleSelectRole = (role: UserRole) => {
     setSelectedRole(role);
     const profile = DEMO_PROFILES.find((candidate) => candidate.role === role)!;
-    setSelectedProfileId(profile.id);
     setEmail(profile.email);
     setPassword('••••••••••••');
     setErrorMsg(null);
@@ -157,7 +156,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
         setErrorMsg('That email does not match a demo profile for the selected role. Use one of the listed demo profiles below.');
         return;
       }
-      onLogin(emailProfile);
+      onLogin(emailProfile, remember);
     }, 400);
   };
 
@@ -167,10 +166,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
 
   const handleQuickLogin = (profile: AuthUser) => {
     setSelectedRole(profile.role);
-    setSelectedProfileId(profile.id);
     setEmail(profile.email);
     setErrorMsg(null);
-    onLogin(profile);
+    onLogin(profile, true);
   };
 
   return (
@@ -433,7 +431,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
             <label className="flex items-center gap-2 text-slate-600 cursor-pointer select-none">
               <input
                 type="checkbox"
-                defaultChecked
+                checked={remember}
+                onChange={(event) => setRemember(event.target.checked)}
                 className="rounded border-slate-300 text-[#164E3D] focus:ring-[#164E3D]"
               />
               <span className="text-[11px]">Remember me</span>
