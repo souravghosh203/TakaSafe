@@ -245,6 +245,11 @@ body, .bg-white, input, table, header {
 .alert-arrive { animation: alert-arrive 700ms ease-out 2; }
 
 .tab-indicator { transition: transform 220ms cubic-bezier(.22, 1, .36, 1), opacity 180ms ease; }
+.customer-view-tabs button { position: relative; }
+.customer-view-tabs button::after { content: ''; position: absolute; left: .75rem; right: .75rem; bottom: 0; height: 2px; border-radius: 999px; background: #fab915; transform: scaleX(.45); opacity: 0; transition: transform 220ms cubic-bezier(.22, 1, .36, 1), opacity 180ms ease; }
+.customer-view-tabs button[aria-pressed='true']::after { transform: scaleX(1); opacity: 1; }
+.operator-module-link::after { content: ''; position: absolute; left: .75rem; right: .75rem; bottom: 2px; height: 2px; border-radius: 999px; background: #fab915; transform: scaleX(.4); opacity: 0; transition: transform 220ms cubic-bezier(.22, 1, .36, 1), opacity 180ms ease; }
+.operator-module-link[aria-current='page']::after { transform: scaleX(1); opacity: 1; }
 .metric-change { animation: metric-change 500ms ease-out; }
 @keyframes metric-change { 0% { color: #0054A6; transform: translateY(-2px); } 100% { color: inherit; transform: translateY(0); } }
 
@@ -268,10 +273,17 @@ body, .bg-white, input, table, header {
 }
 
 button:focus-visible,
-a:focus-visible {
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
   outline: 3px solid rgba(250, 185, 21, 0.85);
   outline-offset: 3px;
 }
+
+button:not(:disabled) { transition-property: transform, background-color, border-color, color, box-shadow; }
+button:not(:disabled):active { transform: scale(.98); }
 
 @media (prefers-reduced-motion: reduce) {
   *,

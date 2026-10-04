@@ -53,7 +53,7 @@ export const LiveWebSocketTicker: React.FC<LiveWebSocketTickerProps> = ({
     <div
       className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
         isFlashing
-          ? 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-500 ring-2 ring-rose-400/50 shadow-md animate-pulse'
+          ? 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-500 ring-2 ring-rose-400/50 shadow-md alert-arrive'
           : 'bg-white dark:bg-[#0F172A] border-slate-200/90 dark:border-slate-800 shadow-xs'
       }`}
     >
@@ -119,7 +119,7 @@ export const LiveWebSocketTicker: React.FC<LiveWebSocketTickerProps> = ({
               <span
                 className={`font-mono font-bold text-[10px] px-2 py-0.5 rounded-md shrink-0 border ${
                   latestTransaction.fusedRiskScore >= 75
-                    ? 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/80 animate-pulse'
+                    ? 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/80'
                     : latestTransaction.fusedRiskScore >= 50
                     ? 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/80'
                     : 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/80'

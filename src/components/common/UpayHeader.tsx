@@ -191,7 +191,8 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
                 <button
                   key={mod.id}
                   onClick={() => handleModuleClick(mod.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                  aria-current={isSelected ? 'page' : undefined}
+                  className={`operator-module-link relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
                     isSelected
                       ? 'bg-white text-[#0054A6] shadow-md border-b-2 border-amber-400'
                       : 'text-blue-100 hover:text-white hover:bg-white/10'

@@ -584,9 +584,10 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
             <span>{lang === 'BN' ? 'কিউআর স্ক্যান / ওয়ালেট লিঙ্ক' : 'Scan QR & Link Wallet'}</span>
           </button>
 
-          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+          <div className="customer-view-tabs flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
             <button
               onClick={() => setActiveTab('WALLET')}
+              aria-pressed={activeTab === 'WALLET'}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'WALLET'
                   ? 'bg-white text-[#0054A6] shadow-xs'
@@ -597,6 +598,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('RESILIENCE')}
+              aria-pressed={activeTab === 'RESILIENCE'}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'RESILIENCE'
                   ? 'bg-white text-[#0054A6] shadow-xs'
