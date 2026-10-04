@@ -682,8 +682,8 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
             <div className="pt-2 border-t border-blue-400/20 text-xs space-y-2">
               <div className="flex items-center justify-between bg-black/20 p-2.5 rounded-xl">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-white text-[#0054A6] flex items-center justify-center font-bold text-xs">
-                    {currentUser.name.charAt(0)}
+                  <div className="w-7 h-7 rounded-full bg-white text-[#0054A6] flex items-center justify-center font-bold text-xs overflow-hidden">
+                    {currentUser.avatar ? <img src={currentUser.avatar} alt="" className="w-full h-full object-cover" /> : currentUser.name.charAt(0)}
                   </div>
                   <div>
                     <span className="font-bold block leading-tight">{currentUser.name}</span>
@@ -702,6 +702,17 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
                   </button>
                 )}
               </div>
+
+              <button
+                onClick={() => {
+                  setProfileDraft({ name: currentUser.name, email: currentUser.email, phone: currentUser.phone, avatar: currentUser.avatar || '' });
+                  setIsMobileMenuOpen(false);
+                  setIsProfileEditorOpen(true);
+                }}
+                className="w-full p-2.5 text-left rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold flex items-center gap-2"
+              >
+                <Pencil className="w-3.5 h-3.5" /> Edit profile
+              </button>
 
               <button
                 onClick={() => {
