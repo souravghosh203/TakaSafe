@@ -113,8 +113,8 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto modal-backdrop-enter">
+      <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden my-auto modal-panel-enter">
         {/* Header */}
         <div className="p-6 bg-gradient-to-r from-[#0054A6] via-[#004A94] to-[#003875] text-white flex items-center justify-between border-b border-[#003366] shadow-sm">
           <div className="flex items-center gap-3">

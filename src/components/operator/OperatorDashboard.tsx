@@ -421,7 +421,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                 setActiveTab(tab.id);
                 onTabChange?.(tab.id);
               }}
-              className={`flex items-center gap-2 py-3 px-4 font-bold text-xs rounded-t-xl transition-all whitespace-nowrap cursor-pointer ${
+              className={`relative flex items-center gap-2 py-3 px-4 font-bold text-xs rounded-t-xl transition-all duration-200 whitespace-nowrap cursor-pointer ${
                 isActive
                   ? 'bg-white dark:bg-[#0F172A] text-[#0054A6] dark:text-blue-400 border-t-2 border-l border-r border-[#0054A6] dark:border-slate-700 border-t-[#0054A6] -mb-[1px] shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
@@ -429,6 +429,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
             >
               <Icon className="w-4 h-4" />
               <span>{tab.label}</span>
+              <span aria-hidden="true" className={`absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-amber-400 tab-indicator ${isActive ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-50'}`} />
               {tab.badge !== undefined && tab.badge > 0 && (
                 <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full">
                   {tab.badge}

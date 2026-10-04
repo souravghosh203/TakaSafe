@@ -1075,14 +1075,14 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
       {/* ScamShield Pre-Payment Modal (Human-Choice Protection) */}
       {showScamModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md modal-backdrop-enter"
           onClick={() => {
             setShowScamModal(false);
             setScamDecision(null);
           }}
         >
           <div
-            className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border-2 border-rose-300 space-y-5 animate-in fade-in zoom-in-95 duration-200"
+            className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border-2 border-rose-300 space-y-5 modal-panel-enter"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with Title and Cross Button */}
