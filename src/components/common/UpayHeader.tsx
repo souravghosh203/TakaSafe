@@ -165,10 +165,10 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
 
             {/* Typography with Golden Bloom Aura (No Color Change on Taka or Safe) */}
             <div className="mfs-logo-text flex items-baseline tracking-tight select-none">
-              <span className="font-['Hind_Siliguri','Noto_Sans_Bengali',sans-serif] text-xl sm:text-2xl font-black text-[#FAB915] leading-none">
+              <span className="mfs-brand-word mfs-brand-taka font-['Hind_Siliguri','Noto_Sans_Bengali',sans-serif] text-xl sm:text-2xl font-black text-[#FAB915] leading-none">
                 টাকা
               </span>
-              <span className="font-['Times_New_Roman',Times,serif] text-[22px] sm:text-[25px] font-bold text-white leading-none ml-0.5 sm:ml-1 tracking-tight">
+              <span className="mfs-brand-word mfs-brand-safe font-['Times_New_Roman',Times,serif] text-[22px] sm:text-[25px] font-bold text-white leading-none ml-0.5 sm:ml-1 tracking-tight">
                 Safe
               </span>
             </div>
