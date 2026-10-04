@@ -174,6 +174,40 @@ export default function App() {
   };
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
+  useEffect(() => {
+    let active = true;
+    const refreshAuditLogs = () => fetch('/api/audit-logs', { cache: 'no-store' })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error('Audit log refresh failed')))
+      .then((data) => { if (active && Array.isArray(data.logs)) setAuditLogs(data.logs); })
+      .catch(() => undefined);
+
+    void refreshAuditLogs();
+    const stream = new EventSource('/api/events');
+    stream.addEventListener('state-change', (rawEvent) => {
+      let detail: { kind?: string; entityType?: string; entityId?: string; actionTaken?: string };
+      try { detail = JSON.parse((rawEvent as MessageEvent<string>).data); }
+      catch { return; }
+
+      window.dispatchEvent(new CustomEvent('takasafe-server-update', { detail }));
+      if (detail.kind === 'audit-action') {
+        void refreshAuditLogs();
+        if (detail.entityType === 'TRANSACTION' && detail.entityId) {
+          const status = detail.actionTaken === 'FREEZE_WALLET' ? 'BLOCKED'
+            : detail.actionTaken === 'HOLD_FOR_REVIEW' ? 'HELD' : 'APPROVED';
+          setTransactions((previous) => previous.map((transaction) => transaction.id === detail.entityId
+            ? { ...transaction, status }
+            : transaction));
+        }
+      }
+      if (detail.kind === 'alert-feedback') window.dispatchEvent(new Event('takasafe-alert-feedback'));
+    });
+
+    return () => {
+      active = false;
+      stream.close();
+    };
+  }, []);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4000);

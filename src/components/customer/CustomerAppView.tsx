@@ -212,6 +212,23 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     return () => { active = false; };
   }, [userId, customer.wallet]);
 
+  useEffect(() => {
+    const refreshOnServerEvent = (event: Event) => {
+      const detail = (event as CustomEvent<{ kind?: string }>).detail;
+      if (detail?.kind !== 'customer-transaction') return;
+      fetch(`/api/customer-history/${encodeURIComponent(userId)}`, { cache: 'no-store' })
+        .then((response) => response.ok ? response.json() : Promise.reject(new Error('History refresh failed')))
+        .then(({ history }: { history: CustomerTransfer[] }) => {
+          if (!Array.isArray(history)) return;
+          setTransferHistory(history);
+          try { window.localStorage.setItem(`takasafe-transfers:${userId}:${customer.wallet}`, JSON.stringify(history)); } catch { /* Keep the refreshed history in memory. */ }
+        })
+        .catch(() => undefined);
+    };
+    window.addEventListener('takasafe-server-update', refreshOnServerEvent);
+    return () => window.removeEventListener('takasafe-server-update', refreshOnServerEvent);
+  }, [userId, customer.wallet]);
+
   const recentTransfers = transferHistory.filter((transfer) => Date.now() - Date.parse(transfer.timestamp) <= 90 * 24 * 60 * 60 * 1000);
   const sendMoneyTransfers = recentTransfers.filter((transfer) => !transfer.serviceType || transfer.serviceType === 'SEND_MONEY');
   const baselineTransfers = sendMoneyTransfers.filter((transfer) => transfer.status !== 'PROCEEDED' && (transfer.riskScore ?? 0) < 40);

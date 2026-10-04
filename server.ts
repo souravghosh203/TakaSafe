@@ -250,7 +250,7 @@ app.post('/api/customer-history/:wallet', async (req: Request, res: Response) =>
     ];
     const content = `${needsHeader ? `${customerTransactionHeaders.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`;
     await fs.appendFile(customerTransactionsCsv, content, 'utf8');
-    publishServerEvent('state-change', { kind: 'customer-transaction', userId: wallet, timestamp: date.toISOString() });
+    publishServerEvent('state-change', { kind: 'customer-transaction', timestamp: date.toISOString() });
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -392,7 +392,10 @@ app.post('/api/audit-action', (req: Request, res: Response) => {
     };
 
     auditLogs.unshift(newEntry);
-    publishServerEvent('state-change', { kind: 'audit-action', entryId: newEntry.id });
+    publishServerEvent('state-change', {
+      kind: 'audit-action', entryId: newEntry.id, entityType: newEntry.entityType,
+      entityId: newEntry.entityId, actionTaken: newEntry.actionTaken,
+    });
     res.json({ success: true, entry: newEntry, totalLogs: auditLogs.length });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
