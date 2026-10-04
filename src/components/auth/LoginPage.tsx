@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AuthUser, UserRole } from '../../types';
 import {
   ShieldCheck,
@@ -118,7 +118,16 @@ export const DEMO_ACCOUNTS: Record<UserRole, AuthUser> = {
   USER: DEMO_PROFILES.find((profile) => profile.role === 'USER')!,
 };
 
+const PROFILE_STORAGE_PREFIX = 'takasafe-profile:';
+const loadQuickLoginProfiles = (): AuthUser[] => DEMO_PROFILES.map((profile) => {
+  try {
+    const saved = localStorage.getItem(`${PROFILE_STORAGE_PREFIX}${profile.id}`);
+    return saved ? { ...profile, ...JSON.parse(saved) } : profile;
+  } catch { return profile; }
+});
+
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBackButton = true, lang, onOpenInfo }) => {
+  const [quickLoginProfiles, setQuickLoginProfiles] = useState<AuthUser[]>(loadQuickLoginProfiles);
   const [selectedRole, setSelectedRole] = useState<UserRole>('ADMIN');
   const [email, setEmail] = useState<string>(DEMO_ACCOUNTS.ADMIN.email);
   const [password, setPassword] = useState<string>('••••••••••••');
@@ -127,6 +136,27 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
   const [remember, setRemember] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const refreshProfiles = async () => {
+      const cachedProfiles = loadQuickLoginProfiles();
+      const profiles = await Promise.all(DEMO_PROFILES.map(async (profile) => {
+        const cachedProfile = cachedProfiles.find((candidate) => candidate.id === profile.id) || profile;
+        try {
+          const response = await fetch(`/api/customer-profiles/${encodeURIComponent(profile.id)}`, { cache: 'no-store' });
+          if (!response.ok) return cachedProfile;
+          const result = await response.json();
+          if (!result?.profile) return cachedProfile;
+          try { localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${profile.id}`, JSON.stringify(result.profile)); } catch { /* Keep server profile in the login view. */ }
+          return { ...profile, ...result.profile };
+        } catch { return cachedProfile; }
+      }));
+      if (!cancelled) setQuickLoginProfiles(profiles);
+    };
+    void refreshProfiles();
+    return () => { cancelled = true; };
+  }, []);
 
   // Switch role selection and autofill matching demo credentials
   const handleSelectRole = (role: UserRole) => {
@@ -479,7 +509,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
             Quick 1-Click Demo Logins for Evaluators
           </span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {DEMO_PROFILES.map((profile) => (
+            {quickLoginProfiles.map((profile) => (
               <button
                 key={profile.id}
                 type="button"
