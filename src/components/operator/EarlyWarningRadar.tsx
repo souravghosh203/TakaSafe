@@ -212,9 +212,9 @@ export const EarlyWarningRadar: React.FC<EarlyWarningRadarProps> = ({
         </div>
 
         {/* Action Engine Recommendation Card */}
-        <div className="bg-gradient-to-br from-[#FFFDF9] via-[#FAF6EE] to-[#F5EFE6] dark:from-[#0F172A] dark:via-[#111827] dark:to-[#0F172A] text-slate-900 dark:text-slate-100 rounded-2xl p-6 flex flex-col justify-between border border-amber-200/90 dark:border-slate-800 shadow-xs">
+        <div className="bg-white dark:bg-[#0F172A] text-slate-900 dark:text-slate-100 rounded-2xl p-6 flex flex-col justify-between border border-slate-200 dark:border-slate-800 shadow-sm">
           <div>
-            <span className="text-[10px] font-bold text-amber-900 dark:text-amber-400 bg-amber-100/90 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-full inline-block uppercase tracking-wider mb-2 border border-amber-300/70 dark:border-amber-800/60">
+            <span className="text-[10px] font-bold text-amber-800 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-0.5 rounded-full inline-block uppercase tracking-wider mb-2 border border-amber-200 dark:border-amber-800/60">
               Action Engine Policy
             </span>
             <h4 className="text-lg font-black text-slate-900 dark:text-white">Recommended Intervention</h4>
@@ -222,7 +222,7 @@ export const EarlyWarningRadar: React.FC<EarlyWarningRadarProps> = ({
               Based on the <strong className="text-slate-900 dark:text-white">{activeRegion.riskScore}/100</strong> regional score in {activeRegion.division}, the platform has elevated the threat posture to <strong className="text-rose-700 dark:text-rose-400 font-bold">EMERGING FINANCIAL RISK</strong>.
             </p>
 
-            <div className="bg-white/95 dark:bg-slate-900/80 rounded-xl p-3.5 mt-4 border border-amber-200/90 dark:border-slate-800 space-y-2 text-xs shadow-2xs">
+            <div className="bg-slate-50 dark:bg-slate-900/80 rounded-xl p-3.5 mt-4 border border-slate-200 dark:border-slate-800 space-y-2 text-xs shadow-2xs">
               <div className="flex items-center gap-2 text-amber-900 dark:text-amber-300 font-bold">
                 <Activity className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                 <span>Protocol: Level-3 Proactive Monitoring</span>
@@ -235,7 +235,7 @@ export const EarlyWarningRadar: React.FC<EarlyWarningRadarProps> = ({
             </div>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-amber-200/80 dark:border-slate-800">
+          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800">
             {activatedMap[activeRegion.division] ? (
               <div className="flex items-center justify-center gap-2 p-2.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 rounded-xl text-xs font-bold shadow-2xs">
                 <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
