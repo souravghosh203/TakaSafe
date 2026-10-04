@@ -199,10 +199,45 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
   };
 
   return (
-    <div className="login-scene min-h-[85vh] flex items-center justify-center py-10 px-4 sm:px-6 font-sans">
+    <div className="login-scene min-h-[85vh] flex items-center justify-center py-8 px-4 sm:px-6 font-sans">
       <div className="login-glow login-glow-one" aria-hidden="true" />
       <div className="login-glow login-glow-two" aria-hidden="true" />
-      <div className="login-card w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-200/80 p-8 sm:p-10 relative card-hover-lift">
+      <div className="login-layout w-full max-w-6xl grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] items-stretch gap-5 lg:gap-7 relative">
+      <aside className={`login-brand-panel relative overflow-hidden rounded-3xl p-7 sm:p-9 lg:p-11 text-white flex flex-col justify-between min-h-[350px] lg:min-h-full ${selectedRole === 'ADMIN' ? 'login-brand-admin' : 'login-brand-user'}`}>
+        <div className="absolute inset-0 login-brand-grid" aria-hidden="true" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-3">
+            <span className="login-brand-mark flex items-center justify-center w-11 h-11 rounded-2xl bg-white/12 border border-white/20">
+              {selectedRole === 'ADMIN' ? <ShieldCheck className="w-6 h-6" /> : <User className="w-6 h-6" />}
+            </span>
+            <div>
+              <div className="text-lg font-black tracking-tight">TakaSafe</div>
+              <div className="text-[10px] uppercase tracking-[.22em] text-white/65">Trust in every transaction</div>
+            </div>
+          </div>
+          <div className="mt-12 lg:mt-16 max-w-md">
+            <p className="text-[10px] font-bold uppercase tracking-[.24em] text-emerald-200">Security that moves with you</p>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-black leading-tight tracking-tight">Confidence in every <span className="text-emerald-200">payment.</span></h2>
+            <p className="mt-4 text-sm leading-relaxed text-white/75">TakaSafe watches transaction patterns, surfaces risk early, and helps protect Bangladesh’s digital payments.</p>
+          </div>
+        </div>
+
+        <div className="login-network relative z-10 my-7 h-36 sm:h-44" aria-hidden="true">
+          <svg viewBox="0 0 440 170" className="w-full h-full" fill="none" role="presentation">
+            <path className="network-line" d="M42 112 128 66l82 37 88-57 100 47M128 66l24 70 58-33 51 39 37-96M42 112l110 24 68 22 51-16 127-49" />
+            <circle className="network-pulse" cx="210" cy="103" r="34" />
+            <path d="M210 81 226 87v14c0 12-7 21-16 25-9-4-16-13-16-25V87l16-6Z" fill="currentColor" fillOpacity=".2" stroke="currentColor" strokeWidth="2" />
+            <path d="m203 101 5 5 10-11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            {[[42,112],[128,66],[152,136],[292,46],[398,93],[261,142],[278,126]].map(([cx,cy], i) => <circle key={i} cx={cx} cy={cy} r={i === 0 || i === 4 ? 5 : 3.5} className="network-node" />)}
+          </svg>
+        </div>
+
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-t border-white/15 pt-4">
+          <div className="flex items-center gap-2 text-xs font-semibold"><ShieldCheck className="w-4 h-4 text-emerald-200" /> Protected by TakaSafe</div>
+          <span className="rounded-full border border-amber-200/35 bg-amber-200/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-100">Demo environment</span>
+        </div>
+      </aside>
+      <div className="login-card w-full bg-white rounded-3xl shadow-xl border border-slate-200/80 p-6 sm:p-8 lg:p-9 relative card-hover-lift">
         {/* Top Back Navigation */}
         {showBackButton && (
           <button
@@ -429,7 +464,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
                 placeholder="Enter Your Email"
                 autoComplete="off"
                 required
-                className="login-input w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#164E3D] focus:border-transparent transition-all"
+                className={`login-input ${selectedRole === 'ADMIN' ? 'login-input-admin' : 'login-input-user'} w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all`}
               />
             </div>
             <p className="mt-1 text-[10px] text-slate-500">Use an email shown on a demo profile button below. The password is not verified.</p>
@@ -446,7 +481,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter Your Password"
                 required
-                className="login-input w-full px-3.5 py-2.5 pr-10 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#164E3D] focus:border-transparent transition-all"
+                className={`login-input ${selectedRole === 'ADMIN' ? 'login-input-admin' : 'login-input-user'} w-full px-3.5 py-2.5 pr-10 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all`}
               />
               <button
                 type="button"
@@ -527,6 +562,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
             ))}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
