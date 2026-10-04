@@ -138,45 +138,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    const refreshProfiles = async () => {
-      const cachedProfiles = loadQuickLoginProfiles();
-      const profiles = await Promise.all(DEMO_PROFILES.map(async (profile) => {
-        const cachedProfile = cachedProfiles.find((candidate) => candidate.id === profile.id) || profile;
-        try {
-          const response = await fetch(`/api/customer-profiles/${encodeURIComponent(profile.id)}`, { cache: 'no-store' });
-          if (!response.ok) return cachedProfile;
-          const result = await response.json();
-          if (!result?.profile) return cachedProfile;
-          try { localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${profile.id}`, JSON.stringify(result.profile)); } catch { /* Keep server profile in the login view. */ }
-          return { ...profile, ...result.profile };
-        } catch { return cachedProfile; }
-      }));
-      if (!cancelled) setQuickLoginProfiles(profiles);
+    const refreshProfiles = () => setQuickLoginProfiles(loadQuickLoginProfiles());
+    const refreshOnFocus = () => { if (document.visibilityState === 'visible') refreshProfiles(); };
+    const refreshOnStorage = (event: StorageEvent) => {
+      if (event.key?.startsWith(PROFILE_STORAGE_PREFIX)) refreshProfiles();
     };
-    const refreshOneProfile = (event: Event) => {
-      const detail = (event as CustomEvent<{ kind?: string; userId?: string }>).detail;
-      if (detail?.kind !== 'customer-profile' || !detail.userId) return;
-      const profile = DEMO_PROFILES.find((candidate) => candidate.id === detail.userId);
-      if (!profile) return;
-      fetch(`/api/customer-profiles/${encodeURIComponent(profile.id)}`, { cache: 'no-store' })
-        .then((response) => response.ok ? response.json() : null)
-        .then((result) => {
-          if (cancelled || !result?.profile) return;
-          try { localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${profile.id}`, JSON.stringify(result.profile)); } catch { /* Keep server profile in the login view. */ }
-          setQuickLoginProfiles((current) => current.map((item) => item.id === profile.id ? { ...item, ...result.profile } : item));
-        }).catch(() => undefined);
-    };
-    const refreshOnFocus = () => { if (document.visibilityState === 'visible') void refreshProfiles(); };
-    void refreshProfiles();
-    const stream = new EventSource('/api/events');
-    stream.addEventListener('state-change', refreshOneProfile);
     window.addEventListener('focus', refreshOnFocus);
+    window.addEventListener('storage', refreshOnStorage);
     document.addEventListener('visibilitychange', refreshOnFocus);
     return () => {
-      cancelled = true;
-      stream.close();
       window.removeEventListener('focus', refreshOnFocus);
+      window.removeEventListener('storage', refreshOnStorage);
       document.removeEventListener('visibilitychange', refreshOnFocus);
     };
   }, []);
