@@ -329,7 +329,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
       />
 
       {/* Top Level Metric Cockpit Bar with Staggered Slide Up Animation */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 stagger-grid">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 stagger-grid scroll-reveal">
         <div className="bg-white dark:bg-[#0F172A] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm card-hover-lift text-slate-900 dark:text-slate-100">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">National Risk Index</span>

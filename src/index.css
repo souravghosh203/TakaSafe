@@ -256,6 +256,11 @@ body, .bg-white, input, table, header {
 .skeleton-shimmer { background: linear-gradient(100deg, rgba(148,163,184,.12) 20%, rgba(148,163,184,.28) 38%, rgba(148,163,184,.12) 56%); background-size: 220% 100%; animation: skeleton-shimmer 1.4s ease-in-out infinite; }
 @keyframes skeleton-shimmer { to { background-position-x: -220%; } }
 
+@keyframes reveal-on-scroll { from { opacity: .45; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@supports (animation-timeline: view()) {
+  .scroll-reveal { animation: reveal-on-scroll linear both; animation-timeline: view(); animation-range: entry 0% entry 28%; }
+}
+
 .interactive-lift {
   transform: translateZ(0);
   transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -293,7 +298,7 @@ button:not(:disabled):active { transform: scale(.98); }
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .page-enter, .modal-backdrop-enter, .modal-panel-enter, .alert-arrive, .metric-change, .skeleton-shimmer { animation: none !important; }
+  .page-enter, .modal-backdrop-enter, .modal-panel-enter, .alert-arrive, .metric-change, .skeleton-shimmer, .scroll-reveal { animation: none !important; }
   .interactive-lift:hover, .interactive-lift:active, button:not(:disabled):active { transform: none; }
 }
 
