@@ -609,7 +609,11 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
 
       {/* Tab 4: Early-Warning Radar */}
       {activeTab === 'RADAR' && (
-        <EarlyWarningRadar metrics={regionalMetrics} onActivateMonitoring={onActivateMonitoring} />
+        <EarlyWarningRadar
+          metrics={regionalMetrics}
+          onActivateMonitoring={onActivateMonitoring}
+          lang={lang}
+        />
       )}
 
       {/* Tab 5: Disaster Resilience Mode */}

@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { RegionalRiskMetric } from '../../types';
 import { Radar, AlertTriangle, ShieldCheck, MapPin, Activity, ArrowUpRight, ArrowDownRight, Eye } from 'lucide-react';
+import { DivisionHistoricalRiskChart } from './DivisionHistoricalRiskChart';
 
 interface EarlyWarningRadarProps {
   metrics: RegionalRiskMetric[];
   onActivateMonitoring: (division: string) => void;
+  lang?: 'EN' | 'BN';
 }
 
 export const EarlyWarningRadar: React.FC<EarlyWarningRadarProps> = ({
   metrics,
   onActivateMonitoring,
+  lang = 'EN',
 }) => {
   const [selectedDivision, setSelectedDivision] = useState<string>('Barishal');
   const [activatedMap, setActivatedMap] = useState<Record<string, boolean>>({ Barishal: true });
@@ -253,6 +256,14 @@ export const EarlyWarningRadar: React.FC<EarlyWarningRadarProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 30-Day Historical Risk Progression Line Chart for Selected Division */}
+      <DivisionHistoricalRiskChart
+        selectedDivision={selectedDivision}
+        metrics={metrics}
+        onSelectDivision={setSelectedDivision}
+        lang={lang}
+      />
     </div>
   );
 };
