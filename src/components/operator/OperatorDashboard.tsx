@@ -14,7 +14,6 @@ import { EarlyWarningRadar } from './EarlyWarningRadar';
 import { TransactionRiskTrendChart } from './TransactionRiskTrendChart';
 import { GeospatialIntelligenceMap } from './GeospatialIntelligenceMap';
 import { LiveWebSocketTicker } from './LiveWebSocketTicker';
-import { ConnectionStatus } from '../../hooks/useRealtimeSync';
 import { ComplianceReportModal } from './ComplianceReportModal';
 import { RiskDistributionDonutChart } from './RiskDistributionDonutChart';
 import { PolicyWeightsActionEngine } from './PolicyWeightsActionEngine';
@@ -53,7 +52,6 @@ interface OperatorDashboardProps {
   initialTab?: string;
   onTabChange?: (tab: string) => void;
   lang: 'EN' | 'BN';
-  connectionStatus: ConnectionStatus;
 }
 
 export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
@@ -71,7 +69,6 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   initialTab = 'OVERVIEW',
   onTabChange,
   lang,
-  connectionStatus,
 }) => {
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [liveTransactions, setLiveTransactions] = useState<Transaction[]>(transactions);
@@ -329,7 +326,6 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         onOpenComplianceReport={() => setIsComplianceModalOpen(true)}
         onDownloadCSV={handleDownloadAuditCSV}
         lang={lang}
-        connectionStatus={connectionStatus}
       />
 
       {/* Top Level Metric Cockpit Bar with Staggered Slide Up Animation */}
