@@ -284,16 +284,45 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({ cluster, onFre
                 </filter>
               </defs>
 
-              {/* Circular Laundering Triangle Hull (Transparent Red Threat Zone) */}
+              {/* Stage 4 Circular Laundering Ring Threat Zone (Transparent Red Threat Capsule) */}
               {highlightCircular && (
-                <path
-                  d="M 360 225 L 505 110 L 505 340 Z"
-                  fill="rgba(220, 38, 38, 0.07)"
-                  stroke="rgba(220, 38, 38, 0.45)"
-                  strokeWidth="1.8"
-                  strokeDasharray="6 4"
-                  className="animate-pulse pointer-events-none"
-                />
+                <g className="pointer-events-none">
+                  <ellipse
+                    cx="505"
+                    cy="225"
+                    rx="52"
+                    ry="148"
+                    fill="rgba(220, 38, 38, 0.07)"
+                    stroke="rgba(220, 38, 38, 0.45)"
+                    strokeWidth="1.8"
+                    strokeDasharray="6 4"
+                    className="animate-pulse"
+                  />
+                  <rect
+                    x="460"
+                    y="216"
+                    width="90"
+                    height="18"
+                    rx="9"
+                    fill="#FFFFFF"
+                    className="dark:fill-[#0F172A]"
+                    stroke="#EF4444"
+                    strokeWidth="1.2"
+                    opacity="0.95"
+                  />
+                  <text
+                    x="505"
+                    y="228.5"
+                    fill="#DC2626"
+                    fontSize="7.5"
+                    fontFamily="JetBrains Mono, monospace"
+                    fontWeight="800"
+                    textAnchor="middle"
+                    className="uppercase tracking-wider"
+                  >
+                    Circular Ring
+                  </text>
+                </g>
               )}
 
               {/* Edge Vectors */}
@@ -321,17 +350,23 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({ cluster, onFre
                 let labelX = (src.x + tgt.x) / 2;
                 let labelY = (src.y + tgt.y) / 2;
 
-                if (edge.source === 'W108' && edge.target === 'W302') {
-                  // Return loop of circular smurfing
+                if (edge.source === 'W204' && edge.target === 'W108') {
+                  // Downward loop of circular smurfing (left arc)
+                  pathD = `M ${src.x - 5} ${src.y} Q 472 225 ${tgt.x - 5} ${tgt.y}`;
+                  labelX = 460;
+                  labelY = 225;
+                } else if (edge.source === 'W108' && edge.target === 'W204') {
+                  // Upward return loop of circular smurfing (right arc)
+                  pathD = `M ${src.x + 5} ${src.y} Q 538 225 ${tgt.x + 5} ${tgt.y}`;
+                  labelX = 550;
+                  labelY = 225;
+                } else if (edge.source === 'W108' && edge.target === 'W302') {
+                  // Fallback for legacy data
                   pathD = `M ${src.x} ${src.y} Q 420 310 ${tgt.x} ${tgt.y}`;
                   labelX = 425;
                   labelY = 295;
-                } else if (edge.source === 'W204' && edge.target === 'W108') {
-                  // Vertical circular smurfing line
-                  pathD = `M ${src.x} ${src.y} L ${tgt.x} ${tgt.y}`;
-                  labelX = 505;
-                  labelY = 225;
                 } else if (edge.source === 'W302' && edge.target === 'W204') {
+                  // Feeder from Central Hub into Circular Ring Stage 4
                   pathD = `M ${src.x} ${src.y} L ${tgt.x} ${tgt.y}`;
                   labelX = 425;
                   labelY = 155;
