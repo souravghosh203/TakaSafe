@@ -29,12 +29,20 @@ import { ShieldCheck, Info } from 'lucide-react';
 // Bump the key so the old prototype's automatically seeded admin session is
 // discarded after upgrade. New sessions are saved only after explicit sign-in.
 const APP_SESSION_KEY = 'takasafe-app-session-v2';
+const PROFILE_STORAGE_PREFIX = 'takasafe-profile:';
+const loadSavedProfile = (user: AuthUser | null): AuthUser | null => {
+  if (!user) return null;
+  try {
+    const saved = localStorage.getItem(`${PROFILE_STORAGE_PREFIX}${user.id}`);
+    return saved ? { ...user, ...JSON.parse(saved) } : user;
+  } catch { return user; }
+};
 type AppView = 'OPERATOR' | 'CUSTOMER' | 'STORYLINE' | 'LOGIN';
 
 const getCustomerProfile = (user: AuthUser | null): CustomerBaseline => {
   if (!user) return CURRENT_CUSTOMER;
   const existingCustomerProfile = DEMO_CUSTOMER_PROFILES[user.id];
-  if (existingCustomerProfile) return existingCustomerProfile;
+  if (existingCustomerProfile) return { ...existingCustomerProfile, name: user.name, wallet: user.phone };
 
   // Admin demo accounts can also open Send Money. Give each account its own
   // identity and data namespace instead of showing Rafiqul's customer record.
@@ -68,7 +76,7 @@ export default function App() {
       const rawSession = rememberedSession || sessionStorage.getItem(APP_SESSION_KEY);
       if (!rawSession) return null;
       const saved = JSON.parse(rawSession) as { userId?: string | null; activeView?: AppView };
-      const user = DEMO_PROFILES.find((profile) => profile.id === saved.userId) || null;
+      const user = loadSavedProfile(DEMO_PROFILES.find((profile) => profile.id === saved.userId) || null);
       const validViews: AppView[] = ['OPERATOR', 'CUSTOMER', 'STORYLINE', 'LOGIN'];
       const view = user?.role === 'USER'
         ? 'CUSTOMER'
@@ -463,6 +471,13 @@ export default function App() {
         setLang={setLang}
         criticalAlertCount={criticalCount}
         currentUser={currentUser}
+        onUpdateProfile={(profile) => {
+          if (!currentUser) return;
+          const updatedUser = { ...currentUser, ...profile };
+          setCurrentUser(updatedUser);
+          try { localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${currentUser.id}`, JSON.stringify(profile)); } catch { /* Keep edits active for this session if storage is full. */ }
+          showToast('Your profile has been updated.');
+        }}
         theme={theme}
         onToggleTheme={toggleTheme}
         onLogout={() => {
@@ -473,7 +488,7 @@ export default function App() {
           showToast('Signed out of TakaSafe.');
         }}
         onSwitchUserRole={(newRole) => {
-          const user = DEMO_ACCOUNTS[newRole];
+          const user = loadSavedProfile(DEMO_ACCOUNTS[newRole]);
           if (!user) return;
           setCurrentUser(user);
           recordCustomerLogin(user);
@@ -510,7 +525,7 @@ export default function App() {
               showBackButton={Boolean(currentUser)}
               onOpenInfo={(modal) => setActiveModal(modal)}
               onLogin={(user, remember) => {
-                setCurrentUser(user);
+                setCurrentUser(loadSavedProfile(user));
                 setRememberSession(remember);
                 recordCustomerLogin(user);
                 if (user.role === 'ADMIN') {
