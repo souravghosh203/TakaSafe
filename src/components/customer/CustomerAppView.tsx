@@ -337,7 +337,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     const historyReference = isAgentTransaction ? `${serviceTarget} · ${serviceNote.trim()}` : serviceNote.trim();
     recordTransfer(value, historyCounterparty, 0, 'COMPLETED', config.type, config.direction, fee, historyReference);
     const balanceAfter = availableBalance + (config.direction === 'IN' ? value : -totalDebit);
-    setServiceReceipt(`${config.title} completed for BDT ${value.toLocaleString()}${fee ? ` (BDT ${fee.toLocaleString()} fee)` : ''}. New available balance: BDT ${balanceAfter.toLocaleString()}.`);
+    setServiceReceipt(`Simulated ${config.title} completed for BDT ${value.toLocaleString()}${fee ? ` (BDT ${fee.toLocaleString()} fee)` : ''}. Demo balance: BDT ${balanceAfter.toLocaleString()}. No real payment was made.`);
     setIsServiceReview(false);
   };
 
@@ -351,6 +351,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
 
   // QR Code Scanner & Secure Wallet Linking States
   const [isQRScannerOpen, setIsQRScannerOpen] = useState<boolean>(false);
+  const [qrInitialTab, setQrInitialTab] = useState<'SCANNER' | 'MY_QR'>('SCANNER');
   const [linkedWallets, setLinkedWallets] = useState<LinkedWallet[]>(MOCK_LINKED_WALLETS);
   const [linkSuccessBanner, setLinkSuccessBanner] = useState<string | null>(null);
   const [formHighlight, setFormHighlight] = useState<boolean>(false);
@@ -525,6 +526,9 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <div role="note" className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-950">
+        Demo mode: payments, service requests, balances, and QR links are simulated. No real money moves and no external account is connected.
+      </div>
       {/* Customer Mode Header */}
       <div className="bg-white dark:bg-[#0F172A] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -657,8 +661,8 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                   <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 text-emerald-800 text-xs animate-in fade-in">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                     <div>
-                      <div className="font-bold">Payment Completed Successfully!</div>
-                      <div>Sent ৳{Number(amount).toLocaleString()} to {recipient}. Transaction fee: ৳0.</div>
+                      <div className="font-bold">Simulated payment completed</div>
+                      <div>Demo transfer of ৳{Number(amount).toLocaleString()} to {recipient}. No real payment was made.</div>
                     </div>
                   </div>
                 )}
@@ -861,7 +865,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => setIsQRScannerOpen(true)}
+                  onClick={() => { setQrInitialTab('MY_QR'); setIsQRScannerOpen(true); }}
                   className="px-3.5 py-1.5 bg-white border border-[#0054A6] text-[#0054A6] hover:bg-blue-50 font-bold rounded-xl text-xs transition-colors cursor-pointer"
                 >
                   Show My Receiving QR
@@ -993,11 +997,12 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
       {/* QR Code Scanner & Secure Linking Modal */}
       <QRCodeScannerModal
         isOpen={isQRScannerOpen}
-        onClose={() => setIsQRScannerOpen(false)}
+        onClose={() => { setIsQRScannerOpen(false); setQrInitialTab('SCANNER'); }}
         customer={customer}
         onWalletLinked={handleWalletLinked}
         onPaymentQRScanned={handlePaymentQRScanned}
         scanMode={activeWalletService === 'Make Payment' ? 'PAYMENT' : (activeWalletService === 'Cash Out' && serviceTarget === 'Agent Cash Out') || (activeWalletService === 'Cash In' && serviceTarget === 'Agent Deposit') ? 'AGENT' : 'LINK'}
+        initialTab={qrInitialTab}
         lang={lang}
       />
 
