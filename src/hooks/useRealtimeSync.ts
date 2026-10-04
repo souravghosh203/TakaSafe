@@ -20,7 +20,10 @@ export const useRealtimeSync = <TTransactions, TAuditLogs>(
   const statusRef = useRef(status);
 
   useEffect(() => { onSnapshotRef.current = onSnapshot; }, [onSnapshot]);
-  useEffect(() => { statusRef.current = status; }, [status]);
+  const updateStatus = useCallback((nextStatus: ConnectionStatus) => {
+    statusRef.current = nextStatus;
+    setStatus(nextStatus);
+  }, []);
 
   const refreshFromServer = useCallback(async () => {
     setIsRefreshing(true);
@@ -33,20 +36,20 @@ export const useRealtimeSync = <TTransactions, TAuditLogs>(
       }
       onSnapshotRef.current(snapshot);
       setLastSyncedAt(snapshot.timestamp || new Date().toISOString());
-      if (statusRef.current !== 'connected') setStatus('polling');
+      if (statusRef.current !== 'connected') updateStatus('polling');
       return true;
     } catch {
-      setStatus('offline');
+      updateStatus('offline');
       return false;
     } finally {
       setIsRefreshing(false);
     }
-  }, []);
+  }, [updateStatus]);
 
   const reconnect = useCallback(() => {
-    setStatus('connecting');
+    updateStatus('connecting');
     setReconnectKey((key) => key + 1);
-  }, []);
+  }, [updateStatus]);
 
   useEffect(() => {
     const stream = new EventSource('/api/events');
@@ -55,13 +58,13 @@ export const useRealtimeSync = <TTransactions, TAuditLogs>(
 
     stream.addEventListener('connected', () => {
       streamIsConnected = true;
-      setStatus('connected');
+      updateStatus('connected');
       void refreshFromServer();
     });
     stream.addEventListener('state-change', () => { void refreshFromServer(); });
     stream.onerror = () => {
       streamIsConnected = false;
-      setStatus('reconnecting');
+      updateStatus('reconnecting');
     };
 
     const fallback = window.setInterval(async () => {
@@ -87,7 +90,7 @@ export const useRealtimeSync = <TTransactions, TAuditLogs>(
       window.removeEventListener('online', handleOnline);
       document.removeEventListener('visibilitychange', handleVisible);
     };
-  }, [reconnectKey, reconnect, refreshFromServer]);
+  }, [reconnectKey, reconnect, refreshFromServer, updateStatus]);
 
   return { status, lastSyncedAt, isRefreshing, refreshFromServer, reconnect };
 };
