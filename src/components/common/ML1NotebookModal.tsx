@@ -383,7 +383,7 @@ export const AI1NotebookModal: React.FC<AI1NotebookModalProps> = ({
               <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-2">
                 <h4 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
                   <Brain className="w-4 h-4 text-emerald-600" />
-                  <span>2. AI-1 Score Node (LightGBM + Calibration)</span>
+                  <span>2. AI Risk Engine (LightGBM + Calibration)</span>
                 </h4>
                 <p>
                   Raw machine learning classifiers often output distorted probabilities under extreme class imbalance. TakaSafe employs a calibrated two-stage setup:

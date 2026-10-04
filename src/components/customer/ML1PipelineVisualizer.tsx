@@ -1,20 +1,61 @@
 import React, { useState } from 'react';
 import {
+  ArrowRightLeft,
+  Send,
+  SendHorizontal,
+  Wallet,
   Smartphone,
+  Coins,
   Brain,
-  Sparkles,
-  ChevronDown,
-  ChevronUp,
-  FileCode2,
-  CheckCircle2,
+  Cpu,
+  ShieldAlert,
+  ShieldQuestion,
+  HelpCircle,
+  Scale,
+  Radar,
   AlertTriangle,
-  Layers,
-  Info,
-  ExternalLink,
-  ShieldCheck,
-  TrendingUp,
 } from 'lucide-react';
 import { AI1EvaluationResult } from '../../services/ai1ScoringEngine';
+
+export type Node1IconType = 'ArrowRightLeft' | 'Send' | 'SendHorizontal' | 'Wallet' | 'Smartphone' | 'Coins';
+export type Node2IconType = 'Brain' | 'Cpu' | 'Radar' | 'Scale';
+export type Node3IconType = 'ShieldAlert' | 'ShieldQuestion' | 'HelpCircle' | 'Scale' | 'Radar' | 'AlertTriangle';
+
+export interface PipelineCustomConfig {
+  node1Icon: Node1IconType;
+  node1Title: string;
+  node1Subtitle: string;
+  node2Icon: Node2IconType;
+  node2Title: string;
+  node2Subtitle: string;
+  node3Icon: Node3IconType;
+  node3Title: string;
+  node3Subtitle: string;
+}
+
+const DEFAULT_CONFIG_EN: PipelineCustomConfig = {
+  node1Icon: 'ArrowRightLeft',
+  node1Title: 'Transaction Vector',
+  node1Subtitle: 'Amount · Recipient · Moment',
+  node2Icon: 'Brain',
+  node2Title: 'AI Risk Engine',
+  node2Subtitle: 'Calibrated LightGBM Model',
+  node3Icon: 'ShieldAlert',
+  node3Title: 'Uncertainty & Doubt Check',
+  node3Subtitle: 'Conformal Prediction + Novelty',
+};
+
+const DEFAULT_CONFIG_BN: PipelineCustomConfig = {
+  node1Icon: 'ArrowRightLeft',
+  node1Title: 'লেনদেন ভেক্টর',
+  node1Subtitle: 'পরিমাণ · প্রাপক · সময়',
+  node2Icon: 'Brain',
+  node2Title: 'AI রিস্ক ইঞ্জিন',
+  node2Subtitle: 'ক্যালিব্রেটেড LightGBM মডেল',
+  node3Icon: 'ShieldAlert',
+  node3Title: 'অনিশ্চয়তা ও ডাউট চেক',
+  node3Subtitle: 'কনফর্মাল গ্যারান্টি + নভেলটি',
+};
 
 interface AI1PipelineVisualizerProps {
   evaluation?: AI1EvaluationResult;
@@ -22,17 +63,19 @@ interface AI1PipelineVisualizerProps {
   compact?: boolean;
   theme?: 'light' | 'dark' | 'glass';
   interactiveNodeClick?: boolean;
+  lang?: 'EN' | 'BN';
 }
 
 export const AI1PipelineVisualizer: React.FC<AI1PipelineVisualizerProps> = ({
   evaluation,
-  onOpenNotebookModal,
   compact = false,
   theme = 'light',
   interactiveNodeClick = true,
+  lang = 'EN',
 }) => {
   const [selectedNode, setSelectedNode] = useState<'TRANSFER' | 'AI1' | 'DOUBT' | null>(null);
-  const [expandedDetails, setExpandedDetails] = useState<boolean>(false);
+
+  const customConfig = lang === 'BN' ? DEFAULT_CONFIG_BN : DEFAULT_CONFIG_EN;
 
   // Status metrics if evaluation is provided
   const ai1Score = evaluation?.ai1Score.calibratedScore ?? 22;
@@ -41,12 +84,10 @@ export const AI1PipelineVisualizer: React.FC<AI1PipelineVisualizerProps> = ({
   const predictionSet = evaluation?.doubtCheck.conformal.predictionSet ?? ['LEGITIMATE'];
   const noveltyScore = evaluation?.doubtCheck.novelty.noveltyScore ?? 0.18;
 
-  // Active glow color for AI-1 node
+  // Active glow color for AI Risk Engine node
   const ai1GlowClass =
-    ai1Score >= 70
-      ? 'border-rose-400 ring-4 ring-rose-500/20 shadow-[0_0_24px_rgba(244,63,94,0.35)]'
-      : ai1Score >= 40
-      ? 'border-amber-400 ring-4 ring-amber-500/20 shadow-[0_0_24px_rgba(245,158,11,0.3)]'
+    ai1Score >= 40
+      ? 'border-amber-400 ring-4 ring-amber-500/20 shadow-[0_0_24px_rgba(245,158,11,0.25)]'
       : 'border-emerald-400 ring-4 ring-emerald-500/15 shadow-[0_0_20px_rgba(16,185,129,0.25)]';
 
   // Active glow color for Doubt check node
@@ -55,48 +96,73 @@ export const AI1PipelineVisualizer: React.FC<AI1PipelineVisualizerProps> = ({
       ? 'border-amber-400 ring-4 ring-amber-500/20 shadow-[0_0_24px_rgba(245,158,11,0.3)]'
       : 'border-slate-200 dark:border-slate-700 shadow-sm';
 
+  // Icon Renderers
+  const renderNode1Icon = (name: Node1IconType) => {
+    switch (name) {
+      case 'ArrowRightLeft':
+        return <ArrowRightLeft className="w-8 h-8 stroke-[1.75]" />;
+      case 'Send':
+        return <Send className="w-8 h-8 stroke-[1.75]" />;
+      case 'SendHorizontal':
+        return <SendHorizontal className="w-8 h-8 stroke-[1.75]" />;
+      case 'Wallet':
+        return <Wallet className="w-8 h-8 stroke-[1.75]" />;
+      case 'Coins':
+        return <Coins className="w-8 h-8 stroke-[1.75]" />;
+      case 'Smartphone':
+      default:
+        return <Smartphone className="w-8 h-8 stroke-[1.75]" />;
+    }
+  };
+
+  const renderNode2Icon = (name: Node2IconType) => {
+    switch (name) {
+      case 'Cpu':
+        return <Cpu className="w-8 h-8 stroke-[1.75]" />;
+      case 'Radar':
+        return <Radar className="w-8 h-8 stroke-[1.75]" />;
+      case 'Scale':
+        return <Scale className="w-8 h-8 stroke-[1.75]" />;
+      case 'Brain':
+      default:
+        return <Brain className="w-8 h-8 stroke-[1.75]" />;
+    }
+  };
+
+  const renderNode3Icon = (name: Node3IconType) => {
+    switch (name) {
+      case 'ShieldQuestion':
+        return <ShieldQuestion className="w-8 h-8 stroke-[1.75] text-amber-500" />;
+      case 'HelpCircle':
+        return <HelpCircle className="w-8 h-8 stroke-[1.75] text-amber-500" />;
+      case 'Scale':
+        return <Scale className="w-8 h-8 stroke-[1.75] text-amber-500" />;
+      case 'Radar':
+        return <Radar className="w-8 h-8 stroke-[1.75] text-amber-500" />;
+      case 'AlertTriangle':
+        return <AlertTriangle className="w-8 h-8 stroke-[1.75] text-amber-500" />;
+      case 'ShieldAlert':
+      default:
+        return <ShieldAlert className="w-8 h-8 stroke-[1.75] text-amber-500" />;
+    }
+  };
+
   return (
-    <div className={`w-full rounded-2xl transition-all ${
-      theme === 'dark'
-        ? 'bg-[#0F172A] border border-slate-800 text-slate-100'
-        : 'bg-white border border-slate-200/90 text-slate-900 shadow-xs'
-    } p-4 sm:p-5 space-y-4`}>
+    <div
+      className={`w-full rounded-2xl transition-all ${
+        theme === 'dark'
+          ? 'bg-[#0F172A] border border-slate-800 text-slate-100'
+          : 'bg-white border border-slate-200/90 text-slate-900 shadow-xs'
+      } p-4 sm:p-5 space-y-4`}
+    >
       {/* Top Visualizer Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
-        <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs font-black tracking-wider uppercase font-mono text-slate-700 dark:text-slate-300">
-            TakaSafe ML Architecture Pipeline
-          </span>
-          <span className="text-[10px] bg-blue-50 dark:bg-blue-950/60 text-[#0054A6] dark:text-blue-400 font-bold px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
-            Real-Time Inference
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {onOpenNotebookModal && (
-            <button
-              type="button"
-              onClick={onOpenNotebookModal}
-              className="flex items-center gap-1.5 text-[11px] font-bold text-[#0054A6] dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 bg-blue-50/80 dark:bg-blue-950/50 hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-200/80 dark:border-blue-800/80 transition-all cursor-pointer shadow-2xs"
-            >
-              <FileCode2 className="w-3.5 h-3.5" />
-              <span>Jupyter Notebook (.ipynb)</span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setExpandedDetails(!expandedDetails)}
-            className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-semibold p-1 cursor-pointer"
-          >
-            <span>{expandedDetails ? 'Hide Telemetry' : 'Inspect Math'}</span>
-            {expandedDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          </button>
-        </div>
+      <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800">
+        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+          {lang === 'BN' ? 'টাকা সেফ এমএল আর্কিটেকচার পাইপলাইন' : 'TakaSafe ML Architecture Pipeline'}
+        </h3>
       </div>
 
-      {/* The 3-Node Interactive Diagram matching the image */}
+      {/* The 3-Node Interactive Diagram */}
       <div className="relative py-4 px-2 sm:px-6 select-none">
         {/* Background Connecting Curves (SVG) */}
         <svg
@@ -137,7 +203,7 @@ export const AI1PipelineVisualizer: React.FC<AI1PipelineVisualizerProps> = ({
 
         {/* 3 Nodes Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 relative z-10 items-start">
-          {/* Node 1: Transfer */}
+          {/* Node 1: Transaction Vector / Transfer */}
           <div
             onClick={() => interactiveNodeClick && setSelectedNode(selectedNode === 'TRANSFER' ? null : 'TRANSFER')}
             className={`flex flex-col items-center text-center cursor-pointer transition-all duration-200 group ${
@@ -145,8 +211,8 @@ export const AI1PipelineVisualizer: React.FC<AI1PipelineVisualizerProps> = ({
             }`}
           >
             {/* Node Card */}
-            <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center text-slate-800 dark:text-slate-100 group-hover:border-slate-400 group-hover:shadow-md transition-all relative">
-              <Smartphone className="w-8 h-8 stroke-[1.75]" />
+            <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center text-[#0054A6] dark:text-sky-400 group-hover:border-slate-400 group-hover:shadow-md transition-all relative">
+              {renderNode1Icon(customConfig.node1Icon)}
               {evaluation && (
                 <span className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-slate-900 text-white shadow-xs">
                   ৳{evaluation.transferSummary.amount >= 1000 ? `${(evaluation.transferSummary.amount / 1000).toFixed(0)}k` : evaluation.transferSummary.amount}
@@ -156,10 +222,10 @@ export const AI1PipelineVisualizer: React.FC<AI1PipelineVisualizerProps> = ({
 
             {/* Title & Subtitle */}
             <h4 className="text-sm font-bold text-slate-900 dark:text-white mt-2.5">
-              Transfer
+              {customConfig.node1Title}
             </h4>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
-              amount, receiver, moment
+              {customConfig.node1Subtitle}
             </p>
 
             {evaluation && (
@@ -169,34 +235,24 @@ export const AI1PipelineVisualizer: React.FC<AI1PipelineVisualizerProps> = ({
             )}
           </div>
 
-          {/* Node 2: AI-1 Score (LightGBM + calibration) */}
+          {/* Node 2: AI Risk Engine (LightGBM + Calibration) */}
           <div
             onClick={() => interactiveNodeClick && setSelectedNode(selectedNode === 'AI1' ? null : 'AI1')}
             className={`flex flex-col items-center text-center cursor-pointer transition-all duration-200 group ${
               selectedNode === 'AI1' ? 'scale-105' : 'hover:scale-[1.02]'
             }`}
           >
-            {/* Node Card with Green Ambient Glow */}
+            {/* Node Card with Ambient Glow */}
             <div className={`w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-white dark:bg-slate-900 border-2 ${ai1GlowClass} flex items-center justify-center text-emerald-600 dark:text-emerald-400 transition-all relative`}>
-              <Brain className="w-8 h-8 stroke-[1.75]" />
-              {evaluation && (
-                <span className={`absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full text-[9.5px] font-mono font-black shadow-xs ${
-                  ai1Score >= 70 ? 'bg-rose-600 text-white' : ai1Score >= 40 ? 'bg-amber-500 text-slate-950' : 'bg-emerald-600 text-white'
-                }`}>
-                  {ai1Score}/100
-                </span>
-              )}
+              {renderNode2Icon(customConfig.node2Icon)}
             </div>
 
             {/* Title & Subtitle */}
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white mt-2.5 flex items-center gap-1.5">
-              <span>ML Score</span>
-              {ai1Score >= 60 && (
-                <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping inline-block" />
-              )}
+            <h4 className="text-sm font-bold text-slate-900 dark:text-white mt-2.5">
+              <span>{customConfig.node2Title}</span>
             </h4>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5 whitespace-nowrap">
-              LightGBM + calibration
+              {customConfig.node2Subtitle}
             </p>
 
             {evaluation && (
@@ -206,7 +262,7 @@ export const AI1PipelineVisualizer: React.FC<AI1PipelineVisualizerProps> = ({
             )}
           </div>
 
-          {/* Node 3: Doubt check (conformal + novelty) */}
+          {/* Node 3: Uncertainty & Doubt Check (Conformal + Novelty) */}
           <div
             onClick={() => interactiveNodeClick && setSelectedNode(selectedNode === 'DOUBT' ? null : 'DOUBT')}
             className={`flex flex-col items-center text-center cursor-pointer transition-all duration-200 group ${
@@ -215,7 +271,7 @@ export const AI1PipelineVisualizer: React.FC<AI1PipelineVisualizerProps> = ({
           >
             {/* Node Card */}
             <div className={`w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-white dark:bg-slate-900 border-2 ${doubtGlowClass} flex items-center justify-center text-slate-900 dark:text-white group-hover:border-slate-400 transition-all relative`}>
-              <Sparkles className="w-8 h-8 stroke-[1.75] text-amber-500" />
+              {renderNode3Icon(customConfig.node3Icon)}
               {isDoubt && (
                 <span className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full text-[9px] font-mono font-black bg-amber-500 text-slate-950 shadow-xs">
                   DOUBT
@@ -225,10 +281,10 @@ export const AI1PipelineVisualizer: React.FC<AI1PipelineVisualizerProps> = ({
 
             {/* Title & Subtitle */}
             <h4 className="text-sm font-bold text-slate-900 dark:text-white mt-2.5">
-              Doubt check
+              {customConfig.node3Title}
             </h4>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
-              conformal + novelty
+              {customConfig.node3Subtitle}
             </p>
 
             {evaluation && (
@@ -250,11 +306,15 @@ export const AI1PipelineVisualizer: React.FC<AI1PipelineVisualizerProps> = ({
           {selectedNode === 'TRANSFER' && (
             <div>
               <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
-                <Smartphone className="w-4 h-4 text-[#0054A6]" />
-                <span>Node 1: Transfer Feature Vector (Amount · Receiver · Moment)</span>
+                <span className="text-[#0054A6] dark:text-sky-400">
+                  {renderNode1Icon(customConfig.node1Icon)}
+                </span>
+                <span>Stage 1: {customConfig.node1Title} ({customConfig.node1Subtitle})</span>
               </div>
               <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed text-[11px]">
-                Extracts the primary transaction dimensions: monetary amount (log-scale and deviation ratio relative to 90-day moving average), recipient graph reputation (known frequent peer vs unverified new wallet vs mule ring centrality), and temporal moment (Bangladesh Standard Time, nocturnal 00:00–05:00 window, and 10-minute velocity bursts).
+                {lang === 'BN'
+                  ? 'লেনদেনের মূল মাত্রাগুলি প্রস্তুত করে: টাকার পরিমাণ (৯০ দিনের গড়ের সাথে বিচ্যুতি), প্রাপকের পরিচিতি ও গ্রাফের বিশ্বাসযোগ্যতা এবং লেনদেনের সময় (বাংলাদেশ সময়, রাতের বিশেষ ঝুঁকি ও ১০ মিনিটের দ্রুত গতি)।'
+                  : 'Extracts the primary transaction dimensions: monetary amount (log-scale and deviation ratio relative to 90-day moving average), recipient graph reputation (known frequent peer vs unverified new wallet vs mule ring centrality), and temporal moment (Bangladesh Standard Time, nocturnal 00:00–05:00 window, and 10-minute velocity bursts).'}
               </p>
             </div>
           )}
@@ -262,11 +322,15 @@ export const AI1PipelineVisualizer: React.FC<AI1PipelineVisualizerProps> = ({
           {selectedNode === 'AI1' && (
             <div>
               <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
-                <Brain className="w-4 h-4 text-emerald-600" />
-                <span>Node 2: Calibrated ML Model (LightGBM + Empirical Calibration)</span>
+                <span className="text-emerald-600 dark:text-emerald-400">
+                  {renderNode2Icon(customConfig.node2Icon)}
+                </span>
+                <span>Stage 2: {customConfig.node2Title} ({customConfig.node2Subtitle})</span>
               </div>
               <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed text-[11px]">
-                Supervised LightGBM gradient boosted tree ensemble trained on high-imbalance tabular MFS transaction features (<span className="font-mono text-emerald-600">scale_pos_weight=20.68</span>). Raw tree decision logits are calibrated via Isotonic Regression & Platt Scaling to guarantee empirical reliability: a calibrated ML score of 80 truly corresponds to an 80% empirical fraud probability.
+                {lang === 'BN'
+                  ? 'উচ্চ-ভারসাম্যহীন এমএফএস লেনদেনের তথ্যের ওপর প্রশিক্ষিত LightGBM এন্সেম্বল মডেল। কাঁচা ট্রি লজিটের সিদ্ধান্ত আইসোটোনিক রিগ্রেশন ও প্ল্যাট স্কেলিং দিয়ে ক্যালিব্রেট করা হয়, যাতে ৮০ স্কোর আসলে সত্যই ৮০% জালিয়াতির সম্ভাবনা নির্দেশ করে।'
+                  : 'Supervised LightGBM gradient boosted tree ensemble trained on high-imbalance tabular MFS transaction features (scale_pos_weight=20.68). Raw tree decision logits are calibrated via Isotonic Regression & Platt Scaling to guarantee empirical reliability: a calibrated ML score of 80 truly corresponds to an 80% empirical fraud probability.'}
               </p>
             </div>
           )}
@@ -274,76 +338,21 @@ export const AI1PipelineVisualizer: React.FC<AI1PipelineVisualizerProps> = ({
           {selectedNode === 'DOUBT' && (
             <div>
               <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
-                <Sparkles className="w-4 h-4 text-amber-500" />
-                <span>Node 3: Doubt Check (Inductive Conformal Prediction + Novelty OOD)</span>
+                <span className="text-amber-500">
+                  {renderNode3Icon(customConfig.node3Icon)}
+                </span>
+                <span>Stage 3: {customConfig.node3Title} ({customConfig.node3Subtitle})</span>
               </div>
               <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed text-[11px]">
-                Quantifies epistemic model uncertainty. <strong>Conformal Prediction</strong> outputs distribution-free prediction sets with a 95% coverage guarantee (<span className="font-mono">1 - α = 0.95</span>). If the prediction set contains both classes <span className="font-mono text-amber-600 font-bold">&#123;Legitimate, Scam&#125;</span>, the model flags statistical doubt. Concurrently, <strong>Novelty Detection</strong> calculates Mahalanobis distance from typical behavioral profiles to intercept zero-day scam variants.
+                {lang === 'BN'
+                  ? 'মডেলের অনিশ্চয়তা পরীক্ষা। কনফর্মাল প্রেডিকশন ৯৫% কভারেজ গ্যারান্টি প্রদান করে। যদি প্রেডিকশন সেটে বৈধ ও স্ক্যাম দুটোই থাকে, মডেল ডাউট ফ্ল্যাগ দেয়। পাশাপাশি নোভেলটি ডিটেকশন অপরিচিত নতুন আক্রমণ অবিলম্বে প্রতিহত করে।'
+                  : 'Quantifies epistemic model uncertainty. Conformal Prediction outputs distribution-free prediction sets with a 95% coverage guarantee (1 - α = 0.95). If the prediction set contains both classes {Legitimate, Scam}, the model flags statistical doubt. Concurrently, Novelty Detection calculates Mahalanobis distance from typical behavioral profiles to intercept zero-day scam variants.'}
               </p>
             </div>
           )}
         </div>
       )}
 
-      {/* Expanded Telemetry Section */}
-      {expandedDetails && evaluation && (
-        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-          {/* Transfer Telemetry */}
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1 font-mono text-[11px]">
-            <span className="font-bold text-slate-700 dark:text-slate-300 block font-sans">Transfer Metrics</span>
-            <div className="flex justify-between text-slate-500">
-              <span>Amount Ratio:</span>
-              <strong className="text-slate-800 dark:text-slate-200">{evaluation.transferSummary.amountRatio}×</strong>
-            </div>
-            <div className="flex justify-between text-slate-500">
-              <span>Receiver Class:</span>
-              <strong className="text-slate-800 dark:text-slate-200">{evaluation.transferSummary.receiverClassification}</strong>
-            </div>
-            <div className="flex justify-between text-slate-500">
-              <span>Moment:</span>
-              <span className="text-slate-800 dark:text-slate-200 text-[10px]">{evaluation.transferSummary.momentBST}</span>
-            </div>
-          </div>
-
-          {/* ML Score Telemetry */}
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1 font-mono text-[11px]">
-            <span className="font-bold text-slate-700 dark:text-slate-300 block font-sans">Calibrated ML Score</span>
-            <div className="flex justify-between text-slate-500">
-              <span>Raw Tree Logits:</span>
-              <span className="text-slate-800 dark:text-slate-200">{evaluation.ai1Score.rawModelScore}/100</span>
-            </div>
-            <div className="flex justify-between text-slate-500">
-              <span>Calibrated Score:</span>
-              <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{evaluation.ai1Score.calibratedScore}/100</strong>
-            </div>
-            <div className="flex justify-between text-slate-500">
-              <span>Method:</span>
-              <span className="text-slate-600 dark:text-slate-400 text-[10px]">Isotonic + Platt</span>
-            </div>
-          </div>
-
-          {/* Doubt Check Telemetry */}
-          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1 font-mono text-[11px]">
-            <span className="font-bold text-slate-700 dark:text-slate-300 block font-sans">Doubt Check Result</span>
-            <div className="flex justify-between text-slate-500">
-              <span>Conformal Set:</span>
-              <strong className={isDoubt ? 'text-amber-600' : 'text-emerald-600'}>
-                &#123;{evaluation.doubtCheck.conformal.predictionSet.join(', ')}&#125;
-              </strong>
-            </div>
-            <div className="flex justify-between text-slate-500">
-              <span>Novelty Score:</span>
-              <span className="text-slate-800 dark:text-slate-200">{(evaluation.doubtCheck.novelty.noveltyScore * 100).toFixed(0)}%</span>
-            </div>
-            <div className="flex justify-between text-slate-500">
-              <span>Status:</span>
-              <strong className={isDoubt ? 'text-amber-600 font-bold' : 'text-slate-700'}>
-                {evaluation.doubtCheck.overallDoubt}
-              </strong>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

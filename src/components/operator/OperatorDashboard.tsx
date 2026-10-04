@@ -17,6 +17,7 @@ import { LiveWebSocketTicker } from './LiveWebSocketTicker';
 import { ComplianceReportModal } from './ComplianceReportModal';
 import { RiskDistributionDonutChart } from './RiskDistributionDonutChart';
 import { PolicyWeightsActionEngine } from './PolicyWeightsActionEngine';
+import { RegionalRiskHeatmapGrid } from './RegionalRiskHeatmapGrid';
 import {
   ShieldCheck,
   AlertTriangle,
@@ -35,6 +36,7 @@ import {
   ArrowUpRight,
   Download,
   Printer,
+  Flame,
 } from 'lucide-react';
 
 interface OperatorDashboardProps {
@@ -200,7 +202,9 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         txn.id.toLowerCase().includes(q) ||
         txn.senderName.toLowerCase().includes(q) ||
         txn.senderWallet.includes(q) ||
-        txn.receiverWallet.includes(q)
+        txn.receiverWallet.includes(q) ||
+        txn.senderLocation.toLowerCase().includes(q) ||
+        txn.receiverLocation.toLowerCase().includes(q)
       );
     }
     return true;
@@ -408,9 +412,10 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
           { id: 'MULEVISION', label: '2. MuleVision (Graph)', icon: Network },
           { id: 'GEOSPATIAL', label: '3. Geospatial Intelligence', icon: Globe },
           { id: 'RADAR', label: '4. Early-Warning Radar', icon: Radar },
-          { id: 'RESILIENCE', label: '5. Disaster Resilience Mode', icon: CloudLightning },
-          { id: 'POLICY', label: '6. Policy Weights & Action Engine', icon: Sliders },
-          { id: 'AUDIT', label: '7. Audit Logs & Compliance', icon: FileCheck2 },
+          { id: 'REGIONAL_HEATMAP', label: '5. Regional Heatmap Grid', icon: Flame },
+          { id: 'RESILIENCE', label: '6. Disaster Resilience Mode', icon: CloudLightning },
+          { id: 'POLICY', label: '7. Policy Weights & Action Engine', icon: Sliders },
+          { id: 'AUDIT', label: '8. Audit Logs & Compliance', icon: FileCheck2 },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -460,7 +465,32 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#0F172A] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-slide-up stagger-2">
+          {/* New Section: Regional Risk Levels & Fraud Cluster Grid (Map-like D3 Grid / Recharts Heatmap) */}
+          <div id="regional-risk-heatmap-section" className="animate-slide-up stagger-2">
+            <RegionalRiskHeatmapGrid
+              regionalMetrics={regionalMetrics}
+              transactions={liveTransactions}
+              agents={agents}
+              onSelectRegion={(division) => {
+                setSearchQuery(division);
+              }}
+              onActivateMonitoring={onActivateMonitoring}
+              onDispatchLiquidity={onDispatchLiquidity}
+              onOpenInvestigation={onOpenInvestigation}
+              onFilterTableToRegion={(regionName) => {
+                setSearchQuery(regionName);
+                const tableElem = document.getElementById('monitored-transactions-table');
+                tableElem?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              onNavigateTab={(tabId) => {
+                setActiveTab(tabId);
+                onTabChange?.(tabId);
+              }}
+              lang={lang}
+            />
+          </div>
+
+          <div id="monitored-transactions-table" className="bg-white dark:bg-[#0F172A] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-slide-up stagger-3">
             {/* Table Filters & Search */}
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/60">
               <div className="flex items-center gap-3">
@@ -616,7 +646,32 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         />
       )}
 
-      {/* Tab 5: Disaster Resilience Mode */}
+      {/* Tab 5: Regional Risk Heatmap & Fraud Cluster Grid */}
+      {activeTab === 'REGIONAL_HEATMAP' && (
+        <RegionalRiskHeatmapGrid
+          regionalMetrics={regionalMetrics}
+          transactions={liveTransactions}
+          agents={agents}
+          onSelectRegion={(division) => setSearchQuery(division)}
+          onActivateMonitoring={onActivateMonitoring}
+          onDispatchLiquidity={onDispatchLiquidity}
+          onOpenInvestigation={onOpenInvestigation}
+          onFilterTableToRegion={(regionName) => {
+            setSearchQuery(regionName);
+            setActiveTab('OVERVIEW');
+            setTimeout(() => {
+              document.getElementById('monitored-transactions-table')?.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          }}
+          onNavigateTab={(tabId) => {
+            setActiveTab(tabId);
+            onTabChange?.(tabId);
+          }}
+          lang={lang}
+        />
+      )}
+
+      {/* Tab 6: Disaster Resilience Mode */}
       {activeTab === 'RESILIENCE' && (
         <DisasterResilienceSimulator agents={agents} onDispatchLiquidity={onDispatchLiquidity} />
       )}

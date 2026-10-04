@@ -388,7 +388,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                 <span className="font-bold text-slate-900 block">Core Architecture</span>
-                <span className="text-slate-600 text-[11px] block mt-0.5">AI-1 Engine: LightGBM + Calibration + Conformal Doubt Check & Novelty · GAT Graph Defense</span>
+                <span className="text-slate-600 text-[11px] block mt-0.5">AI Risk Engine: LightGBM + Calibration + Conformal Doubt Check & Novelty · GAT Graph Defense</span>
               </div>
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                 <span className="font-bold text-slate-900 block">Compliance & Explainability</span>

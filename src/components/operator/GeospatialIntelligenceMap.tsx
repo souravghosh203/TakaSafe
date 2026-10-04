@@ -1778,7 +1778,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                           stroke="#EF4444"
                           strokeWidth="1.4"
                           opacity="0.65"
-                          className="animate-ping"
+                          className="animate-pulse"
                         />
                       )}
 
@@ -1853,7 +1853,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                             stroke="#EF4444"
                             strokeWidth="1.5"
                             opacity="0.7"
-                            className="animate-ping"
+                            className="animate-pulse"
                           />
                         )}
                         <rect
@@ -1950,7 +1950,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                             stroke="#EF4444"
                             strokeWidth="1.5"
                             opacity="0.6"
-                            className="animate-ping"
+                            className="animate-pulse"
                             style={{ animationDuration: '2s' }}
                           />
                           <circle
@@ -1959,7 +1959,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                             stroke="#F59E0B"
                             strokeWidth="1"
                             opacity="0.3"
-                            className="animate-ping"
+                            className="animate-pulse"
                             style={{ animationDuration: '3s' }}
                           />
                         </>
