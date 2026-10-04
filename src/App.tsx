@@ -24,7 +24,8 @@ import {
   INITIAL_AUDIT_LOGS,
 } from './data/mockData';
 import { Transaction, MuleCluster, AgentLiquidityNode, RegionalRiskMetric, StorylineStep, AuthUser, CustomerBaseline } from './types';
-import { ShieldCheck, Info } from 'lucide-react';
+import { ShieldCheck, Info, Wifi, WifiOff, RefreshCw, RotateCw } from 'lucide-react';
+import { useRealtimeSync } from './hooks/useRealtimeSync';
 
 // Bump the key so the old prototype's automatically seeded admin session is
 // discarded after upgrade. New sessions are saved only after explicit sign-in.
@@ -151,6 +152,10 @@ export default function App() {
   const [agents, setAgents] = useState<AgentLiquidityNode[]>(MOCK_AGENTS_BARISHAL);
   const [regionalMetrics, setRegionalMetrics] = useState<RegionalRiskMetric[]>(REGIONAL_RADAR_METRICS);
   const [auditLogs, setAuditLogs] = useState<any[]>(INITIAL_AUDIT_LOGS);
+  const realtime = useRealtimeSync((snapshot) => {
+    setTransactions(snapshot.transactions);
+    setAuditLogs(snapshot.auditLogs);
+  });
   const [selectedTxnForInvestigation, setSelectedTxnForInvestigation] = useState<Transaction | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [requestedWalletService, setRequestedWalletService] = useState<string | null>(null);
@@ -173,21 +178,6 @@ export default function App() {
     }).catch(() => undefined);
   };
   const [activeModal, setActiveModal] = useState<string | null>(null);
-
-  // Fetch initial audit logs from server if available (e.g. local/Express dev), else fallback cleanly
-  useEffect(() => {
-    fetch('/api/audit-logs')
-      .then((res) => {
-        if (!res.ok) throw new Error('Static host');
-        return res.json();
-      })
-      .then((data) => {
-        if (data && data.logs && data.logs.length > 0) setAuditLogs(data.logs);
-      })
-      .catch(() => {
-        // Safe fallback for static deployments like GitHub Pages
-      });
-  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -433,6 +423,28 @@ export default function App() {
       {isTransitioning && (
         <div key={`${activeView}-${operatorTab}`} className="page-progress-bar" />
       )}
+
+      <div className="flex items-center justify-end gap-2 px-3 py-1.5 text-[11px]" role="status" aria-live="polite">
+        <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 font-semibold ${
+          realtime.status === 'connected' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' :
+          realtime.status === 'polling' ? 'border-blue-200 bg-blue-50 text-blue-800' :
+          realtime.status === 'offline' ? 'border-rose-200 bg-rose-50 text-rose-800' :
+          'border-amber-200 bg-amber-50 text-amber-900'
+        }`}>
+          {realtime.status === 'offline' ? <WifiOff className="h-3.5 w-3.5" /> : <Wifi className="h-3.5 w-3.5" />}
+          {realtime.status === 'connected' ? 'Live connection' :
+            realtime.status === 'polling' ? 'Live stream unavailable · polling server' :
+            realtime.status === 'offline' ? 'Server unavailable · showing last data' :
+            realtime.status === 'connecting' ? 'Connecting to server…' : 'Reconnecting to server…'}
+        </span>
+        {realtime.lastSyncedAt && <span className="hidden text-slate-500 sm:inline">Updated {new Date(realtime.lastSyncedAt).toLocaleTimeString()}</span>}
+        <button type="button" onClick={() => void realtime.refreshFromServer()} disabled={realtime.isRefreshing} className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">
+          <RefreshCw className={`h-3.5 w-3.5 ${realtime.isRefreshing ? 'animate-spin' : ''}`} /> Refresh
+        </button>
+        {realtime.status !== 'connected' && <button type="button" onClick={realtime.reconnect} className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2.5 py-1 font-semibold text-slate-700 hover:bg-slate-50">
+          <RotateCw className="h-3.5 w-3.5" /> Reconnect
+        </button>}
+      </div>
 
       {/* Upay Header with Logo, Navigation, Mode Switcher & Accreditation */}
       <UpayHeader
