@@ -3,6 +3,9 @@ import { CustomerBaseline, LinkedWallet } from '../../types';
 import { MOCK_LINKED_WALLETS } from '../../data/mockData';
 import { QRCodeScannerModal } from './QRCodeScannerModal';
 import { TakaSafeSovereignCard } from './TakaSafeSovereignCard';
+import { AI1PipelineVisualizer } from './AI1PipelineVisualizer';
+import { AI1NotebookModal } from '../common/AI1NotebookModal';
+import { evaluateAI1AndDoubtCheck, AI1EvaluationResult } from '../../services/ai1ScoringEngine';
 import {
   Send,
   ArrowUpRight,
@@ -28,6 +31,8 @@ import {
   Shield,
   Zap,
   X,
+  FileCode2,
+  Brain,
 } from 'lucide-react';
 
 interface CustomerAppViewProps {
@@ -121,6 +126,8 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
   const [note, setNote] = useState<string>('');
   const [showScamModal, setShowScamModal] = useState<boolean>(false);
   const [scamDecision, setScamDecision] = useState<string | null>(null);
+  const [isNotebookModalOpen, setIsNotebookModalOpen] = useState<boolean>(false);
+  const [currentAI1Evaluation, setCurrentAI1Evaluation] = useState<AI1EvaluationResult | null>(null);
   const [normalSuccess, setNormalSuccess] = useState<boolean>(false);
   const [balanceError, setBalanceError] = useState<string | null>(null);
   const [riskReasons, setRiskReasons] = useState<string[]>([]);
@@ -262,6 +269,30 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
   const usualHours = observedHours.length >= 3
     ? `${String(observedHours[0]).padStart(2, '0')}:00 - ${String((observedHours[observedHours.length - 1] + 1) % 24).padStart(2, '0')}:00`
     : customer.usualHours;
+
+  const liveAI1Evaluation = React.useMemo(() => {
+    const num = Number(amount) || Math.round(observedAverage);
+    const normalizedRecipient = recipient.trim().replace(/\D/g, '');
+    const recipientIsKnown = knownRecipients.has(normalizedRecipient);
+    const isKnownMule = recipient.trim().includes('510294');
+    const currentHour = new Date().getHours();
+    const [usualStart = 9, usualEnd = 21] = usualHours.split('-').map((time) => Number(time.trim().split(':')[0]));
+    const outsideUsualHours = currentHour < usualStart || currentHour >= usualEnd;
+
+    return evaluateAI1AndDoubtCheck({
+      amount: num,
+      observedAverage,
+      recipient: recipient || '01XXXXXXXXX',
+      recipientIsKnown,
+      isKnownMule,
+      momentHourBST: currentHour,
+      outsideUsualHours,
+      recentAttemptCount10m: 0,
+      isNewDevice: false,
+      splitPaymentDetected: false,
+      note,
+    });
+  }, [amount, recipient, observedAverage, knownRecipients, usualHours, note]);
 
   const recordTransfer = (
     transferAmount: number,
@@ -476,15 +507,43 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
       score += recipientNetworkRisk.score;
       reasons.push(...recipientNetworkRisk.reasons);
     }
+
+    // AI-1 Engine evaluation (LightGBM + Calibration + Conformal Doubt Check)
+    const evalResult = evaluateAI1AndDoubtCheck({
+      amount: num,
+      observedAverage,
+      recipient,
+      recipientIsKnown,
+      isKnownMule,
+      momentHourBST: currentHour,
+      outsideUsualHours,
+      recentAttemptCount10m: recentAttemptCount,
+      isNewDevice: newDevice,
+      splitPaymentDetected: splitPaymentPattern,
+      note,
+    });
+    setCurrentAI1Evaluation(evalResult);
+
+    // Fuse scores: incorporate calibrated AI-1 probability
+    const finalScore = Math.min(100, Math.max(score, evalResult.ai1Score.calibratedScore));
+
+    if (evalResult.doubtCheck.conformal.isDoubtFlagged) {
+      reasons.push(`Model Doubt Check: Conformal prediction set {${evalResult.doubtCheck.conformal.predictionSet.join(', ')}} indicates high statistical ambiguity.`);
+    }
+    if (evalResult.doubtCheck.novelty.isNovel) {
+      reasons.push(`Model Novelty Check: Transfer exhibits ${(evalResult.doubtCheck.novelty.noveltyScore * 100).toFixed(0)}% Out-of-Distribution deviance across Amount, Receiver & Moment.`);
+    }
+
     setIsScoring(false);
     setRiskReasons(reasons);
-    setRiskScore(Math.min(score, 100));
-    // A new recipient or a routine amount alone should not interrupt a transfer.
-    if (score >= 40) {
+    setRiskScore(finalScore);
+
+    // Trigger ScamShield if finalScore >= 40 or AI-1 doubt/risk policy flags it
+    if (finalScore >= 40 || evalResult.scamShieldTriggered) {
       setShowScamModal(true);
       onSimulateRiskyPayment();
     } else {
-      recordTransfer(num, recipient, score, 'COMPLETED');
+      recordTransfer(num, recipient, finalScore, 'COMPLETED');
       setNormalSuccess(true);
       setTimeout(() => setNormalSuccess(false), 4000);
     }
@@ -739,6 +798,14 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                     {balanceError}
                   </div>
                 )}
+
+                {/* AI-1 Real-time Inference Pipeline Visualizer (Transfer -> AI-1 Score -> Doubt check) */}
+                <div className="mt-4">
+                  <AI1PipelineVisualizer
+                    evaluation={liveAI1Evaluation}
+                    onOpenNotebookModal={() => setIsNotebookModalOpen(true)}
+                  />
+                </div>
 
                 <form onSubmit={handleSendPayment} className="space-y-4 mt-4">
                   <div>
@@ -1084,7 +1151,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
           }}
         >
           <div
-            className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border-2 border-rose-300 space-y-5 modal-panel-enter"
+            className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border-2 border-rose-300 space-y-5 modal-panel-enter max-h-[92vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with Title and Cross Button */}
@@ -1121,6 +1188,13 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
             <p className="text-xs text-slate-700 leading-relaxed">
               Hold on, <strong>{customer.name}</strong>. This transfer has signals that differ from your usual activity. Review them before continuing.
             </p>
+
+            {/* AI-1 Model Architecture Pipeline Visualizer in ScamShield */}
+            <AI1PipelineVisualizer
+              evaluation={currentAI1Evaluation || liveAI1Evaluation}
+              onOpenNotebookModal={() => setIsNotebookModalOpen(true)}
+              compact
+            />
 
             {/* Plain Language Reasons */}
             <div className="bg-rose-50/80 rounded-2xl p-4 border border-rose-200 space-y-2.5 text-xs">
@@ -1217,6 +1291,13 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* AI-1 Model Architecture & Python Notebook Modal */}
+      <AI1NotebookModal
+        isOpen={isNotebookModalOpen}
+        onClose={() => setIsNotebookModalOpen(false)}
+        lang={lang}
+      />
     </div>
   );
 };

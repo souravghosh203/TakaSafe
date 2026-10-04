@@ -556,6 +556,19 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
   }
 });
 
+// API endpoint to download or inspect TakaSafe AI-1 Jupyter Notebook (.ipynb)
+app.get('/api/notebook/ai1', async (_req: Request, res: Response) => {
+  try {
+    const notebookPath = path.resolve(process.cwd(), 'notebooks', 'TakaSafe_AI1_LightGBM_Conformal_DoubtCheck.ipynb');
+    const content = await fs.readFile(notebookPath, 'utf8');
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename="TakaSafe_AI1_LightGBM_Conformal_DoubtCheck.ipynb"');
+    res.send(content);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Setup Vite Middlewares in dev mode, or static file serving in production
 async function startServer() {
   const isProduction = process.env.NODE_ENV === 'production';

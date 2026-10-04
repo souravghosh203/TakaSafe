@@ -74,6 +74,15 @@ export const TAKASAFE_KNOWLEDGE_BASE: KnowledgeItem[] = [
 
   // 4. ML & XGBoost Models
   {
+    id: 'ai1_conformal_doubt_check',
+    category: 'ML_AI',
+    keywords: ['ai-1', 'ai1', 'lightgbm', 'conformal', 'calibration', 'doubt check', 'novelty', 'notebook', 'shabab', 'model architecture', 'লাইটজিবিএম'],
+    questionExamples: ['What is the AI-1 Score pipeline?', 'How does the Doubt Check work with Conformal Prediction?'],
+    answerEn: 'The AI-1 Engine (engineered by Model Architecture Lead Md. Sadman Al Islam Shabab) operates a 3-node tri-stage pipeline: 1) Transfer (amount, receiver, moment); 2) AI-1 Score (LightGBM gradient boosting with Isotonic & Platt probability calibration); 3) Doubt Check (Split Conformal Prediction guaranteeing 95% marginal coverage + Out-of-Distribution Novelty scoring). When model uncertainty is high or novelty flags zero-day fraud, ScamShield intercepts the transfer with a 24-hour cooling-off window. The full runnable Python Jupyter Notebook is available in the app under /api/notebook/ai1.',
+    answerBn: 'AI-1 ইঞ্জিন (মডেল আর্কিটেকচার লিড মোঃ সাদমান আল ইসলাম শাবাব কর্তৃক প্রণীত) ৩-স্তরের পাইপলাইনে কাজ করে: ১) ট্রান্সফার (টাকার পরিমাণ, প্রাপক, সময়/মুহূর্ত); ২) AI-1 স্কোর (আইসোটোনিক ও প্ল্যাট ক্যালিব্রেটেড LightGBM); ৩) ডাউট চেক (৯৫% কভারেজ গ্যারান্টিযুক্ত কনফর্মাল প্রেডিকশন এবং ওওডি নভেলটি অ্যানালাইসিস)। যখন মডেলে সন্দেহ বা অপরিচিত প্যাটার্ন দেখা দেয়, ScamShield ২৪ ঘণ্টার কুলিং-অফ সক্রিয় করে। পুরো পাইথন জুপিটার নোটবুকটি অ্যাপের ভেতরেই ডাউনলোড ও পরিদর্শনযোগ্য।',
+    suggestedAction: { label: 'Open Send Money ScamShield', view: 'CUSTOMER' },
+  },
+  {
     id: 'ml_models',
     category: 'ML_AI',
     keywords: ['model', 'xgboost', 'isolation forest', 'algorithm', 'machine learning', 'ai', 'weights', 'formula', 'scale_pos_weight', 'মডেল', 'অ্যালগরিদম', 'এআই'],
