@@ -9,6 +9,19 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const eventClients = new Set<Response>();
+let eventSequence = 0;
+const recentEvents: Array<{ id: number; name: string; data: Record<string, unknown> }> = [];
+
+const publishServerEvent = (name: string, data: Record<string, unknown>) => {
+  const event = { id: ++eventSequence, name, data };
+  recentEvents.push(event);
+  if (recentEvents.length > 100) recentEvents.shift();
+  const frame = `id: ${event.id}\nevent: ${name}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const client of eventClients) {
+    try { client.write(frame); } catch { eventClients.delete(client); }
+  }
+};
 
 app.use(express.json());
 
@@ -119,6 +132,7 @@ app.post('/api/alert-feedback', async (req: Request, res: Response) => {
     const headers = ['timestamp', 'case_id', 'transaction_id', 'analyst', 'outcome', 'risk_score', 'notes'];
     const values = [new Date().toISOString(), caseId.trim(), transactionId.trim(), analyst.trim(), outcome, Number(riskScore), notes];
     await fs.appendFile(alertFeedbackCsv, `${needsHeader ? `${headers.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`, 'utf8');
+    publishServerEvent('state-change', { kind: 'alert-feedback', caseId: caseId.trim() });
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -236,6 +250,7 @@ app.post('/api/customer-history/:wallet', async (req: Request, res: Response) =>
     ];
     const content = `${needsHeader ? `${customerTransactionHeaders.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`;
     await fs.appendFile(customerTransactionsCsv, content, 'utf8');
+    publishServerEvent('state-change', { kind: 'customer-transaction', userId: wallet, timestamp: date.toISOString() });
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -313,6 +328,32 @@ const auditLogs: AuditLogEntry[] = [
   },
 ];
 
+// One-way event channel for browsers. EventSource reconnects automatically and
+// Last-Event-ID lets a briefly disconnected client catch up from the replay buffer.
+app.get('/api/events', (req: Request, res: Response) => {
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  res.flushHeaders();
+  res.write(`event: ready\ndata: ${JSON.stringify({ timestamp: new Date().toISOString() })}\n\n`);
+
+  const lastEventId = Number(req.header('Last-Event-ID')) || 0;
+  for (const event of recentEvents) {
+    if (event.id > lastEventId) {
+      res.write(`id: ${event.id}\nevent: ${event.name}\ndata: ${JSON.stringify(event.data)}\n\n`);
+    }
+  }
+  eventClients.add(res);
+  const heartbeat = setInterval(() => res.write(': keep-alive\n\n'), 20000);
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    eventClients.delete(res);
+  });
+});
+
 // Health Check
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({
@@ -351,6 +392,7 @@ app.post('/api/audit-action', (req: Request, res: Response) => {
     };
 
     auditLogs.unshift(newEntry);
+    publishServerEvent('state-change', { kind: 'audit-action', entryId: newEntry.id });
     res.json({ success: true, entry: newEntry, totalLogs: auditLogs.length });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
