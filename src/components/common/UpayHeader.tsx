@@ -108,9 +108,9 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
   const OPERATOR_MODULES = [
     { id: 'OVERVIEW', label: '1. Transaction Guardian', icon: ShieldCheck, badge: criticalAlertCount },
     { id: 'MULEVISION', label: '2. MuleVision (Graph)', icon: Network },
-    { id: 'RESILIENCE', label: '3. Disaster Resilience', icon: CloudLightning },
+    { id: 'GEOSPATIAL', label: '3. Geospatial Intelligence', icon: Globe },
     { id: 'RADAR', label: '4. Early-Warning Radar', icon: Radar },
-    { id: 'GEOSPATIAL', label: '5. Geospatial Intelligence', icon: Globe },
+    { id: 'RESILIENCE', label: '5. Disaster Resilience', icon: CloudLightning },
     { id: 'POLICY', label: '6. Policy Weights', icon: Sliders },
     { id: 'AUDIT', label: '7. Audit Logs', icon: FileCheck2 },
   ];

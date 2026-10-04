@@ -406,9 +406,9 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         {[
           { id: 'OVERVIEW', label: '1. Transaction Guardian', icon: ShieldCheck, badge: criticalCount },
           { id: 'MULEVISION', label: '2. MuleVision (Graph)', icon: Network },
-          { id: 'RESILIENCE', label: '3. Disaster Resilience Mode', icon: CloudLightning },
+          { id: 'GEOSPATIAL', label: '3. Geospatial Intelligence', icon: Globe },
           { id: 'RADAR', label: '4. Early-Warning Radar', icon: Radar },
-          { id: 'GEOSPATIAL', label: '5. Geospatial Intelligence', icon: Globe },
+          { id: 'RESILIENCE', label: '5. Disaster Resilience Mode', icon: CloudLightning },
           { id: 'POLICY', label: '6. Policy Weights & Action Engine', icon: Sliders },
           { id: 'AUDIT', label: '7. Audit Logs & Compliance', icon: FileCheck2 },
         ].map((tab) => {
@@ -593,17 +593,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         <MuleVisionGraph cluster={muleCluster} onFreezeWallet={onFreezeWallet} />
       )}
 
-      {/* Tab 3: Disaster Resilience Mode */}
-      {activeTab === 'RESILIENCE' && (
-        <DisasterResilienceSimulator agents={agents} onDispatchLiquidity={onDispatchLiquidity} />
-      )}
-
-      {/* Tab 4: Early-Warning Radar */}
-      {activeTab === 'RADAR' && (
-        <EarlyWarningRadar metrics={regionalMetrics} onActivateMonitoring={onActivateMonitoring} />
-      )}
-
-      {/* Tab 5: Geospatial Intelligence (D3 Geographic Heatmap) */}
+      {/* Tab 3: Geospatial Intelligence (D3 Geographic Heatmap) */}
       {activeTab === 'GEOSPATIAL' && (
         <GeospatialIntelligenceMap
           transactions={liveTransactions}
@@ -614,6 +604,16 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
           onOpenInvestigation={onOpenInvestigation}
           lang={lang}
         />
+      )}
+
+      {/* Tab 4: Early-Warning Radar */}
+      {activeTab === 'RADAR' && (
+        <EarlyWarningRadar metrics={regionalMetrics} onActivateMonitoring={onActivateMonitoring} />
+      )}
+
+      {/* Tab 5: Disaster Resilience Mode */}
+      {activeTab === 'RESILIENCE' && (
+        <DisasterResilienceSimulator agents={agents} onDispatchLiquidity={onDispatchLiquidity} />
       )}
 
       {/* Tab 6: Policy Weights & Action Engine Mapping */}
