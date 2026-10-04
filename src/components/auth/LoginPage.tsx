@@ -211,7 +211,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
               {selectedRole === 'ADMIN' ? <ShieldCheck className="w-6 h-6" /> : <User className="w-6 h-6" />}
             </span>
             <div>
-              <div className="text-lg font-black tracking-tight">TakaSafe</div>
+              <div className="mfs-logo-text flex items-baseline tracking-tight select-none" aria-label="টাকা Safe">
+                <span className="mfs-brand-word mfs-brand-taka font-['Hind_Siliguri','Noto_Sans_Bengali',sans-serif] text-xl sm:text-2xl font-black text-[#FAB915] leading-none">
+                  টাকা
+                </span>
+                <span className="mfs-brand-word mfs-brand-safe font-['Times_New_Roman',Times,serif] text-[22px] sm:text-[25px] font-bold text-white leading-none ml-0.5 sm:ml-1 tracking-tight">
+                  Safe
+                </span>
+              </div>
               <div className="text-[10px] uppercase tracking-[.22em] text-white/65">Trust in every transaction</div>
             </div>
           </div>
