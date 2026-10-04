@@ -11,28 +11,6 @@ export default defineConfig(({ mode }) => {
   return {
     base,
     plugins: [react(), tailwindcss()],
-    build: {
-      rolldownOptions: {
-        output: {
-          codeSplitting: {
-            groups: [
-              {
-                name: 'vendor',
-                test: /node_modules[\\/]/,
-                minSize: 30_000,
-                maxSize: 300_000,
-              },
-              {
-                name: 'app',
-                test: /src[\\/]/,
-                minSize: 100_000,
-                maxSize: 300_000,
-              },
-            ],
-          },
-        },
-      },
-    },
     resolve: {
       alias: {
         '@': path.resolve(import.meta.dirname, '.'),
