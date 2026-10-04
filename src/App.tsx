@@ -14,6 +14,8 @@ import { InvestigationModal } from './components/investigation/InvestigationModa
 import { UpayInfoModal } from './components/common/UpayInfoModal';
 import { LoginPage, DEMO_ACCOUNTS, DEMO_PROFILES } from './components/auth/LoginPage';
 import { AccessRestrictedGate } from './components/common/AccessRestrictedGate';
+import { PublicDashboard } from './components/landing/PublicDashboard';
+import { RegistrationPage } from './components/registration/RegistrationPage';
 import {
   MOCK_TRANSACTIONS,
   CURRENT_CUSTOMER,
@@ -89,6 +91,8 @@ export default function App() {
     }
   });
   const [activeView, setActiveView] = useState<AppView>(initialSession?.view || 'OPERATOR');
+  const [showRegistration, setShowRegistration] = useState(false);
+  const [registrationEmail, setRegistrationEmail] = useState('');
   const [operatorTab, setOperatorTab] = useState<string>('OVERVIEW');
   const [lang, setLang] = useState<'EN' | 'BN'>('EN');
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() =>
@@ -153,6 +157,10 @@ export default function App() {
     }
     localStorage.setItem('takasafe_theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.lang = lang === 'BN' ? 'bn' : 'en';
+  }, [lang]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
@@ -482,6 +490,14 @@ export default function App() {
     setActiveView(view);
   };
 
+  const openRegistration = () => {
+    setCurrentUser(null);
+    localStorage.removeItem(APP_SESSION_KEY);
+    sessionStorage.removeItem(APP_SESSION_KEY);
+    setRegistrationEmail('');
+    setShowRegistration(true);
+  };
+
   const navigateToOperatorTab = (tab: string) => {
     if (!currentUser && tab !== 'OVERVIEW') {
       setActiveView('LOGIN');
@@ -498,8 +514,90 @@ export default function App() {
     action();
   };
 
+  // Keep a useful public dashboard as the opening screen; authentication is
+  // only needed when someone chooses to enter the private customer workspace.
+  if (!currentUser && showRegistration) {
+    return (
+      <>
+        <UpayHeader
+          activeView="OPERATOR"
+          setActiveView={(view) => {
+            setShowRegistration(false);
+            navigateToView(view);
+          }}
+          operatorTab={operatorTab}
+          setOperatorTab={setOperatorTab}
+          lang={lang}
+          setLang={setLang}
+          criticalAlertCount={criticalCount}
+          currentUser={null}
+          onOpenModal={(modal) => setActiveModal(modal)}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          darkHeader
+        />
+        <RegistrationPage
+          initialEmail={registrationEmail}
+          hideTopbar
+          lang={lang}
+          theme={theme}
+          onLogin={() => {
+            setShowRegistration(false);
+            setActiveView('LOGIN');
+          }}
+          onDashboard={() => {
+            setShowRegistration(false);
+            setCurrentUser(null);
+            localStorage.removeItem(APP_SESSION_KEY);
+            sessionStorage.removeItem(APP_SESSION_KEY);
+            setActiveView('OPERATOR');
+          }}
+          onOpenModal={(modal) => setActiveModal(modal)}
+        />
+        <UpayInfoModal
+          modalType={activeModal}
+          onClose={() => setActiveModal(null)}
+          lang={lang}
+          onNavigateView={(view) => {
+            navigateToView(view);
+            setShowRegistration(false);
+            setActiveModal(null);
+          }}
+        />
+      </>
+    );
+  }
+
+  if (!currentUser && activeView === 'OPERATOR') {
+    return (
+      <>
+        <PublicDashboard
+          onGetStarted={(email) => {
+            setRegistrationEmail(email || '');
+            setShowRegistration(true);
+          }}
+          onSignIn={() => setActiveView('LOGIN')}
+          onOpenModal={(modal) => setActiveModal(modal)}
+          lang={lang}
+          onToggleLanguage={() => setLang((current) => current === 'EN' ? 'BN' : 'EN')}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+        />
+        <UpayInfoModal
+          modalType={activeModal}
+          onClose={() => setActiveModal(null)}
+          lang={lang}
+          onNavigateView={(view) => {
+            navigateToView(view);
+            setActiveModal(null);
+          }}
+        />
+      </>
+    );
+  }
+
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-slate-100 dark:bg-[#090D16] text-slate-900 dark:text-slate-100 transition-colors duration-200 relative">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-slate-100 dark:bg-[#090D16] text-slate-900 dark:text-slate-100 transition-colors duration-200 relative" style={activeView === 'LOGIN' ? { background: theme === 'dark' ? 'linear-gradient(118deg, #071324 0%, #102a49 34%, #0c1d33 68%, #071324 100%)' : 'linear-gradient(118deg, #d5e7ff 0%, #edf5ff 26%, #fff 58%, #e1efff 100%)' } : undefined}>
       {/* Route & Page Change Transition Glow Bar */}
       {isTransitioning && (
         <div key={`${activeView}-${operatorTab}`} className="page-progress-bar" />
@@ -509,6 +607,7 @@ export default function App() {
       <UpayHeader
         activeView={activeView}
         setActiveView={navigateToView}
+        onRegister={openRegistration}
         operatorTab={operatorTab}
         setOperatorTab={navigateToOperatorTab}
         lang={lang}
@@ -569,6 +668,7 @@ export default function App() {
           {activeView === 'LOGIN' && (
             <LoginPage
               showBackButton={Boolean(currentUser)}
+              onRegister={openRegistration}
               onOpenInfo={(modal) => setActiveModal(modal)}
               onLogin={(user, remember) => {
                 setCurrentUser(loadSavedProfile(user));
@@ -590,6 +690,7 @@ export default function App() {
                 }
               }}
               lang={lang}
+              theme={theme}
             />
           )}
 

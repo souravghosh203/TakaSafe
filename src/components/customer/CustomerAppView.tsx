@@ -3,8 +3,8 @@ import { CustomerBaseline, LinkedWallet } from '../../types';
 import { MOCK_LINKED_WALLETS } from '../../data/mockData';
 import { QRCodeScannerModal } from './QRCodeScannerModal';
 import { TakaSafeSovereignCard } from './TakaSafeSovereignCard';
-import { AI1PipelineVisualizer } from './AI1PipelineVisualizer';
-import { AI1NotebookModal } from '../common/AI1NotebookModal';
+import { AI1PipelineVisualizer } from './ML1PipelineVisualizer';
+import { AI1NotebookModal } from '../common/ML1NotebookModal';
 import { evaluateAI1AndDoubtCheck, AI1EvaluationResult } from '../../services/ai1ScoringEngine';
 import {
   Send,
