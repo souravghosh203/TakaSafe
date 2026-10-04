@@ -119,6 +119,21 @@ export default function App() {
     }
   }, [activeView, currentUser, rememberSession]);
 
+  useEffect(() => {
+    if (!currentUser) return;
+    let cancelled = false;
+    fetch(`/api/customer-profiles/${encodeURIComponent(currentUser.id)}`, { cache: 'no-store' })
+      .then((response) => response.ok ? response.json() : null)
+      .then((result) => {
+        if (cancelled || !result?.profile) return;
+        const updatedUser = { ...currentUser, ...result.profile };
+        setCurrentUser((active) => active?.id === currentUser.id ? updatedUser : active);
+        try { localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${currentUser.id}`, JSON.stringify(result.profile)); } catch { /* Keep the server profile active in memory. */ }
+      })
+      .catch(() => { /* Browser storage remains available if the profile API is offline. */ });
+    return () => { cancelled = true; };
+  }, [currentUser?.id]);
+
   // Dark/Light Theme state with localStorage persistence
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
@@ -476,7 +491,12 @@ export default function App() {
           const updatedUser = { ...currentUser, ...profile };
           setCurrentUser(updatedUser);
           try { localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${currentUser.id}`, JSON.stringify(profile)); } catch { /* Keep edits active for this session if storage is full. */ }
-          showToast('Your profile has been updated.');
+          fetch(`/api/customer-profiles/${encodeURIComponent(currentUser.id)}`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile),
+          }).then((response) => {
+            if (!response.ok) throw new Error('Profile server rejected the update');
+            showToast('Profile updated and saved to the server.');
+          }).catch(() => showToast('Profile updated in this browser. Server storage is unavailable.'));
         }}
         theme={theme}
         onToggleTheme={toggleTheme}
