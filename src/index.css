@@ -522,7 +522,10 @@ html.dark {
   isolation: isolate;
   overflow: hidden;
   background:
-    radial-gradient(ellipse at 50% 42%, rgba(255,255,255,.94) 0%, rgba(248,250,252,.72) 48%, transparent 78%);
+    radial-gradient(ellipse at 50% 42%, rgba(255,255,255,.94) 0%, rgba(248,250,252,.72) 48%, transparent 78%),
+    radial-gradient(rgba(22, 78, 61, .075) .7px, transparent .7px);
+  background-size: auto, 22px 22px;
+  background-position: center, center;
 }
 
 .login-glow {
@@ -552,13 +555,13 @@ html.dark {
 
 .login-card {
   z-index: 0;
-  box-shadow: 0 32px 80px -42px rgba(15, 23, 42, .34), 0 12px 30px -22px rgba(15, 23, 42, .24);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 32px 80px -42px rgba(15, 23, 42, .34), 0 12px 30px -22px rgba(15, 23, 42, .24);
   animation: login-card-arrive 620ms cubic-bezier(.22, 1, .36, 1) both;
   transition: box-shadow 300ms ease, border-color 300ms ease, transform 300ms cubic-bezier(.22, 1, .36, 1);
 }
 
 .login-card:hover {
-  box-shadow: 0 38px 88px -44px rgba(15, 23, 42, .4), 0 14px 34px -22px rgba(15, 23, 42, .27);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 38px 88px -44px rgba(15, 23, 42, .4), 0 14px 34px -22px rgba(15, 23, 42, .27);
 }
 
 .login-role-option {
