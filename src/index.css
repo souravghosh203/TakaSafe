@@ -515,3 +515,131 @@ html.dark {
     line-height: 1.25;
   }
 }
+
+/* Login screen polish: quiet ambient light, crisp depth, and responsive feedback. */
+.login-scene {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(255,255,255,.94) 0%, rgba(248,250,252,.72) 48%, transparent 78%);
+}
+
+.login-glow {
+  position: absolute;
+  z-index: -1;
+  width: min(34rem, 90vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: .2;
+  pointer-events: none;
+  animation: login-drift 14s ease-in-out infinite alternate;
+}
+
+.login-glow-one {
+  top: 2%;
+  left: calc(50% - 30rem);
+  background: #5da7ed;
+}
+
+.login-glow-two {
+  right: calc(50% - 30rem);
+  bottom: -12%;
+  background: #41b58a;
+  animation-delay: -7s;
+}
+
+.login-card {
+  z-index: 0;
+  box-shadow: 0 32px 80px -42px rgba(15, 23, 42, .34), 0 12px 30px -22px rgba(15, 23, 42, .24);
+  animation: login-card-arrive 620ms cubic-bezier(.22, 1, .36, 1) both;
+  transition: box-shadow 300ms ease, border-color 300ms ease, transform 300ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.login-card:hover {
+  box-shadow: 0 38px 88px -44px rgba(15, 23, 42, .4), 0 14px 34px -22px rgba(15, 23, 42, .27);
+}
+
+.login-role-option {
+  transition: color 200ms ease, background-color 240ms ease, box-shadow 240ms ease, transform 240ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.login-role-option:hover { transform: translateY(-1px); }
+.login-role-option:active { transform: scale(.98); }
+
+.login-privileges { animation: login-panel-arrive 280ms cubic-bezier(.22, 1, .36, 1) both; }
+
+.login-input {
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.login-input:focus {
+  border-color: #164E3D;
+  box-shadow: 0 0 0 4px rgba(22, 78, 61, .12), 0 3px 10px -6px rgba(22, 78, 61, .35);
+}
+
+.login-submit {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 18px -9px rgba(0, 64, 128, .55);
+  transition: transform 180ms ease, box-shadow 220ms ease, filter 220ms ease;
+}
+
+.login-submit::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: linear-gradient(110deg, transparent 25%, rgba(255,255,255,.2) 48%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 650ms cubic-bezier(.22, 1, .36, 1);
+  pointer-events: none;
+}
+
+.login-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px -10px rgba(0, 64, 128, .58);
+  filter: saturate(1.08);
+}
+
+.login-submit:hover:not(:disabled)::after { transform: translateX(120%); }
+.login-submit:active:not(:disabled) { transform: translateY(0) scale(.99); }
+.login-submit:disabled { cursor: wait; opacity: .82; }
+
+.login-profile {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.login-profile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -11px rgba(15, 23, 42, .42);
+}
+
+.login-error { animation: login-error-arrive 260ms cubic-bezier(.22, 1, .36, 1) both; }
+
+@keyframes login-card-arrive {
+  from { opacity: 0; transform: translate3d(0, 14px, 0) scale(.99); filter: blur(5px); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+}
+
+@keyframes login-panel-arrive {
+  from { opacity: .55; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes login-error-arrive {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes login-drift {
+  from { transform: translate3d(-8px, -10px, 0) scale(.96); }
+  to { transform: translate3d(14px, 12px, 0) scale(1.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-glow, .login-card, .login-privileges, .login-error { animation: none !important; }
+  .login-card, .login-role-option, .login-input, .login-submit, .login-profile { transition: none !important; }
+  .login-card:hover, .login-role-option:hover, .login-role-option:active,
+  .login-submit:hover:not(:disabled), .login-submit:active:not(:disabled), .login-profile:hover { transform: none; }
+}
