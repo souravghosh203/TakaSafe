@@ -1,4 +1,4 @@
-import React, { useState, useId, useRef } from 'react';
+import React, { useState, useEffect, useId, useRef } from 'react';
 import { Transaction } from '../../types';
 import {
   ArrowRight,
