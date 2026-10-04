@@ -164,14 +164,14 @@
     <line x1="660" y1="220" x2="735" y2="220" stroke="#ccff00" stroke-width="1.5" filter="url(#glow)"/>
   </g>
 
-  <!-- RIGHT SECTION 2: Payment Card (Centurion / TakaSafe) -->
+  <!-- RIGHT SECTION 2: Payment Card (Centurion / upay) -->
   <g transform="translate(730, 60)" filter="url(#card-shadow)">
     <!-- Card Frame -->
     <rect x="0" y="0" width="260" height="150" rx="12" fill="#121212" stroke="#282828" stroke-width="1"/>
     
     <!-- Branding -->
     <text x="20" y="28" fill="#555555" font-size="9" font-weight="700" letter-spacing="1">SOVEREIGN CENTURION</text>
-    <text x="240" y="28" fill="#ffffff" font-size="11" font-weight="800" text-anchor="end">TakaSafe</text>
+    <text x="210" y="28" fill="#ffffff" font-size="11" font-weight="800" font-style="italic">upay</text>
 
     <!-- Metallic Chip -->
     <rect x="20" y="44" width="26" height="18" rx="3" fill="#222222" stroke="#3a3a3a" stroke-width="1"/>
@@ -249,6 +249,6 @@
     <line x1="0" y1="0" x2="1040" y2="0" stroke="#161616" stroke-width="1"/>
     <text x="0" y="22" fill="#444444" font-size="10" font-weight="600" letter-spacing="0.5">REGULATORY ASSURANCE:</text>
     <text x="140" y="22" fill="#666666" font-size="10" font-weight="500">BANGLADESH BANK PSD CIRCULAR 12 • ANTI-MONEY LAUNDERING ACT 2012 (SEC 19) • ZERO-COLD-START ML</text>
-    <text x="1040" y="22" fill="#ccff00" font-size="10" font-weight="700" text-anchor="end">DIU CPC x TakaSafe HACKATHON 2026</text>
+    <text x="1040" y="22" fill="#ccff00" font-size="10" font-weight="700" text-anchor="end">DIU CPC x UPAY HACKATHON 2026</text>
   </g>
 </svg>

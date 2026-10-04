@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { Transaction, CustomerBaseline, AuthUser } from '../../types';
-import { MoneyPathInvestigationGraph } from './MoneyPathInvestigationGraph';
 import {
   X,
   Sparkles,
   ShieldAlert,
-  ShieldCheck,
   CheckCircle,
   Clock,
   Smartphone,
@@ -16,7 +14,6 @@ import {
   Loader2,
   AlertTriangle,
   UserCheck,
-  Zap,
 } from 'lucide-react';
 
 interface InvestigationModalProps {
@@ -29,7 +26,6 @@ interface InvestigationModalProps {
     action: 'MONITOR' | 'ADDITIONAL_VERIFICATION' | 'HOLD_FOR_REVIEW' | 'FREEZE_WALLET',
     notes: string
   ) => void;
-  onLabelAlert: (outcome: 'CONFIRMED_FRAUD' | 'FALSE_POSITIVE' | 'NEEDS_REVIEW', notes: string) => Promise<boolean>;
 }
 
 export const InvestigationModal: React.FC<InvestigationModalProps> = ({
@@ -39,13 +35,11 @@ export const InvestigationModal: React.FC<InvestigationModalProps> = ({
   isOpen,
   onClose,
   onTakeAction,
-  onLabelAlert,
 }) => {
   const [aiReport, setAiReport] = useState<string | null>(null);
   const [isLoadingAi, setIsLoadingAi] = useState<boolean>(false);
   const [operatorNotes, setOperatorNotes] = useState<string>('');
   const [actionConfirmed, setActionConfirmed] = useState<string | null>(null);
-  const [feedbackSaved, setFeedbackSaved] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -113,8 +107,8 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto modal-backdrop-enter">
-      <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden my-auto modal-panel-enter">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden my-auto">
         {/* Header */}
         <div className="p-6 bg-gradient-to-r from-[#0054A6] via-[#004A94] to-[#003875] text-white flex items-center justify-between border-b border-[#003366] shadow-sm">
           <div className="flex items-center gap-3">
@@ -134,7 +128,7 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
                 )}
               </div>
               <h2 className="text-xl font-bold mt-0.5 tracking-tight text-white">
-                Investigate
+                Explainable Investigation & Decision Dossier
               </h2>
             </div>
           </div>
@@ -157,122 +151,75 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-6 text-xs text-slate-700 flex-1">
-          {/* Section 1: Transaction Guardian Anomaly Detection & Baseline */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between pb-1">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-[#0054A6]/10 flex items-center justify-center text-[#0054A6]">
-                  <ShieldCheck className="w-3.5 h-3.5" />
+          {/* Top Comparison: Baseline vs Attempted Event */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Customer Baseline */}
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-bold text-slate-800 uppercase tracking-wide text-[11px]">
+                  Customer Historical Baseline
+                </span>
+                <span className="text-[11px] text-slate-500">Learned via Isolation Forest</span>
+              </div>
+              <div className="space-y-1.5 text-slate-600">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Account Owner:</span>
+                  <span className="font-semibold text-slate-800">{customerProfile.name} ({customerProfile.wallet})</span>
                 </div>
-                <div>
-                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
-                    1. Transaction Guardian: Behavioral Anomaly & Fraud Baseline
-                  </h3>
-                  <p className="text-[10px] text-slate-500">
-                    Dual-Engine Detection: XGBoost Gradient-Boosted Classifier + Isolation Forest
-                  </p>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">90-Day Avg Amount:</span>
+                  <span className="font-mono font-semibold text-slate-800">৳{customerProfile.avgAmount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Normal Transacting Window:</span>
+                  <span className="font-medium text-slate-800">{customerProfile.usualHours}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Usual Geolocation:</span>
+                  <span className="font-medium text-slate-800">{customerProfile.homeDistrict}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Registered Device:</span>
+                  <span className="font-medium text-slate-800">{customerProfile.knownDevices[0]}</span>
                 </div>
               </div>
-              <span className="text-[10px] font-mono font-bold bg-blue-50 text-[#0054A6] px-2.5 py-0.5 rounded-full border border-blue-200">
-                Guardian Score: {transaction.fusedRiskScore}/100
-              </span>
             </div>
 
-            {/* Top Comparison: Baseline vs Attempted Event */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Customer Baseline */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-slate-800 uppercase tracking-wide text-[11px]">
-                    Customer Historical Baseline
+            {/* Current Flagged Transaction */}
+            <div className="bg-rose-50/60 p-4 rounded-2xl border border-rose-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-bold text-rose-900 uppercase tracking-wide text-[11px]">
+                  Flagged Transaction Event
+                </span>
+                <span className="text-[11px] font-mono text-rose-700">{transaction.timestamp}</span>
+              </div>
+              <div className="space-y-1.5 text-slate-700">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Amount Attempted:</span>
+                  <span className="font-mono font-black text-rose-700 text-sm">
+                    ৳{transaction.amount.toLocaleString()} (53.3x baseline)
                   </span>
-                  <span className="text-[11px] text-slate-500">Learned via Isolation Forest</span>
                 </div>
-                <div className="space-y-1.5 text-slate-600">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Account Owner:</span>
-                    <span className="font-semibold text-slate-800">{customerProfile.name} ({customerProfile.wallet})</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">90-Day Avg Amount:</span>
-                    <span className="font-mono font-semibold text-slate-800">৳{customerProfile.avgAmount.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Normal Transacting Window:</span>
-                    <span className="font-medium text-slate-800">{customerProfile.usualHours}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Usual Geolocation:</span>
-                    <span className="font-medium text-slate-800">{customerProfile.homeDistrict}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Registered Device:</span>
-                    <span className="font-medium text-slate-800">{customerProfile.knownDevices[0]}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Current Flagged Transaction */}
-              <div className="bg-rose-50/60 p-4 rounded-2xl border border-rose-200">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-rose-900 uppercase tracking-wide text-[11px]">
-                    Flagged Transaction Event
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Recipient Target:</span>
+                  <span className="font-semibold text-rose-800">
+                    {transaction.receiverName} ({transaction.receiverWallet})
                   </span>
-                  <span className="text-[11px] font-mono text-rose-700">{transaction.timestamp}</span>
                 </div>
-                <div className="space-y-1.5 text-slate-700">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Amount Attempted:</span>
-                    <span className="font-mono font-black text-rose-700 text-sm">
-                      ৳{transaction.amount.toLocaleString()} (53.3x baseline)
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Recipient Target:</span>
-                    <span className="font-semibold text-rose-800">
-                      {transaction.receiverName} ({transaction.receiverWallet})
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Execution Time:</span>
-                    <span className="font-mono font-semibold text-rose-700">03:20 AM (Nocturnal anomaly)</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Originating IP Location:</span>
-                    <span className="font-semibold text-rose-800">{transaction.senderLocation}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Hardware Fingerprint:</span>
-                    <span className="font-semibold text-rose-800">{transaction.senderDevice}</span>
-                  </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Execution Time:</span>
+                  <span className="font-mono font-semibold text-rose-700">03:20 AM (Nocturnal anomaly)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Originating IP Location:</span>
+                  <span className="font-semibold text-rose-800">{transaction.senderLocation}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Hardware Fingerprint:</span>
+                  <span className="font-semibold text-rose-800">{transaction.senderDevice}</span>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Section 2: Investigate - Money Paths & Fund Flow Graph */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between pb-1">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/80 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                  <Zap className="w-3.5 h-3.5" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
-                    Investigate: Money Paths & Agent Network Flow
-                  </h3>
-                  <p className="text-[10px] text-slate-500">
-                    Forensic fund-tracing graph linking source victim to intermediate relays, aggregator hub, and physical OTC cash-out agents
-                  </p>
-                </div>
-              </div>
-            </div>
-            <MoneyPathInvestigationGraph
-              transaction={transaction}
-              onFreezeNode={(nodeId, nodeName) => {
-                handleAction('FREEZE_WALLET');
-              }}
-            />
           </div>
 
           {/* SHAP Feature Attribution Waterfall */}
@@ -371,29 +318,6 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
 
           {/* Human-in-the-loop Action Engine Form */}
           <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-            <div className="pb-3 border-b border-slate-200">
-              <div className="text-xs font-bold text-slate-900 mb-2">Alert outcome (for model evaluation)</div>
-              <div className="flex flex-wrap gap-2">
-                {([
-                  ['CONFIRMED_FRAUD', 'Confirmed fraud'],
-                  ['FALSE_POSITIVE', 'False positive'],
-                  ['NEEDS_REVIEW', 'Needs review'],
-                ] as const).map(([outcome, label]) => (
-                  <button
-                    key={outcome}
-                    type="button"
-                    onClick={async () => {
-                      const saved = await onLabelAlert(outcome, operatorNotes);
-                      if (saved) setFeedbackSaved(label);
-                    }}
-                    className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-[11px] font-semibold text-slate-700 hover:border-blue-400 hover:text-blue-700"
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              {feedbackSaved && <div className="text-[11px] text-emerald-700 font-semibold mt-2">Saved outcome: {feedbackSaved}</div>}
-            </div>
             <div>
               <label className="font-bold text-slate-900 text-xs block mb-1">
                 Operator Decision & Audit Notes (Mandatory for High-Impact Actions)

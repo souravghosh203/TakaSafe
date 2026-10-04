@@ -41,8 +41,6 @@ interface QRCodeScannerModalProps {
   customer: CustomerBaseline;
   onWalletLinked: (newWallet: LinkedWallet) => void;
   onPaymentQRScanned?: (recipientWallet: string, amount?: number, note?: string) => void;
-  scanMode?: 'LINK' | 'PAYMENT' | 'AGENT';
-  initialTab?: 'SCANNER' | 'MY_QR';
   lang: 'EN' | 'BN';
 }
 
@@ -52,11 +50,8 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
   customer,
   onWalletLinked,
   onPaymentQRScanned,
-  scanMode = 'LINK',
-  initialTab = 'SCANNER',
   lang,
 }) => {
-  const transactionScan = scanMode !== 'LINK';
   const [modalTab, setModalTab] = useState<'SCANNER' | 'MY_QR'>('SCANNER');
   const [isTorchOn, setIsTorchOn] = useState<boolean>(false);
   const [cameraFacing, setCameraFacing] = useState<'ENVIRONMENT' | 'USER'>('ENVIRONMENT');
@@ -71,22 +66,10 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen) setModalTab(initialTab);
-  }, [isOpen, initialTab]);
-
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const animFrameRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (!isOpen || !transactionScan) return;
-    setModalTab('SCANNER');
-    setIsScanning(true);
-    setScannedPayload(null);
-    setUploadError(null);
-  }, [isOpen, transactionScan]);
 
   // Generate My QR Code for current customer
   useEffect(() => {
@@ -207,7 +190,6 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
         };
       }
 
-      if (transactionScan) payload.action = 'MERCHANT_CHECKOUT';
       setIsScanning(false);
       const isThreat = !payload.muleCheckPassed || payload.riskAssessmentScore >= 80;
       playScanBeep(isThreat);
@@ -226,7 +208,6 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
     let isActive = true;
 
     if (isOpen && modalTab === 'SCANNER' && isScanning && navigator.mediaDevices?.getUserMedia) {
-      setHasCameraPermission(null);
       const constraints: MediaStreamConstraints = {
         video: {
           facingMode: cameraFacing === 'ENVIRONMENT' ? { ideal: 'environment' } : { ideal: 'user' },
@@ -275,12 +256,10 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
 
           animFrameRef.current = requestAnimationFrame(scanFrame);
         })
-      .catch(() => {
+        .catch(() => {
           // Camera permission denied or not available (e.g. desktop/iframe)
           setHasCameraPermission(false);
-      });
-    } else if (isOpen && modalTab === 'SCANNER' && isScanning) {
-      setHasCameraPermission(false);
+        });
     }
 
     return () => {
@@ -295,7 +274,7 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
         videoRef.current.srcObject = null;
       }
     };
-    }, [isOpen, modalTab, isScanning, cameraFacing]);
+  }, [isOpen, modalTab, isScanning, cameraFacing]);
 
   // Handle Image File Upload (QR from photo/screenshot)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -388,8 +367,8 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto modal-backdrop-enter">
-      <div className="bg-white rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden my-auto font-sans modal-panel-enter">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+      <div className="bg-white rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden my-auto font-sans">
         {/* Header Bar */}
         <div className="px-6 py-4 bg-gradient-to-r from-[#0054A6] via-[#00478D] to-[#003875] text-white flex items-center justify-between border-b border-[#003366]">
           <div className="flex items-center gap-2.5">
@@ -398,14 +377,10 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
             </div>
             <div>
               <h3 className="font-extrabold text-sm sm:text-base tracking-tight flex items-center gap-2">
-                <span>{scanMode === 'PAYMENT' ? 'Scan Merchant QR' : scanMode === 'AGENT' ? 'Scan Agent QR' : lang === 'BN' ? 'কিউআর স্ক্যানার ও ওয়ালেট সংযোগ' : 'QR Scanner & Secure Wallet Link'}</span>
+                <span>{lang === 'BN' ? 'কিউআর স্ক্যানার ও ওয়ালেট সংযোগ' : 'QR Scanner & Secure Wallet Link'}</span>
               </h3>
               <p className="text-[11px] text-blue-100 font-medium">
-                {scanMode === 'PAYMENT'
-                  ? 'Scan a merchant QR to load the merchant and requested amount before payment.'
-                  : scanMode === 'AGENT'
-                    ? 'Scan the agent QR to fill the agent number, then review the amount before confirming.'
-                    : 'Scan to link an account or continue to a merchant payment.'}
+                Cryptographically verify and link bank accounts, trusted co-wallets, or scan merchant QR
               </p>
             </div>
           </div>
@@ -433,10 +408,10 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
             }`}
           >
             <Camera className="w-3.5 h-3.5" />
-                <span>{transactionScan ? 'Scan to Continue' : 'Scan QR Code'}</span>
+            <span>Scan QR Code</span>
           </button>
 
-          {!transactionScan && <button
+          <button
             onClick={() => setModalTab('MY_QR')}
             className={`flex items-center gap-2 py-2.5 px-4 font-bold text-xs rounded-t-xl transition-all cursor-pointer ${
               modalTab === 'MY_QR'
@@ -446,7 +421,7 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
           >
             <QrCode className="w-3.5 h-3.5" />
             <span>My Receiving QR</span>
-          </button>}
+          </button>
         </div>
 
         {/* Hidden Canvas for QR frame processing */}
@@ -550,14 +525,6 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
                   </div>
                 </div>
 
-                <p className={`text-center text-xs ${hasCameraPermission ? 'text-emerald-700' : hasCameraPermission === false ? 'text-amber-700' : 'text-slate-500'}`}>
-                  {hasCameraPermission
-                    ? 'Camera is active. Center the payment QR inside the frame.'
-                    : hasCameraPermission === false
-                      ? 'Camera access is unavailable or denied. Allow camera access, or upload a QR image below.'
-                      : 'Requesting camera access…'}
-                </p>
-
                 {/* Hidden File Input for QR Image Upload */}
                 <input
                   type="file"
@@ -578,7 +545,7 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
                 {/* Quick 1-Click QR Demonstration Scenarios */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                    <span>{transactionScan ? 'Or choose a sample QR to preview the scan flow:' : 'Or select a simulated QR Code to test linking:'}</span>
+                    <span>⚡ Or select a simulated QR Code to test linking:</span>
                     <span className="text-[10px] text-slate-500 font-mono">4 Scenarios Ready</span>
                   </div>
 
@@ -728,9 +695,7 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
                       <div className="space-y-3">
                         <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">
                           <span>
-                            {scanMode === 'AGENT'
-                              ? <>Agent QR found for <strong>{scannedPayload.accountHolder}</strong> ({scannedPayload.accountNumberMasked}).</>
-                              : <>Merchant payment ready for <strong>৳{scannedPayload.suggestedAmount?.toLocaleString()}</strong> at {scannedPayload.accountHolder}.</>}
+                            Merchant payment ready for <strong>৳{scannedPayload.suggestedAmount?.toLocaleString()}</strong> at {scannedPayload.accountHolder}.
                           </span>
                         </div>
                         <button
@@ -739,7 +704,7 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
                           className="w-full py-3 px-4 bg-[#0054A6] hover:bg-[#004284] text-white font-extrabold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
                         >
                           <DollarSign className="w-4 h-4 text-amber-300" />
-                          <span>{scanMode === 'AGENT' ? 'Use Agent Details' : `Pay ৳${scannedPayload.suggestedAmount?.toLocaleString()} Now`}</span>
+                          <span>Pay ৳{scannedPayload.suggestedAmount?.toLocaleString()} Now</span>
                         </button>
                       </div>
                     ) : (

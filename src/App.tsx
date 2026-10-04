@@ -12,10 +12,8 @@ import { CustomerAppView } from './components/customer/CustomerAppView';
 import { StorylineRunner } from './components/storyline/StorylineRunner';
 import { InvestigationModal } from './components/investigation/InvestigationModal';
 import { UpayInfoModal } from './components/common/UpayInfoModal';
-import { LoginPage, DEMO_ACCOUNTS, DEMO_PROFILES } from './components/auth/LoginPage';
+import { LoginPage, DEMO_ACCOUNTS } from './components/auth/LoginPage';
 import { AccessRestrictedGate } from './components/common/AccessRestrictedGate';
-import { PublicDashboard } from './components/landing/PublicDashboard';
-import { RegistrationPage } from './components/registration/RegistrationPage';
 import {
   MOCK_TRANSACTIONS,
   CURRENT_CUSTOMER,
@@ -25,116 +23,30 @@ import {
   REGIONAL_RADAR_METRICS,
   INITIAL_AUDIT_LOGS,
 } from './data/mockData';
-import { Transaction, MuleCluster, AgentLiquidityNode, RegionalRiskMetric, StorylineStep, AuthUser, CustomerBaseline } from './types';
+import { Transaction, MuleCluster, AgentLiquidityNode, RegionalRiskMetric, StorylineStep, AuthUser } from './types';
 import { ShieldCheck, Info } from 'lucide-react';
 
-// Bump the key so the old prototype's automatically seeded admin session is
-// discarded after upgrade. New sessions are saved only after explicit sign-in.
-const APP_SESSION_KEY = 'takasafe-app-session-v2';
-const PROFILE_STORAGE_PREFIX = 'takasafe-profile:';
-const loadSavedProfile = (user: AuthUser | null): AuthUser | null => {
-  if (!user) return null;
-  try {
-    const saved = localStorage.getItem(`${PROFILE_STORAGE_PREFIX}${user.id}`);
-    return saved ? { ...user, ...JSON.parse(saved) } : user;
-  } catch { return user; }
-};
-type AppView = 'OPERATOR' | 'CUSTOMER' | 'STORYLINE' | 'LOGIN';
-
-const getCustomerProfile = (user: AuthUser | null): CustomerBaseline => {
-  if (!user) return CURRENT_CUSTOMER;
-  const existingCustomerProfile = DEMO_CUSTOMER_PROFILES[user.id];
-  if (existingCustomerProfile) return { ...existingCustomerProfile, name: user.name, wallet: user.phone };
-
-  // Admin demo accounts can also open Send Money. Give each account its own
-  // identity and data namespace instead of showing Rafiqul's customer record.
-  return {
-    ...CURRENT_CUSTOMER,
-    wallet: user.phone,
-    name: user.name,
-    nationalIdMasked: 'Not provided',
-    balance: 100000,
-    avgDailyTxns: 2,
-    avgAmount: 2500,
-    maxAmountTypical: 10000,
-    usualHours: '09:00 - 21:00',
-    homeDistrict: 'Not provided',
-    knownDevices: ['Current device'],
-    frequentRecipients: [],
-    financialResilienceScore: 70,
-    resilienceComponents: {
-      incomeStability: 70,
-      spendingDiscipline: 70,
-      emergencyBufferDays: 30,
-      cashOutDependency: 40,
-    },
-  };
-};
-
 export default function App() {
-  const [initialSession] = useState(() => {
-    try {
-      const rememberedSession = localStorage.getItem(APP_SESSION_KEY);
-      const rawSession = rememberedSession || sessionStorage.getItem(APP_SESSION_KEY);
-      if (!rawSession) return null;
-      const saved = JSON.parse(rawSession) as { userId?: string | null; activeView?: AppView };
-      const user = loadSavedProfile(DEMO_PROFILES.find((profile) => profile.id === saved.userId) || null);
-      const validViews: AppView[] = ['OPERATOR', 'CUSTOMER', 'STORYLINE', 'LOGIN'];
-      const view = user?.role === 'USER'
-        ? 'CUSTOMER'
-        : user
-          ? (validViews.includes(saved.activeView as AppView) ? saved.activeView! : 'OPERATOR')
-          : 'OPERATOR';
-      return { user, view, remember: Boolean(rememberedSession) };
-    } catch {
-      return null;
-    }
-  });
-  const [activeView, setActiveView] = useState<AppView>(initialSession?.view || 'OPERATOR');
-  const [showRegistration, setShowRegistration] = useState(false);
-  const [registrationEmail, setRegistrationEmail] = useState('');
+  const [activeView, setActiveView] = useState<'OPERATOR' | 'CUSTOMER' | 'STORYLINE' | 'LOGIN'>('OPERATOR');
   const [operatorTab, setOperatorTab] = useState<string>('OVERVIEW');
   const [lang, setLang] = useState<'EN' | 'BN'>('EN');
-  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() =>
-    initialSession ? initialSession.user : null
-  );
-  const [rememberSession, setRememberSession] = useState(() => initialSession?.remember ?? true);
-
-  useEffect(() => {
-    try {
-      if (!currentUser) {
-        localStorage.removeItem(APP_SESSION_KEY);
-        sessionStorage.removeItem(APP_SESSION_KEY);
-        return;
-      }
-      const serializedSession = JSON.stringify({
-        userId: currentUser?.id || null,
-        activeView: currentUser?.role === 'USER' ? 'CUSTOMER' : activeView,
-      });
-      if (rememberSession) {
-        localStorage.setItem(APP_SESSION_KEY, serializedSession);
-        sessionStorage.removeItem(APP_SESSION_KEY);
-      } else {
-        sessionStorage.setItem(APP_SESSION_KEY, serializedSession);
-        localStorage.removeItem(APP_SESSION_KEY);
-      }
-    } catch {
-      // Keep the in-memory session active if browser storage is unavailable.
-    }
-  }, [activeView, currentUser, rememberSession]);
-
-  useEffect(() => {
-    if (!currentUser) return;
-    const refreshProfileFromThisBrowser = (event: StorageEvent) => {
-      if (event.key !== `${PROFILE_STORAGE_PREFIX}${currentUser.id}` || !event.newValue) return;
-      try {
-        const profile = JSON.parse(event.newValue);
-        setCurrentUser((active) => active?.id === currentUser.id ? { ...active, ...profile } : active);
-      } catch { /* Ignore invalid browser storage values. */ }
-    };
-    window.addEventListener('storage', refreshProfileFromThisBrowser);
-    return () => window.removeEventListener('storage', refreshProfileFromThisBrowser);
-  }, [currentUser?.id]);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>({
+    id: 'USR-ADM-01',
+    name: 'Md. Tanvir Hasan',
+    email: 'tanvir.hasan@takasafe.upay.bd',
+    phone: '+880 1712-401920',
+    role: 'ADMIN',
+    designation: 'Chief Risk Analyst & AML Supervisor',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+    permissions: {
+      canViewOperatorDashboard: true,
+      canFreezeWallets: true,
+      canDispatchLiquidity: true,
+      canTunePolicyWeights: true,
+      canExportAuditLogs: true,
+      canPerformInvestigationActions: true,
+    },
+  });
 
   // Dark/Light Theme state with localStorage persistence
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -158,10 +70,6 @@ export default function App() {
     localStorage.setItem('takasafe_theme', theme);
   }, [theme]);
 
-  useEffect(() => {
-    document.documentElement.lang = lang === 'BN' ? 'bn' : 'en';
-  }, [lang]);
-
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
@@ -182,7 +90,6 @@ export default function App() {
   const [auditLogs, setAuditLogs] = useState<any[]>(INITIAL_AUDIT_LOGS);
   const [selectedTxnForInvestigation, setSelectedTxnForInvestigation] = useState<Transaction | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [requestedWalletService, setRequestedWalletService] = useState<string | null>(null);
 
   const recordCustomerLogin = (user: AuthUser) => {
     if (user.role !== 'USER') return;
@@ -190,7 +97,7 @@ export default function App() {
     const storageKey = `takasafe-logins:${user.id}:${user.phone}`;
     try {
       const prior = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      const logins = [...(Array.isArray(prior) ? prior : []), { timestamp, device: navigator.userAgent }].slice(-200);
+      const logins = [...(Array.isArray(prior) ? prior : []), { timestamp }].slice(-200);
       localStorage.setItem(storageKey, JSON.stringify(logins));
     } catch {
       // Server logging below remains available if browser storage is unavailable.
@@ -198,74 +105,24 @@ export default function App() {
     fetch(`/api/customer-logins/${encodeURIComponent(user.id)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ wallet: user.phone, timestamp, device: navigator.userAgent }),
-    }).then((response) => response.ok ? response.json() : null).then((data) => {
-      if (data?.alert) {
-        const alert = data.alert;
-        showToast(`Threat alert: BDT ${Number(alert.amount).toLocaleString()} transaction at ${new Date(alert.timestamp).toLocaleString()} from ${alert.device}.`);
-        fetch('/api/suspicious-transactions', { cache: 'no-store' }).then((result) => result.ok ? result.json() : null).then((feed) => {
-          const rows = Array.isArray(feed?.transactions) ? feed.transactions : [];
-          const added = rows.map((row: any, index: number) => ({
-            id: `CSV-${row.user_id}-${index}`, timestamp: row.timestamp, senderWallet: row.wallet,
-            senderName: row.user_id, senderLocation: 'Customer transaction history', senderDevice: row.device || 'Known device',
-            receiverWallet: row.recipient, receiverName: 'Recipient', receiverLocation: 'Unknown', amount: Number(row.amount), fee: 0,
-            channel: 'TakaSafe App' as const, status: 'HELD' as const, fusedRiskScore: 85, riskBand: 'HIGH' as const,
-            fraudProb: 0.85, anomalyProb: 0.85, networkRisk: 0, velocityRisk: 0, deviceRisk: 0.2,
-            isMuleConnected: false, shapFeatures: [],
-          }));
-          setTransactions((current) => [...added, ...current.filter((txn) => !added.some((item: Transaction) => item.id === txn.id))]);
-        }).catch(() => undefined);
-      }
+      body: JSON.stringify({ wallet: user.phone, timestamp }),
     }).catch(() => undefined);
   };
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
+  // Fetch initial audit logs from server if available (e.g. local/Express dev), else fallback cleanly
   useEffect(() => {
-    let active = true;
-    const refreshAuditLogs = () => fetch('/api/audit-logs', { cache: 'no-store' })
-      .then((response) => response.ok ? response.json() : Promise.reject(new Error('Audit log refresh failed')))
-      .then((data) => { if (active && Array.isArray(data.logs)) setAuditLogs(data.logs); })
-      .catch(() => undefined);
-
-    void refreshAuditLogs();
-    const stream = new EventSource('/api/events');
-    stream.addEventListener('state-change', (rawEvent) => {
-      let detail: { kind?: string; userId?: string; entityType?: string; entityId?: string; actionTaken?: string };
-      try { detail = JSON.parse((rawEvent as MessageEvent<string>).data); }
-      catch { return; }
-
-      window.dispatchEvent(new CustomEvent('takasafe-server-update', { detail }));
-      if (detail.kind === 'audit-action') {
-        void refreshAuditLogs();
-        if (detail.entityType === 'TRANSACTION' && detail.entityId) {
-          const status = detail.actionTaken === 'FREEZE_WALLET' ? 'BLOCKED'
-            : detail.actionTaken === 'HOLD_FOR_REVIEW' ? 'HELD' : 'APPROVED';
-          setTransactions((previous) => previous.map((transaction) => transaction.id === detail.entityId
-            ? { ...transaction, status }
-            : transaction));
-        }
-      }
-      if (detail.kind === 'alert-feedback') window.dispatchEvent(new Event('takasafe-alert-feedback'));
-      if (detail.kind === 'suspicious-transaction') {
-        fetch('/api/suspicious-transactions', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null).then((feed) => {
-          const rows = Array.isArray(feed?.transactions) ? feed.transactions : [];
-          const flagged = rows.map((row: any) => ({
-            id: `CSV-${row.user_id}-${row.timestamp}`, timestamp: row.timestamp, senderWallet: row.wallet,
-            senderName: row.user_id, senderLocation: 'Customer transaction history', senderDevice: row.device || 'Known device',
-            receiverWallet: row.recipient, receiverName: 'Recipient', receiverLocation: 'Unknown', amount: Number(row.amount), fee: 0,
-            channel: 'TakaSafe App' as const, status: 'HELD' as const, fusedRiskScore: 85, riskBand: 'HIGH' as const,
-            fraudProb: 0.85, anomalyProb: 0.85, networkRisk: 0, velocityRisk: 0, deviceRisk: 0.2,
-            isMuleConnected: false, shapFeatures: [],
-          }));
-          setTransactions((current) => [...flagged, ...current.filter((txn) => !flagged.some((item: Transaction) => item.id === txn.id))]);
-        }).catch(() => undefined);
-      }
-    });
-
-    return () => {
-      active = false;
-      stream.close();
-    };
+    fetch('/api/audit-logs')
+      .then((res) => {
+        if (!res.ok) throw new Error('Static host');
+        return res.json();
+      })
+      .then((data) => {
+        if (data && data.logs && data.logs.length > 0) setAuditLogs(data.logs);
+      })
+      .catch(() => {
+        // Safe fallback for static deployments like GitHub Pages
+      });
   }, []);
 
   const showToast = (msg: string) => {
@@ -445,159 +302,10 @@ export default function App() {
     showToast(`Action recorded: ${action.replace(/_/g, ' ')} for Case #${selectedTxnForInvestigation.id}`);
   };
 
-  const handleLabelAlert = async (
-    outcome: 'CONFIRMED_FRAUD' | 'FALSE_POSITIVE' | 'NEEDS_REVIEW',
-    notes: string
-  ): Promise<boolean> => {
-    if (!selectedTxnForInvestigation) return false;
-    try {
-      const response = await fetch('/api/alert-feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          caseId: `CASE-${selectedTxnForInvestigation.id}`,
-          transactionId: selectedTxnForInvestigation.id,
-          analyst: currentUser?.name || 'Demo Analyst',
-          outcome,
-          riskScore: selectedTxnForInvestigation.fusedRiskScore,
-          notes,
-        }),
-      });
-      if (!response.ok) throw new Error('Could not save analyst feedback');
-      window.dispatchEvent(new Event('takasafe-alert-feedback'));
-      showToast(`Alert feedback saved: ${outcome.replace(/_/g, ' ')}.`);
-      return true;
-    } catch (error) {
-      console.error(error);
-      showToast('Could not save alert feedback.');
-      return false;
-    }
-  };
-
   const criticalCount = transactions.filter((t) => t.riskBand === 'CRITICAL' || t.riskBand === 'HIGH').length;
 
-  // Customer accounts should stay in the customer experience even when shared
-  // navigation controls request the operator view.
-  const navigateToView = (view: 'OPERATOR' | 'CUSTOMER' | 'STORYLINE' | 'LOGIN') => {
-    if (!currentUser && view !== 'LOGIN' && view !== 'OPERATOR') {
-      setActiveView('LOGIN');
-      return;
-    }
-    if (view === 'OPERATOR' && currentUser?.role === 'USER') {
-      setActiveView('CUSTOMER');
-      return;
-    }
-    setActiveView(view);
-  };
-
-  const openRegistration = () => {
-    setCurrentUser(null);
-    localStorage.removeItem(APP_SESSION_KEY);
-    sessionStorage.removeItem(APP_SESSION_KEY);
-    setRegistrationEmail('');
-    setShowRegistration(true);
-  };
-
-  const navigateToOperatorTab = (tab: string) => {
-    if (!currentUser && tab !== 'OVERVIEW') {
-      setActiveView('LOGIN');
-      return;
-    }
-    setOperatorTab(tab);
-  };
-
-  const requireSignIn = (action: () => void) => {
-    if (!currentUser) {
-      setActiveView('LOGIN');
-      return;
-    }
-    action();
-  };
-
-  // Keep a useful public dashboard as the opening screen; authentication is
-  // only needed when someone chooses to enter the private customer workspace.
-  if (!currentUser && showRegistration) {
-    return (
-      <>
-        <UpayHeader
-          activeView="OPERATOR"
-          setActiveView={(view) => {
-            setShowRegistration(false);
-            navigateToView(view);
-          }}
-          operatorTab={operatorTab}
-          setOperatorTab={setOperatorTab}
-          lang={lang}
-          setLang={setLang}
-          criticalAlertCount={criticalCount}
-          currentUser={null}
-          onOpenModal={(modal) => setActiveModal(modal)}
-          theme={theme}
-          onToggleTheme={toggleTheme}
-          darkHeader
-        />
-        <RegistrationPage
-          initialEmail={registrationEmail}
-          hideTopbar
-          lang={lang}
-          theme={theme}
-          onLogin={() => {
-            setShowRegistration(false);
-            setActiveView('LOGIN');
-          }}
-          onDashboard={() => {
-            setShowRegistration(false);
-            setCurrentUser(null);
-            localStorage.removeItem(APP_SESSION_KEY);
-            sessionStorage.removeItem(APP_SESSION_KEY);
-            setActiveView('OPERATOR');
-          }}
-          onOpenModal={(modal) => setActiveModal(modal)}
-        />
-        <UpayInfoModal
-          modalType={activeModal}
-          onClose={() => setActiveModal(null)}
-          lang={lang}
-          onNavigateView={(view) => {
-            navigateToView(view);
-            setShowRegistration(false);
-            setActiveModal(null);
-          }}
-        />
-      </>
-    );
-  }
-
-  if (!currentUser && activeView === 'OPERATOR') {
-    return (
-      <>
-        <PublicDashboard
-          onGetStarted={(email) => {
-            setRegistrationEmail(email || '');
-            setShowRegistration(true);
-          }}
-          onSignIn={() => setActiveView('LOGIN')}
-          onOpenModal={(modal) => setActiveModal(modal)}
-          lang={lang}
-          onToggleLanguage={() => setLang((current) => current === 'EN' ? 'BN' : 'EN')}
-          theme={theme}
-          onToggleTheme={toggleTheme}
-        />
-        <UpayInfoModal
-          modalType={activeModal}
-          onClose={() => setActiveModal(null)}
-          lang={lang}
-          onNavigateView={(view) => {
-            navigateToView(view);
-            setActiveModal(null);
-          }}
-        />
-      </>
-    );
-  }
-
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-slate-100 dark:bg-[#090D16] text-slate-900 dark:text-slate-100 transition-colors duration-200 relative" style={activeView === 'LOGIN' ? { background: theme === 'dark' ? 'linear-gradient(118deg, #071324 0%, #102a49 34%, #0c1d33 68%, #071324 100%)' : 'linear-gradient(118deg, #d5e7ff 0%, #edf5ff 26%, #fff 58%, #e1efff 100%)' } : undefined}>
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-slate-100 dark:bg-[#090D16] text-slate-900 dark:text-slate-100 transition-colors duration-200 relative">
       {/* Route & Page Change Transition Glow Bar */}
       {isTransitioning && (
         <div key={`${activeView}-${operatorTab}`} className="page-progress-bar" />
@@ -606,35 +314,21 @@ export default function App() {
       {/* Upay Header with Logo, Navigation, Mode Switcher & Accreditation */}
       <UpayHeader
         activeView={activeView}
-        setActiveView={navigateToView}
-        onRegister={openRegistration}
+        setActiveView={setActiveView}
         operatorTab={operatorTab}
-        setOperatorTab={navigateToOperatorTab}
+        setOperatorTab={setOperatorTab}
         lang={lang}
         setLang={setLang}
         criticalAlertCount={criticalCount}
         currentUser={currentUser}
-        onUpdateProfile={(profile) => {
-          if (!currentUser) return;
-          const updatedUser = { ...currentUser, ...profile };
-          setCurrentUser(updatedUser);
-          try {
-            localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${currentUser.id}`, JSON.stringify(profile));
-            showToast('Profile saved in this browser.');
-          } catch { showToast('Profile updated for this session, but browser storage is unavailable.'); }
-        }}
         theme={theme}
         onToggleTheme={toggleTheme}
         onLogout={() => {
           setCurrentUser(null);
-          localStorage.removeItem(APP_SESSION_KEY);
-          sessionStorage.removeItem(APP_SESSION_KEY);
-          setActiveView('OPERATOR');
           showToast('Signed out of TakaSafe.');
         }}
         onSwitchUserRole={(newRole) => {
-          const user = loadSavedProfile(DEMO_ACCOUNTS[newRole]);
-          if (!user) return;
+          const user = DEMO_ACCOUNTS[newRole];
           setCurrentUser(user);
           recordCustomerLogin(user);
           if (newRole === 'ADMIN') {
@@ -652,12 +346,17 @@ export default function App() {
       {activeView !== 'LOGIN' && (
         <UpayHeroServices
           onServiceSelect={(svc) => {
-            if (svc === 'Cash In' && currentUser?.role === 'USER') return;
-            setRequestedWalletService(svc === 'Send Money' ? null : svc);
-            navigateToView('CUSTOMER');
+            if (svc === 'Send Money') {
+              setActiveView('CUSTOMER');
+            } else {
+              if (currentUser?.role === 'USER') {
+                setActiveView('OPERATOR'); // Will trigger AccessRestrictedGate
+              } else {
+                setActiveView('OPERATOR');
+              }
+            }
           }}
           onOpenModal={(modal) => setActiveModal(modal)}
-          showCashIn={currentUser?.role !== 'USER'}
           lang={lang}
         />
       )}
@@ -667,12 +366,8 @@ export default function App() {
         <div key={activeView} className="page-enter">
           {activeView === 'LOGIN' && (
             <LoginPage
-              showBackButton={Boolean(currentUser)}
-              onRegister={openRegistration}
-              onOpenInfo={(modal) => setActiveModal(modal)}
-              onLogin={(user, remember) => {
-                setCurrentUser(loadSavedProfile(user));
-                setRememberSession(remember);
+              onLogin={(user) => {
+                setCurrentUser(user);
                 recordCustomerLogin(user);
                 if (user.role === 'ADMIN') {
                   setActiveView('OPERATOR');
@@ -686,38 +381,15 @@ export default function App() {
                 if (currentUser) {
                   setActiveView(currentUser.role === 'ADMIN' ? 'OPERATOR' : 'CUSTOMER');
                 } else {
-                  setActiveView('LOGIN');
+                  setActiveView('OPERATOR');
                 }
               }}
               lang={lang}
-              theme={theme}
             />
           )}
 
           {activeView === 'OPERATOR' && (
-            !currentUser ? (
-              <section className="max-w-5xl mx-auto py-8 sm:py-14">
-                <div className="rounded-3xl bg-gradient-to-br from-[#004080] via-[#0054A6] to-slate-900 p-7 sm:p-12 text-white shadow-xl">
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Digital finance, made safer</p>
-                  <h1 className="mt-3 max-w-3xl text-3xl sm:text-5xl font-black leading-tight">A safer way to move and manage money</h1>
-                  <p className="mt-5 max-w-2xl text-sm sm:text-base leading-7 text-blue-100">TakaSafe brings secure mobile financial services and intelligent fraud protection together, helping customers transact with confidence.</p>
-                  <button onClick={() => setActiveView('LOGIN')} className="mt-7 rounded-xl bg-amber-400 px-5 py-3 text-sm font-bold text-slate-950 shadow hover:bg-amber-300">Sign in to get started</button>
-                </div>
-                <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                  {[
-                    { title: 'Everyday payments', description: 'Send money, pay merchants, and manage your wallet from one place.' },
-                    { title: 'Safer transactions', description: 'Built-in protections help identify suspicious activity and reduce scams.' },
-                    { title: 'Service access', description: 'Explore customer services and account tools after signing in.' },
-                  ].map((item) => (
-                    <button key={item.title} onClick={() => setActiveView('LOGIN')} className="interactive-lift rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-900">
-                      <h2 className="font-bold text-[#0054A6] dark:text-blue-300">{item.title}</h2>
-                      <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{item.description}</p>
-                      <span className="mt-4 inline-block text-xs font-bold text-amber-700 dark:text-amber-300">Sign in to use this feature →</span>
-                    </button>
-                  ))}
-                </div>
-              </section>
-            ) : currentUser.role === 'USER' ? (
+            currentUser?.role === 'USER' ? (
               <AccessRestrictedGate
                 currentUser={currentUser}
                 onElevateToAdmin={() => {
@@ -737,13 +409,13 @@ export default function App() {
                 muleCluster={muleCluster}
                 agents={agents}
                 regionalMetrics={regionalMetrics}
-                onOpenInvestigation={(txn) => requireSignIn(() => setSelectedTxnForInvestigation(txn))}
-                onFreezeWallet={(walletId, label) => requireSignIn(() => { void handleFreezeWallet(walletId, label); })}
-                onDispatchLiquidity={(agentId, agentName, amount) => requireSignIn(() => { void handleDispatchLiquidity(agentId, agentName, amount); })}
-                onActivateMonitoring={(division) => requireSignIn(() => { void handleActivateMonitoring(division); })}
+                onOpenInvestigation={(txn) => setSelectedTxnForInvestigation(txn)}
+                onFreezeWallet={handleFreezeWallet}
+                onDispatchLiquidity={handleDispatchLiquidity}
+                onActivateMonitoring={handleActivateMonitoring}
                 auditLogs={auditLogs}
                 initialTab={operatorTab}
-                onTabChange={navigateToOperatorTab}
+                onTabChange={(tab) => setOperatorTab(tab)}
                 lang={lang}
               />
             )
@@ -751,14 +423,11 @@ export default function App() {
 
           {activeView === 'CUSTOMER' && (
             <CustomerAppView
-              customer={getCustomerProfile(currentUser)}
-              userId={currentUser?.id || 'guest'}
+              customer={DEMO_CUSTOMER_PROFILES[currentUser?.id || ''] || CURRENT_CUSTOMER}
+              userId={currentUser?.id || CURRENT_CUSTOMER.wallet}
               onSimulateRiskyPayment={() => {
                 // Ensure critical transaction is visible in operator queue
               }}
-              initialService={requestedWalletService}
-              allowCashIn={currentUser?.role !== 'USER'}
-              onServiceDismiss={() => setRequestedWalletService(null)}
               lang={lang}
             />
           )}
@@ -789,7 +458,6 @@ export default function App() {
           isOpen={!!selectedTxnForInvestigation}
           onClose={() => setSelectedTxnForInvestigation(null)}
           onTakeAction={handleTakeInvestigationAction}
-          onLabelAlert={handleLabelAlert}
         />
       )}
 
@@ -799,7 +467,7 @@ export default function App() {
         onClose={() => setActiveModal(null)}
         lang={lang}
         onNavigateView={(v) => {
-          navigateToView(v);
+          setActiveView(v);
           setActiveModal(null);
         }}
       />
@@ -808,7 +476,7 @@ export default function App() {
       <UpayFooter
         onOpenModal={(modal) => setActiveModal(modal)}
         onNavigateHome={() => {
-          navigateToView('OPERATOR');
+          setActiveView('OPERATOR');
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
       />

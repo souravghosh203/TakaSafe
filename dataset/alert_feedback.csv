@@ -1,3 +1,0 @@
-timestamp,case_id,transaction_id,analyst,outcome,risk_score,notes
-"2026-10-03T20:04:51.411Z","CASE-TXN-90821","TXN-90821","Md. Sadman Al Islam Shabab","CONFIRMED_FRAUD","12",""
-DEC-SBQV3W18,2026-10-04T21:51:12.099Z,SCAMSHIELD_CUSTOMER,01988-510294,VERIFY,100,"User clicked Verify Recipient",false

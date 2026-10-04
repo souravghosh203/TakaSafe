@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { AuthUser, UserRole } from '../../types';
-import shababAvatar from '../../../assets/shabab.png';
 import {
   ShieldCheck,
   User,
   Lock,
+  Mail,
   Eye,
   EyeOff,
   ArrowLeft,
@@ -20,13 +20,9 @@ import {
 } from 'lucide-react';
 
 interface LoginPageProps {
-  onLogin: (user: AuthUser, remember: boolean) => void;
+  onLogin: (user: AuthUser) => void;
   onCancel: () => void;
-  onRegister: () => void;
-  showBackButton?: boolean;
   lang: 'EN' | 'BN';
-  theme?: 'light' | 'dark';
-  onOpenInfo?: (modal: 'TERMS' | 'PRIVACY_POLICY') => void;
 }
 
 const adminPermissions: AuthUser['permissions'] = {
@@ -74,7 +70,6 @@ export const DEMO_PROFILES: AuthUser[] = [
     phone: '+880 1912-403922',
     role: 'ADMIN',
     designation: 'Model Architecture & Explainability Lead',
-    avatar: shababAvatar,
     permissions: adminPermissions,
   },
   {
@@ -121,196 +116,151 @@ export const DEMO_ACCOUNTS: Record<UserRole, AuthUser> = {
   USER: DEMO_PROFILES.find((profile) => profile.role === 'USER')!,
 };
 
-const PROFILE_STORAGE_PREFIX = 'takasafe-profile:';
-const loadQuickLoginProfiles = (): AuthUser[] => DEMO_PROFILES.map((profile) => {
-  try {
-    const saved = localStorage.getItem(`${PROFILE_STORAGE_PREFIX}${profile.id}`);
-    return saved ? { ...profile, ...JSON.parse(saved) } : profile;
-  } catch { return profile; }
-});
-
-export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, onRegister, showBackButton = true, lang, theme = 'light', onOpenInfo }) => {
-  const isBn = lang === 'BN';
-  const t = (english: string, bangla: string) => isBn ? bangla : english;
-  const [quickLoginProfiles, setQuickLoginProfiles] = useState<AuthUser[]>(loadQuickLoginProfiles);
+export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, lang }) => {
   const [selectedRole, setSelectedRole] = useState<UserRole>('ADMIN');
-  const [phone, setPhone] = useState<string>(DEMO_ACCOUNTS.ADMIN.phone.replace(/^\+880\s*/, '0').replace(/\D/g, ''));
-  const [pin, setPin] = useState<string>('123456');
-  const [showPin, setShowPin] = useState<boolean>(false);
+  const [selectedProfileId, setSelectedProfileId] = useState<string>(DEMO_ACCOUNTS.ADMIN.id);
+  const [email, setEmail] = useState<string>(DEMO_ACCOUNTS.ADMIN.email);
+  const [password, setPassword] = useState<string>('••••••••••••');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showMatrixModal, setShowMatrixModal] = useState<boolean>(false);
-  const [remember, setRemember] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  const normalizePhone = (value: string) => {
-    let digits = value.replace(/\D/g, '');
-    if (digits.startsWith('880')) digits = digits.slice(3);
-    if (digits.startsWith('0')) digits = digits.slice(1);
-    return digits;
-  };
-
-  useEffect(() => {
-    const refreshProfiles = () => setQuickLoginProfiles(loadQuickLoginProfiles());
-    const refreshOnFocus = () => { if (document.visibilityState === 'visible') refreshProfiles(); };
-    const refreshOnStorage = (event: StorageEvent) => {
-      if (event.key?.startsWith(PROFILE_STORAGE_PREFIX)) refreshProfiles();
-    };
-    window.addEventListener('focus', refreshOnFocus);
-    window.addEventListener('storage', refreshOnStorage);
-    document.addEventListener('visibilitychange', refreshOnFocus);
-    return () => {
-      window.removeEventListener('focus', refreshOnFocus);
-      window.removeEventListener('storage', refreshOnStorage);
-      document.removeEventListener('visibilitychange', refreshOnFocus);
-    };
-  }, []);
-
-  useEffect(() => {
-    setErrorMsg(null);
-  }, [lang]);
 
   // Switch role selection and autofill matching demo credentials
   const handleSelectRole = (role: UserRole) => {
     setSelectedRole(role);
     const profile = DEMO_PROFILES.find((candidate) => candidate.role === role)!;
-    setPhone(`0${normalizePhone(profile.phone)}`);
-    setPin('123456');
+    setSelectedProfileId(profile.id);
+    setEmail(profile.email);
+    setPassword('••••••••••••');
     setErrorMsg(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const normalizedPhone = normalizePhone(phone);
-    if (!/^1[3-9]\d{8}$/.test(normalizedPhone)) {
-      setErrorMsg(t('Enter a valid Bangladesh mobile number.', 'বৈধ বাংলাদেশি মোবাইল নম্বর লিখুন।'));
+    if (!email.trim()) {
+      setErrorMsg('Please enter a valid email address.');
       return;
     }
-    if (!/^\d{6}$/.test(pin)) {
-      setErrorMsg(t('Enter your 6-digit PIN.', 'আপনার ৬ সংখ্যার পিন লিখুন।'));
+    if (!password.trim()) {
+      setErrorMsg('Please enter your account password.');
       return;
     }
 
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      const phoneProfile = DEMO_PROFILES.find((profile) => normalizePhone(profile.phone) === normalizedPhone);
-      if (!phoneProfile || phoneProfile.role !== selectedRole) {
-        setErrorMsg(t('That mobile number does not match a demo profile for the selected role. Choose a listed demo profile or register.', 'এই মোবাইল নম্বরটি নির্বাচিত ভূমিকার ডেমো প্রোফাইলের সঙ্গে মেলে না। তালিকা থেকে প্রোফাইল বেছে নিন অথবা নিবন্ধন করুন।'));
+      const user = DEMO_PROFILES.find((profile) => profile.id === selectedProfileId && profile.role === selectedRole && profile.email.toLowerCase() === email.trim().toLowerCase());
+      if (!user) {
+        setErrorMsg('Choose a demo profile that matches the selected role and email.');
         return;
       }
-      if (pin !== '123456') {
-        setErrorMsg(t('For this demo, use PIN 123456. Real PIN authentication is not connected.', 'এই ডেমোর জন্য ১২৩৪৫৬ পিন ব্যবহার করুন। প্রকৃত পিন যাচাই সংযুক্ত নয়।'));
-        return;
-      }
-      onLogin(phoneProfile, remember);
+      onLogin(user);
     }, 400);
   };
 
-  const handleQuickLogin = (profile: AuthUser) => {
-    setErrorMsg(null);
-    onLogin(profile, true);
+  const handleGoogleSignIn = () => {
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      onLogin(DEMO_PROFILES.find((profile) => profile.id === selectedProfileId)!);
+    }, 450);
   };
 
   return (
-    <div className="login-scene min-h-[85vh] flex items-center justify-center py-10 px-4 sm:px-6 font-sans" lang={isBn ? 'bn' : 'en'} data-theme={theme}>
-      <div className="login-glow login-glow-one" aria-hidden="true" />
-      <div className="login-glow login-glow-two" aria-hidden="true" />
-      <div className="login-card w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-200/80 p-8 sm:p-10 relative card-hover-lift">
+    <div className="min-h-[85vh] flex items-center justify-center py-10 px-4 sm:px-6 font-sans">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-200/80 p-8 sm:p-10 relative animate-slide-up card-hover-lift">
         {/* Top Back Navigation */}
-        {showBackButton && (
-          <button
-            onClick={onCancel}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-6 cursor-pointer"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>{t('Back to Home', 'হোমে ফিরুন')}</span>
-          </button>
-        )}
+        <button
+          onClick={onCancel}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-6 cursor-pointer"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to Home</span>
+        </button>
 
         {/* Header Kicker and Title matching user image reference */}
         <div className="text-center mb-6">
-          <div className="login-kicker inline-flex items-center gap-1.5 text-[11px] font-mono tracking-widest text-[#0054A6] font-bold uppercase mb-2">
-            <span className="login-kicker-dot w-1.5 h-1.5 rounded-full bg-[#0054A6]"></span>
-            <span>{t('Account Access', 'অ্যাকাউন্টে প্রবেশ')}</span>
+          <div className="inline-flex items-center gap-1.5 text-[11px] font-mono tracking-widest text-[#164E3D] font-bold uppercase mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#164E3D]"></span>
+            <span>Account Access</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-serif font-black text-slate-900 tracking-tight">
-            {t('Sign in', 'লগইন')}
+            Sign in
           </h1>
           <p className="text-xs text-slate-500 mt-2 max-w-xs mx-auto leading-relaxed">
-            {t('Sign in with your Bangladesh mobile number and 6-digit PIN. Demo credentials only; PIN authentication is not connected.', 'বাংলাদেশি মোবাইল নম্বর ও ৬ সংখ্যার পিন দিয়ে লগইন করুন। এটি শুধু ডেমো; প্রকৃত পিন যাচাই সংযুক্ত নয়।')}
+            Access your TakaSafe dashboard, fraud surveillance controls, and wallet security.
           </p>
         </div>
 
         {/* Two Options: Admin vs User Role Selector */}
         <div className="mb-6 space-y-3">
           <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-            {t('Select Access Role', 'প্রবেশের ধরন বেছে নিন')}
+            Select Access Role
           </div>
 
-          <div className="login-role-switch grid grid-cols-2 gap-2 p-1 bg-slate-100/90 rounded-2xl border border-slate-200">
+          <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100/90 rounded-2xl border border-slate-200">
             {/* Admin Option */}
             <button
               type="button"
               onClick={() => handleSelectRole('ADMIN')}
-              aria-pressed={selectedRole === 'ADMIN'}
-              className={`login-role-option flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedRole === 'ADMIN'
                   ? 'bg-white text-slate-950 shadow-md ring-1 ring-slate-900/10'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <ShieldCheck className={`w-4 h-4 ${selectedRole === 'ADMIN' ? 'text-[#0054A6]' : 'text-slate-400'}`} />
-              <span>{t('Admin', 'অ্যাডমিন')}</span>
+              <span>Admin</span>
             </button>
 
             {/* User Option */}
             <button
               type="button"
               onClick={() => handleSelectRole('USER')}
-              aria-pressed={selectedRole === 'USER'}
-              className={`login-role-option flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedRole === 'USER'
                   ? 'bg-white text-slate-950 shadow-md ring-1 ring-slate-900/10'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <User className={`w-4 h-4 ${selectedRole === 'USER' ? 'text-[#0054A6]' : 'text-slate-400'}`} />
-              <span>{t('User', 'ব্যবহারকারী')}</span>
+              <User className={`w-4 h-4 ${selectedRole === 'USER' ? 'text-emerald-600' : 'text-slate-400'}`} />
+              <span>User</span>
             </button>
           </div>
 
           {/* Dynamic Active Role Privileges Panel */}
-          <div key={selectedRole} className={`login-privileges p-3.5 rounded-2xl border text-xs transition-all ${
+          <div className={`p-3.5 rounded-2xl border text-xs transition-all ${
             selectedRole === 'ADMIN'
               ? 'bg-blue-50/80 border-blue-200 text-blue-950'
-              : 'bg-sky-50/90 border-sky-200 text-sky-950'
+              : 'bg-emerald-50/80 border-emerald-200 text-emerald-950'
           }`}>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className={`w-2.5 h-2.5 rounded-full ${
-                  selectedRole === 'ADMIN' ? 'bg-[#0054A6]' : 'bg-sky-600'
+                  selectedRole === 'ADMIN' ? 'bg-[#0054A6]' : 'bg-emerald-600'
                 }`} />
                 <span className="font-bold text-xs">
-                  {selectedRole === 'ADMIN' ? t('Admin: Operator Intelligence', 'অ্যাডমিন: অপারেটর ইন্টেলিজেন্স') : t('User: Customer Wallet', 'ব্যবহারকারী: গ্রাহক ওয়ালেট')}
+                  {selectedRole === 'ADMIN' ? 'Admin: Operator Intelligence' : 'User: Customer Wallet'}
                 </span>
               </div>
               <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
                 selectedRole === 'ADMIN'
                   ? 'bg-[#0054A6] text-white'
-                  : 'bg-sky-600 text-white'
+                  : 'bg-emerald-600 text-white'
               }`}>
-                {selectedRole === 'ADMIN' ? (isBn ? '৬/৬ অনুমতি' : '6/6 Authorizations') : (isBn ? '২/৬ অনুমতি' : '2/6 Authorizations')}
+                {selectedRole === 'ADMIN' ? '6/6 Authorizations' : '2/6 Authorizations'}
               </span>
             </div>
 
             <p className="text-[11px] text-slate-600 mb-2.5 leading-snug">
               {selectedRole === 'ADMIN' ? (
                 <span>
-                  <strong>{t('Full Administrative Access:', 'সম্পূর্ণ প্রশাসনিক প্রবেশাধিকার:')}</strong> {t('Authorized for National Risk Cockpit, multi-hop MuleVision graph, suspicious wallet quarantine, coastal float dispatch, policy tuning & BFIU regulatory compliance.', 'ন্যাশনাল রিস্ক ককপিট, মাল্টি-হপ MuleVision গ্রাফ, সন্দেহজনক ওয়ালেট স্থগিত, জরুরি নগদ সরবরাহ, নীতিমালা সমন্বয় এবং BFIU নিয়ন্ত্রক পরিপালনের অনুমতি রয়েছে।')}
+                  <strong>Full Administrative Access:</strong> Authorized for National Risk Cockpit, multi-hop MuleVision graph, suspicious wallet quarantine, coastal float dispatch, policy tuning & BFIU regulatory compliance.
                 </span>
               ) : (
                 <span>
-                  <strong>{t('Scoped Customer Access:', 'সীমিত গ্রাহক প্রবেশাধিকার:')}</strong> {t('Authorized for personal Upay customer wallet, Send Money with ScamShield protection & linked accounts. Administrative surveillance and network freezing are restricted.', 'ব্যক্তিগত Upay ওয়ালেট, ScamShield সুরক্ষাসহ টাকা পাঠানো এবং সংযুক্ত অ্যাকাউন্ট ব্যবহারের অনুমতি রয়েছে। প্রশাসনিক নজরদারি ও নেটওয়ার্ক স্থগিত করার সুবিধা নেই।')}
+                  <strong>Scoped Customer Access:</strong> Authorized for personal Upay customer wallet, Send Money with ScamShield protection & linked accounts. Administrative surveillance and network freezing are restricted.
                 </span>
               )}
             </p>
@@ -321,54 +271,54 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, onRegis
                 <>
                   <div className="flex items-center gap-1.5 text-slate-800">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#0054A6] shrink-0" />
-                    <span>{t('Operator Cockpit & Live Ticker', 'অপারেটর ককপিট ও লাইভ টিকার')}</span>
+                    <span>Operator Cockpit & Live Ticker</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-800">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#0054A6] shrink-0" />
-                    <span>{t('Quarantine & Freeze Wallets', 'ওয়ালেট কোয়ারেন্টাইন ও স্থগিত')}</span>
+                    <span>Quarantine & Freeze Wallets</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-800">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#0054A6] shrink-0" />
-                    <span>{t('Dispatch Emergency Agent Floats', 'জরুরি এজেন্ট নগদ পাঠানো')}</span>
+                    <span>Dispatch Emergency Agent Floats</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-800">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#0054A6] shrink-0" />
-                    <span>{t('Tune ML Policy Weights', 'এমএল নীতিমালার ওজন সমন্বয়')}</span>
+                    <span>Tune ML Policy Weights</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-800">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#0054A6] shrink-0" />
-                    <span>{t('Export BFIU Audit Logs (CSV)', 'BFIU নিরীক্ষা লগ রপ্তানি (CSV)')}</span>
+                    <span>Export BFIU Audit Logs (CSV)</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-800">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#0054A6] shrink-0" />
-                    <span>{t('AI Dossier Case Investigations', 'এআই ডসিয়ার কেস তদন্ত')}</span>
+                    <span>AI Dossier Case Investigations</span>
                   </div>
                 </>
               ) : (
                 <>
                   <div className="flex items-center gap-1.5 text-slate-800 font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-                    <span>{t('Personal Wallet & Balances', 'ব্যক্তিগত ওয়ালেট ও ব্যালেন্স')}</span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Personal Wallet & Balances</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-800 font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-                    <span>{t('Send Money & ScamShield', 'টাকা পাঠানো ও ScamShield')}</span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Send Money & ScamShield</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-400">
                     <XCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                    <span className="line-through">{t('Operator Surveillance', 'অপারেটর নজরদারি')}</span>
+                    <span className="line-through">Operator Surveillance</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-400">
                     <XCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                    <span className="line-through">{t('Quarantine Wallets', 'ওয়ালেট কোয়ারেন্টাইন')}</span>
+                    <span className="line-through">Quarantine Wallets</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-400">
                     <XCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                    <span className="line-through">{t('Dispatch Cash Floats', 'নগদ সরবরাহ পাঠানো')}</span>
+                    <span className="line-through">Dispatch Cash Floats</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-400">
                     <XCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                    <span className="line-through">{t('Policy Tuning & Audit Export', 'নীতিমালা সমন্বয় ও নিরীক্ষা রপ্তানি')}</span>
+                    <span className="line-through">Policy Tuning & Audit Export</span>
                   </div>
                 </>
               )}
@@ -376,9 +326,48 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, onRegis
           </div>
         </div>
 
+        {/* Continue with Google button matching image reference */}
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          disabled={isSubmitting}
+          className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 bg-white hover:bg-slate-50 border border-slate-300 rounded-full text-xs font-semibold text-slate-700 shadow-xs transition-all cursor-pointer hover:shadow-sm"
+        >
+          {/* Multicolored Google SVG Icon */}
+          <svg className="w-4 h-4" viewBox="0 0 24 24">
+            <path
+              fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+            />
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        {/* OR Divider */}
+        <div className="relative my-5">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200"></div>
+          </div>
+          <div className="relative flex justify-center text-[10px] font-mono tracking-widest uppercase">
+            <span className="bg-white px-3 text-slate-400 font-semibold">Or</span>
+          </div>
+        </div>
+
         {/* Error notification if any */}
         {errorMsg && (
-          <div role="alert" className="login-error mb-4 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+          <div className="mb-4 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
             <span>{errorMsg}</span>
           </div>
@@ -388,137 +377,114 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, onRegis
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              {t('Bangladesh mobile number', 'বাংলাদেশি মোবাইল নম্বর')} <span className="text-rose-500">*</span>
+              Email address <span className="text-rose-500">*</span>
             </label>
-            <div className="flex gap-2">
-              <span className="inline-flex items-center rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs font-bold text-slate-700">+880</span>
+            <div className="relative">
               <input
-                type="tel"
-                inputMode="numeric"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value.replace(/[^\d+\s()-]/g, '').slice(0, 18))}
-                placeholder={t('01XXXXXXXXX', '০১XXXXXXXXX')}
-                autoComplete="tel-national"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  const nextEmail = e.target.value;
+                  setEmail(nextEmail);
+                  const matchingProfile = DEMO_PROFILES.find((profile) => profile.email.toLowerCase() === nextEmail.trim().toLowerCase());
+                  if (matchingProfile) {
+                    setSelectedRole(matchingProfile.role);
+                    setSelectedProfileId(matchingProfile.id);
+                  }
+                }}
+                placeholder="Enter Your Email"
                 required
-                className="login-input w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0054A6] focus:border-transparent transition-all"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#164E3D] focus:border-transparent transition-all"
               />
             </div>
-            <p className="mt-1 text-[10px] text-slate-500">{t('Use a demo profile number below or register for an account.', 'নিচের ডেমো প্রোফাইলের নম্বর ব্যবহার করুন অথবা নতুন অ্যাকাউন্ট খুলুন।')}</p>
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              {t('6-digit PIN', '৬ সংখ্যার পিন')} <span className="text-rose-500">*</span>
+              Password <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <input
-                type={showPin ? 'text' : 'password'}
-                inputMode="numeric"
-                maxLength={6}
-                value={pin}
-                onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder={t('Enter your 6-digit PIN', 'আপনার ৬ সংখ্যার পিন লিখুন')}
-                autoComplete="current-password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter Your Password"
                 required
-                className="login-input w-full px-3.5 py-2.5 pr-10 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0054A6] focus:border-transparent transition-all"
+                className="w-full px-3.5 py-2.5 pr-10 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#164E3D] focus:border-transparent transition-all"
               />
               <button
                 type="button"
-                onClick={() => setShowPin(!showPin)}
-                aria-label={showPin ? t('Hide PIN', 'পিন লুকান') : t('Show PIN', 'পিন দেখান')}
-                aria-pressed={showPin}
+                onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
               >
-                {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            <p className="mt-1 text-[10px] text-slate-500">{t('Demo PIN: 123456. This preview does not check real account credentials.', 'ডেমো পিন: ১২৩৪৫৬। এই প্রিভিউ প্রকৃত অ্যাকাউন্টের তথ্য যাচাই করে না।')}</p>
           </div>
 
           <div className="flex items-center justify-between text-xs pt-1">
             <label className="flex items-center gap-2 text-slate-600 cursor-pointer select-none">
               <input
                 type="checkbox"
-                checked={remember}
-                onChange={(event) => setRemember(event.target.checked)}
-                className="rounded border-slate-300 text-[#0054A6] focus:ring-[#0054A6]"
+                defaultChecked
+                className="rounded border-slate-300 text-[#164E3D] focus:ring-[#164E3D]"
               />
-              <span className="text-[11px]">{t('Remember me', 'আমাকে মনে রাখুন')}</span>
+              <span className="text-[11px]">Remember me</span>
             </label>
             <button
               type="button"
-              onClick={() => setErrorMsg(t('PIN recovery is unavailable in this demo. Please use the demo credentials or register.', 'এই ডেমোতে পিন পুনরুদ্ধার করা যায় না। ডেমো তথ্য ব্যবহার করুন অথবা নিবন্ধন করুন।'))}
+              onClick={() => setErrorMsg('Password reset link sent to registered email.')}
               className="text-[11px] font-semibold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
             >
-              {t('Forgot PIN?', 'পিন ভুলে গেছেন?')}
+              Forgot password?
             </button>
           </div>
 
           <div className="text-[11px] text-slate-500 text-center leading-normal pt-1">
-            {t('By signing in, I agree to the', 'লগইন করার মাধ্যমে আমি সম্মত হচ্ছি')} {' '}
-            <button type="button" onClick={() => onOpenInfo?.('TERMS')} className="text-slate-700 underline font-medium cursor-pointer">{t('Terms of Service', 'সেবার শর্তাবলি')}</button> {t('and', 'এবং')} {' '}
-            <button type="button" onClick={() => onOpenInfo?.('PRIVACY_POLICY')} className="text-slate-700 underline font-medium cursor-pointer">{t('Privacy Policy', 'গোপনীয়তা নীতি')}</button>
+            By signing in, I agree to the{' '}
+            <span className="text-slate-700 underline font-medium cursor-pointer">Terms of Service</span> and{' '}
+            <span className="text-slate-700 underline font-medium cursor-pointer">Privacy Policy</span>
           </div>
 
           {/* Primary Sign In Button */}
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`login-submit w-full py-3 px-4 text-white font-bold rounded-full text-xs shadow-md hover:shadow-lg transition-all transform active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 ${
+            className={`w-full py-3 px-4 text-white font-bold rounded-full text-xs shadow-md hover:shadow-lg transition-all transform active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 ${
               selectedRole === 'ADMIN'
                 ? 'bg-[#0054A6] hover:bg-[#004080]'
-                : 'bg-[#0879C9] hover:bg-[#0054A6]'
+                : 'bg-[#164E3D] hover:bg-[#113C2F]'
             }`}
           >
             {isSubmitting ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <>
-                <span>{t('Sign in as', 'লগইন করুন')} {selectedRole === 'ADMIN' ? t('Admin', 'অ্যাডমিন') : t('User', 'ব্যবহারকারী')}</span>
+                <span>Sign in as {selectedRole === 'ADMIN' ? 'Admin' : 'User'}</span>
                 <ChevronRight className="w-4 h-4 text-amber-300" />
               </>
             )}
           </button>
         </form>
 
-        <div className="mt-4 text-center text-xs text-slate-600">
-          {t('New to টাকা Safe?', 'টাকা Safe-এ নতুন?')} {' '}
-          <button type="button" onClick={onRegister} className="font-bold text-[#0054A6] hover:underline underline-offset-2">
-            {t('Create an account', 'অ্যাকাউন্ট তৈরি করুন')}
-          </button>
-        </div>
-
-        <div className="mt-6 pt-5 border-t border-slate-200/80">
-          <div className="mb-3 text-center">
-            <span className="text-[10px] font-mono uppercase text-slate-500 font-bold block">
-              {t('Quick demo sign-in', 'দ্রুত ডেমো লগইন')}
-            </span>
-            <span className="mt-1 block text-[10px] text-slate-500">
-              {t('Select an account to sign in directly. Demo PIN: 123456.', 'সরাসরি লগইন করতে একটি অ্যাকাউন্ট বেছে নিন। ডেমো পিন: ১২৩৪৫৬।')}
-            </span>
-          </div>
-          <div className="space-y-3">
-            {(['ADMIN', 'USER'] as UserRole[]).map((role) => (
-              <section key={role} className={`demo-account-group demo-account-${role.toLowerCase()}`}>
-                <div className="demo-account-heading">
-                  {role === 'ADMIN' ? <ShieldCheck size={14} /> : <User size={14} />}
-                  <strong>{role === 'ADMIN' ? t('Admin demo accounts', 'অ্যাডমিন ডেমো অ্যাকাউন্ট') : t('Customer demo accounts', 'গ্রাহক ডেমো অ্যাকাউন্ট')}</strong>
-                  <span>{quickLoginProfiles.filter((profile) => profile.role === role).length}</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {quickLoginProfiles.filter((profile) => profile.role === role).map((profile) => (
-                    <button
-                      key={profile.id}
-                      type="button"
-                      onClick={() => handleQuickLogin(profile)}
-                      className="login-profile w-full text-[11px] font-bold text-slate-800 border px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
-                    >
-                      {role === 'ADMIN' ? <ShieldCheck className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-                      <span>{profile.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </section>
+        {/* Quick 1-Click Demo Profiles Footer for Evaluators */}
+        <div className="mt-6 pt-5 border-t border-slate-200/80 text-center">
+          <span className="text-[10px] font-mono uppercase text-slate-400 font-bold block mb-2">
+            Quick 1-Click Demo Logins for Evaluators
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {DEMO_PROFILES.map((profile) => (
+              <button
+                key={profile.id}
+                type="button"
+                onClick={() => onLogin(profile)}
+                className={`w-full text-[11px] font-bold text-slate-800 ${profile.role === 'ADMIN' ? 'bg-blue-50 hover:bg-blue-100 border-blue-200' : 'bg-emerald-50 hover:bg-emerald-100 border-emerald-200'} border px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs`}
+              >
+                {profile.role === 'ADMIN'
+                  ? <ShieldCheck className="w-3.5 h-3.5 text-[#0054A6]" />
+                  : <User className="w-3.5 h-3.5 text-emerald-600" />}
+                <span>{profile.name}</span>
+              </button>
             ))}
           </div>
         </div>

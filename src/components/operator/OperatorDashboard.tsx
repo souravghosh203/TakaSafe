@@ -17,7 +17,6 @@ import { LiveWebSocketTicker } from './LiveWebSocketTicker';
 import { ComplianceReportModal } from './ComplianceReportModal';
 import { RiskDistributionDonutChart } from './RiskDistributionDonutChart';
 import { PolicyWeightsActionEngine } from './PolicyWeightsActionEngine';
-import { RegionalRiskHeatmapGrid } from './RegionalRiskHeatmapGrid';
 import {
   ShieldCheck,
   AlertTriangle,
@@ -36,7 +35,6 @@ import {
   ArrowUpRight,
   Download,
   Printer,
-  Flame,
 } from 'lucide-react';
 
 interface OperatorDashboardProps {
@@ -77,17 +75,6 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   const [latestTickerTxn, setLatestTickerTxn] = useState<Transaction | null>(transactions[0] || null);
   const [isTickerFlashing, setIsTickerFlashing] = useState<boolean>(false);
   const [isComplianceModalOpen, setIsComplianceModalOpen] = useState<boolean>(false);
-  const [alertFeedback, setAlertFeedback] = useState<Array<{ outcome: string }>>([]);
-
-  useEffect(() => {
-    const refreshFeedback = () => fetch('/api/alert-feedback')
-      .then((response) => response.ok ? response.json() : Promise.reject(new Error('Alert feedback unavailable')))
-      .then((data) => { if (Array.isArray(data.feedback)) setAlertFeedback(data.feedback); })
-      .catch(() => undefined);
-    refreshFeedback();
-    window.addEventListener('takasafe-alert-feedback', refreshFeedback);
-    return () => window.removeEventListener('takasafe-alert-feedback', refreshFeedback);
-  }, []);
 
   useEffect(() => {
     if (initialTab && initialTab !== activeTab) {
@@ -202,9 +189,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         txn.id.toLowerCase().includes(q) ||
         txn.senderName.toLowerCase().includes(q) ||
         txn.senderWallet.includes(q) ||
-        txn.receiverWallet.includes(q) ||
-        txn.senderLocation.toLowerCase().includes(q) ||
-        txn.receiverLocation.toLowerCase().includes(q)
+        txn.receiverWallet.includes(q)
       );
     }
     return true;
@@ -333,7 +318,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
       />
 
       {/* Top Level Metric Cockpit Bar with Staggered Slide Up Animation */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 stagger-grid scroll-reveal">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 stagger-grid">
         <div className="bg-white dark:bg-[#0F172A] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm card-hover-lift text-slate-900 dark:text-slate-100">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">National Risk Index</span>
@@ -351,10 +336,10 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         <div className="bg-white dark:bg-[#0F172A] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm card-hover-lift text-slate-900 dark:text-slate-100">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">High / Critical Alerts</span>
-            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span key={criticalCount} className="text-2xl font-black font-mono text-rose-600 dark:text-rose-400 metric-change">{criticalCount}</span>
+            <span className="text-2xl font-black font-mono text-rose-600 dark:text-rose-400">{criticalCount}</span>
             <span className="text-xs text-slate-500 dark:text-slate-400">Active</span>
           </div>
           <span className="text-[10px] text-rose-600 dark:text-rose-400 font-semibold block mt-1">
@@ -396,7 +381,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
             <FileCheck2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span key={auditLogs.length} className="text-2xl font-black font-mono text-slate-900 dark:text-white metric-change">{auditLogs.length}</span>
+            <span className="text-2xl font-black font-mono text-slate-900 dark:text-white">{auditLogs.length}</span>
             <span className="text-xs text-slate-500 dark:text-slate-400">Decisions</span>
           </div>
           <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block mt-1">
@@ -410,12 +395,11 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         {[
           { id: 'OVERVIEW', label: '1. Transaction Guardian', icon: ShieldCheck, badge: criticalCount },
           { id: 'MULEVISION', label: '2. MuleVision (Graph)', icon: Network },
-          { id: 'GEOSPATIAL', label: '3. Geospatial Intelligence', icon: Globe },
+          { id: 'RESILIENCE', label: '3. Disaster Resilience Mode', icon: CloudLightning },
           { id: 'RADAR', label: '4. Early-Warning Radar', icon: Radar },
-          { id: 'REGIONAL_HEATMAP', label: '5. Regional Heatmap Grid', icon: Flame },
-          { id: 'RESILIENCE', label: '6. Disaster Resilience Mode', icon: CloudLightning },
-          { id: 'POLICY', label: '7. Policy Weights & Action Engine', icon: Sliders },
-          { id: 'AUDIT', label: '8. Audit Logs & Compliance', icon: FileCheck2 },
+          { id: 'GEOSPATIAL', label: '5. Geospatial Intelligence', icon: Globe },
+          { id: 'POLICY', label: '6. Policy Weights & Action Engine', icon: Sliders },
+          { id: 'AUDIT', label: '7. Audit Logs & Compliance', icon: FileCheck2 },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -426,7 +410,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                 setActiveTab(tab.id);
                 onTabChange?.(tab.id);
               }}
-              className={`relative flex items-center gap-2 py-3 px-4 font-bold text-xs rounded-t-xl transition-all duration-200 whitespace-nowrap cursor-pointer ${
+              className={`flex items-center gap-2 py-3 px-4 font-bold text-xs rounded-t-xl transition-all whitespace-nowrap cursor-pointer ${
                 isActive
                   ? 'bg-white dark:bg-[#0F172A] text-[#0054A6] dark:text-blue-400 border-t-2 border-l border-r border-[#0054A6] dark:border-slate-700 border-t-[#0054A6] -mb-[1px] shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
@@ -434,7 +418,6 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
             >
               <Icon className="w-4 h-4" />
               <span>{tab.label}</span>
-              <span aria-hidden="true" className={`absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-amber-400 tab-indicator ${isActive ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-50'}`} />
               {tab.badge !== undefined && tab.badge > 0 && (
                 <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full">
                   {tab.badge}
@@ -465,32 +448,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
             </div>
           </div>
 
-          {/* New Section: Regional Risk Levels & Fraud Cluster Grid (Map-like D3 Grid / Recharts Heatmap) */}
-          <div id="regional-risk-heatmap-section" className="animate-slide-up stagger-2">
-            <RegionalRiskHeatmapGrid
-              regionalMetrics={regionalMetrics}
-              transactions={liveTransactions}
-              agents={agents}
-              onSelectRegion={(division) => {
-                setSearchQuery(division);
-              }}
-              onActivateMonitoring={onActivateMonitoring}
-              onDispatchLiquidity={onDispatchLiquidity}
-              onOpenInvestigation={onOpenInvestigation}
-              onFilterTableToRegion={(regionName) => {
-                setSearchQuery(regionName);
-                const tableElem = document.getElementById('monitored-transactions-table');
-                tableElem?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              onNavigateTab={(tabId) => {
-                setActiveTab(tabId);
-                onTabChange?.(tabId);
-              }}
-              lang={lang}
-            />
-          </div>
-
-          <div id="monitored-transactions-table" className="bg-white dark:bg-[#0F172A] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-slide-up stagger-3">
+          <div className="bg-white dark:bg-[#0F172A] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-slide-up stagger-2">
             {/* Table Filters & Search */}
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/60">
               <div className="flex items-center gap-3">
@@ -607,7 +565,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                           className="inline-flex items-center gap-1.5 bg-[#0054A6] hover:bg-[#004284] text-white font-bold py-1.5 px-3 rounded-lg text-xs shadow-2xs transition-all cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5 text-amber-300" />
-                          <span>Investigate</span>
+                          <span>Investigate (SHAP)</span>
                         </button>
                       </td>
                     </tr>
@@ -621,10 +579,20 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
 
       {/* Tab 2: MuleVision Graph */}
       {activeTab === 'MULEVISION' && (
-        <MuleVisionGraph cluster={muleCluster} onFreezeWallet={onFreezeWallet} lang={lang} />
+        <MuleVisionGraph cluster={muleCluster} onFreezeWallet={onFreezeWallet} />
       )}
 
-      {/* Tab 3: Geospatial Intelligence (D3 Geographic Heatmap) */}
+      {/* Tab 3: Disaster Resilience Mode */}
+      {activeTab === 'RESILIENCE' && (
+        <DisasterResilienceSimulator agents={agents} onDispatchLiquidity={onDispatchLiquidity} />
+      )}
+
+      {/* Tab 4: Early-Warning Radar */}
+      {activeTab === 'RADAR' && (
+        <EarlyWarningRadar metrics={regionalMetrics} onActivateMonitoring={onActivateMonitoring} />
+      )}
+
+      {/* Tab 5: Geospatial Intelligence (D3 Geographic Heatmap) */}
       {activeTab === 'GEOSPATIAL' && (
         <GeospatialIntelligenceMap
           transactions={liveTransactions}
@@ -635,45 +603,6 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
           onOpenInvestigation={onOpenInvestigation}
           lang={lang}
         />
-      )}
-
-      {/* Tab 4: Early-Warning Radar */}
-      {activeTab === 'RADAR' && (
-        <EarlyWarningRadar
-          metrics={regionalMetrics}
-          onActivateMonitoring={onActivateMonitoring}
-          lang={lang}
-        />
-      )}
-
-      {/* Tab 5: Regional Risk Heatmap & Fraud Cluster Grid */}
-      {activeTab === 'REGIONAL_HEATMAP' && (
-        <RegionalRiskHeatmapGrid
-          regionalMetrics={regionalMetrics}
-          transactions={liveTransactions}
-          agents={agents}
-          onSelectRegion={(division) => setSearchQuery(division)}
-          onActivateMonitoring={onActivateMonitoring}
-          onDispatchLiquidity={onDispatchLiquidity}
-          onOpenInvestigation={onOpenInvestigation}
-          onFilterTableToRegion={(regionName) => {
-            setSearchQuery(regionName);
-            setActiveTab('OVERVIEW');
-            setTimeout(() => {
-              document.getElementById('monitored-transactions-table')?.scrollIntoView({ behavior: 'smooth' });
-            }, 100);
-          }}
-          onNavigateTab={(tabId) => {
-            setActiveTab(tabId);
-            onTabChange?.(tabId);
-          }}
-          lang={lang}
-        />
-      )}
-
-      {/* Tab 6: Disaster Resilience Mode */}
-      {activeTab === 'RESILIENCE' && (
-        <DisasterResilienceSimulator agents={agents} onDispatchLiquidity={onDispatchLiquidity} />
       )}
 
       {/* Tab 6: Policy Weights & Action Engine Mapping */}
@@ -735,20 +664,6 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                 </button>
               )}
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 border-b border-slate-200 dark:border-slate-800">
-            {[
-              { label: 'Analyst Labels', count: alertFeedback.length, style: 'text-slate-700 dark:text-slate-200' },
-              { label: 'Confirmed Fraud', count: alertFeedback.filter((item) => item.outcome === 'CONFIRMED_FRAUD').length, style: 'text-rose-700 dark:text-rose-300' },
-              { label: 'False Positives', count: alertFeedback.filter((item) => item.outcome === 'FALSE_POSITIVE').length, style: 'text-amber-700 dark:text-amber-300' },
-              { label: 'Needs Review', count: alertFeedback.filter((item) => item.outcome === 'NEEDS_REVIEW').length, style: 'text-blue-700 dark:text-blue-300' },
-            ].map((metric) => (
-              <div key={metric.label} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2">
-                <div className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">{metric.label}</div>
-                <div className={`text-lg font-black font-mono ${metric.style}`}>{metric.count}</div>
-              </div>
-            ))}
           </div>
 
           {/* Filter & Search Bar */}

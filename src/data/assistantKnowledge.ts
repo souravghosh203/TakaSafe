@@ -12,25 +12,6 @@ export interface KnowledgeItem {
 }
 
 export const TAKASAFE_KNOWLEDGE_BASE: KnowledgeItem[] = [
-  // 0. Official Abstract & Scope
-  {
-    id: 'project_abstract',
-    category: 'OVERVIEW',
-    keywords: ['abstract', 'project abstract', 'official abstract', 'summary', 'research', 'paper', 'novelty', 'novel contributions', 'পাঁচটি সক্ষমতা', 'অ্যাবস্ট্রাক্ট', 'সারসংক্ষেপ'],
-    questionExamples: ['What is the official project abstract?', 'Show me the abstract of TakaSafe', 'অ্যাবস্ট্রাক্ট বা প্রকল্পের সারসংক্ষেপ কী?'],
-    answerEn: `TakaSafe is a modular, explainable AI platform that acts as a financial trust and resilience layer for mobile financial services (MFS). It connects five core capabilities in one coherent system: Transaction Guardian, which combines gradient-boosted fraud classification with Isolation Forest behavioural anomaly detection; MuleVision, which uses transaction-graph analysis to uncover connected fraud networks; ScamShield, which warns customers before a risky payment is completed while leaving the final choice to them; Disaster Financial Resilience Mode, our first primary novel contribution, which simulates how a flood, cyclone or network disruption affects transaction demand, cash-out demand, agent liquidity and fraud vulnerability; and the Financial Early-Warning Radar, our second, which fuses fraud, scam, network, liquidity and behavioural signals into a regional risk score. Every prediction is explained with SHAP feature attribution and converted into a recommended action by an Action Engine; an LLM only narrates structured evidence, and an authorised human makes every high-impact decision. The prototype is built entirely on synthetic data. The platform supports UN SDG 8 (Decent Work and Economic Growth), SDG 9 (Industry, Innovation and Infrastructure) and SDG 16 (Peace, Justice and Strong Institutions).`,
-    answerBn: `TakaSafe হলো একটি মডুলার, ব্যাখ্যামূলক (Explainable) এআই প্ল্যাটফর্ম যা মোবাইল ফাইন্যান্সিয়াল সার্ভিসের (MFS) আর্থিক আস্থা ও স্থিতিস্থাপকতার স্তর হিসেবে কাজ করে। এটি পাঁচটি প্রধান সক্ষমতাকে একটি সুসংহত সিস্টেমে যুক্ত করে: ১) Transaction Guardian (XGBoost ও আইসোলেশন ফরেস্ট সমন্বিত ফ্রড ডিটেকশন); ২) MuleVision (লেনদেন গ্রাফ বিশ্লেষণের মাধ্যমে মানি মিউল নেটওয়ার্ক উন্মোচন); ৩) ScamShield (ঝুঁকিপূর্ণ পেমেন্টের পূর্বে গ্রাহককে সতর্ক করে চূড়ান্ত সিদ্ধান্তের অধিকার তাদের হাতেই রাখা); ৪) Disaster Financial Resilience Mode (আমাদের ১ম মৌলিক অবদান—বন্যা, ঘূর্ণিঝড় বা নেটওয়ার্ক বিভ্রাটে নগদ উত্তোলন চাহিদা, এজেন্টের ক্যাশ সংকট ও জালিয়াতির প্রভাব সিমুলেশন); এবং ৫) Financial Early-Warning Radar (আমাদের ২য় মৌলিক অবদান—জালিয়াতি, স্ক্যাম, নেটওয়ার্ক ও তারল্য সংকেত একত্র করে বিভাগীয় ঝুঁকি স্কোর)। প্রতিটি পূর্বাভাস SHAP দিয়ে ব্যাখ্যা করা হয় এবং অ্যাকশন ইঞ্জিনের মাধ্যমে সুপারিশে রূপান্তরিত হয়; এলএলএম শুধুমাত্র কাঠামোগত প্রমাণ বর্ণনা করে এবং অনুমোদিত ব্যক্তি প্রতিটি চূড়ান্ত সিদ্ধান্ত গ্রহণ করেন। প্রোটোটাইপটি সম্পূর্ণ সিন্থেটিক ডেটায় তৈরি এবং জাতিসংঘ SDG ৮, ৯ ও ১৬ সমর্থন করে।`,
-    suggestedAction: { label: 'View Full Research Storyline', view: 'STORYLINE' },
-  },
-  {
-    id: 'un_sdg_alignment',
-    category: 'OVERVIEW',
-    keywords: ['sdg', 'un sdg', 'sustainable development', 'sdg 8', 'sdg 9', 'sdg 16', 'জাতিসংঘ', 'এসডিজি'],
-    questionExamples: ['How does TakaSafe support UN SDGs?', 'Which Sustainable Development Goals does TakaSafe align with?'],
-    answerEn: 'TakaSafe actively supports three United Nations Sustainable Development Goals: 1) SDG 8 (Decent Work & Economic Growth) by protecting over 1.5M rural agents from liquidity insolvency during disasters and shielding daily-wage earners from scam loss; 2) SDG 9 (Industry, Innovation & Infrastructure) by deploying a < 18ms SLA fault-tolerant resilient payment security layer; and 3) SDG 16 (Peace, Justice & Strong Institutions) by dismantling organized mule laundering syndicates and ensuring 100% human-in-the-loop explainable AI accountability with automated BFIU AML/CFT filings.',
-    answerBn: 'TakaSafe জাতিসংঘের ৩টি টেকসই উন্নয়ন লক্ষ্যমাত্রা (SDG) সরাসরি সমর্থন করে: ১) SDG ৮ (শোভন কাজ ও অর্থনৈতিক প্রবৃদ্ধি)—দুর্যোগে ১.৫ মিলিয়নের বেশি গ্রামীণ এজেন্টের তারল্য সুরক্ষা ও সাধারণ দিনমজুরদের প্রতারণা থেকে রক্ষা; ২) SDG ৯ (শিল্প, উদ্ভাবন ও অবকাঠামো)—১৮ মিলিসেকেন্ডের স্থিতিস্থাপক ও ক্লাইমেট-রেজিলিয়েন্ট পেমেন্ট অবকাঠামো; এবং ৩) SDG ১৬ (শান্তি, ন্যায়বিচার ও কার্যকর প্রতিষ্ঠান)—মিউল সিন্ডিকেট দমন, শতভাগ স্বচ্ছ অ্যালগরিদম ও বিএফআইইউ নিয়ন্ত্রক জবাবদিহিতা।',
-    suggestedAction: { label: 'Explore Interactive Demo', view: 'STORYLINE' },
-  },
   // 1. Overview
   {
     id: 'what_is_takasafe',
@@ -73,15 +54,6 @@ export const TAKASAFE_KNOWLEDGE_BASE: KnowledgeItem[] = [
   },
 
   // 4. ML & XGBoost Models
-  {
-    id: 'ai1_conformal_doubt_check',
-    category: 'ML_AI',
-    keywords: ['ai-1', 'ai1', 'lightgbm', 'conformal', 'calibration', 'doubt check', 'novelty', 'notebook', 'shabab', 'model architecture', 'লাইটজিবিএম'],
-    questionExamples: ['What is the AI-1 Score pipeline?', 'How does the Doubt Check work with Conformal Prediction?'],
-    answerEn: 'The AI-1 Engine (engineered by Model Architecture Lead Md. Sadman Al Islam Shabab) operates a 3-node tri-stage pipeline: 1) Transfer (amount, receiver, moment); 2) AI-1 Score (LightGBM gradient boosting with Isotonic & Platt probability calibration); 3) Doubt Check (Split Conformal Prediction guaranteeing 95% marginal coverage + Out-of-Distribution Novelty scoring). When model uncertainty is high or novelty flags zero-day fraud, ScamShield intercepts the transfer with a 24-hour cooling-off window. The full runnable Python Jupyter Notebook is available in the app under /api/notebook/ai1.',
-    answerBn: 'AI-1 ইঞ্জিন (মডেল আর্কিটেকচার লিড মোঃ সাদমান আল ইসলাম শাবাব কর্তৃক প্রণীত) ৩-স্তরের পাইপলাইনে কাজ করে: ১) ট্রান্সফার (টাকার পরিমাণ, প্রাপক, সময়/মুহূর্ত); ২) AI-1 স্কোর (আইসোটোনিক ও প্ল্যাট ক্যালিব্রেটেড LightGBM); ৩) ডাউট চেক (৯৫% কভারেজ গ্যারান্টিযুক্ত কনফর্মাল প্রেডিকশন এবং ওওডি নভেলটি অ্যানালাইসিস)। যখন মডেলে সন্দেহ বা অপরিচিত প্যাটার্ন দেখা দেয়, ScamShield ২৪ ঘণ্টার কুলিং-অফ সক্রিয় করে। পুরো পাইথন জুপিটার নোটবুকটি অ্যাপের ভেতরেই ডাউনলোড ও পরিদর্শনযোগ্য।',
-    suggestedAction: { label: 'Open Send Money ScamShield', view: 'CUSTOMER' },
-  },
   {
     id: 'ml_models',
     category: 'ML_AI',

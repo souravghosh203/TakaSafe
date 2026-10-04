@@ -4,10 +4,17 @@ import {
   PieChart,
   Pie,
   Cell,
+  Tooltip,
 } from 'recharts';
 import { Transaction, RiskBand } from '../../types';
 import {
   PieChart as PieChartIcon,
+  ShieldAlert,
+  AlertTriangle,
+  Info,
+  ShieldCheck,
+  CheckCircle2,
+  Filter,
   X,
 } from 'lucide-react';
 
@@ -21,7 +28,6 @@ interface RiskDistributionDonutChartProps {
 interface RiskSliceData {
   band: RiskBand;
   name: string;
-  shortName: string;
   count: number;
   percentage: number;
   volumeBDT: number;
@@ -40,8 +46,6 @@ const RISK_BAND_CONFIG: Record<
     borderColor: string;
     labelEN: string;
     labelBN: string;
-    shortLabelEN: string;
-    shortLabelBN: string;
     scoreRange: string;
     actionRequired: string;
   }
@@ -51,9 +55,7 @@ const RISK_BAND_CONFIG: Record<
     bgColor: 'bg-rose-50 text-rose-800',
     borderColor: 'border-rose-200',
     labelEN: 'Critical Risk',
-    labelBN: 'মারাত্মক ঝুঁকি',
-    shortLabelEN: 'Critical',
-    shortLabelBN: 'মারাত্মক',
+    labelBN: 'মারাত্মক ঝুঁকি (Critical)',
     scoreRange: '81 – 100',
     actionRequired: 'Immediate Freeze / Step-Up KYC',
   },
@@ -62,9 +64,7 @@ const RISK_BAND_CONFIG: Record<
     bgColor: 'bg-amber-50 text-amber-800',
     borderColor: 'border-amber-200',
     labelEN: 'High Risk',
-    labelBN: 'উচ্চ ঝুঁকি',
-    shortLabelEN: 'High',
-    shortLabelBN: 'উচ্চ ঝুঁকি',
+    labelBN: 'উচ্চ ঝুঁকি (High)',
     scoreRange: '61 – 80',
     actionRequired: 'Human Review Mandatory',
   },
@@ -73,9 +73,7 @@ const RISK_BAND_CONFIG: Record<
     bgColor: 'bg-blue-50 text-blue-800',
     borderColor: 'border-blue-200',
     labelEN: 'Medium Risk',
-    labelBN: 'মাঝারি ঝুঁকি',
-    shortLabelEN: 'Medium',
-    shortLabelBN: 'মাঝারি',
+    labelBN: 'মাঝারি ঝুঁকি (Medium)',
     scoreRange: '31 – 60',
     actionRequired: 'SMS OTP Verification',
   },
@@ -84,15 +82,11 @@ const RISK_BAND_CONFIG: Record<
     bgColor: 'bg-emerald-50 text-emerald-800',
     borderColor: 'border-emerald-200',
     labelEN: 'Low / Clean',
-    labelBN: 'স্বাভাবিক',
-    shortLabelEN: 'Low / Clean',
-    shortLabelBN: 'স্বাভাবিক',
+    labelBN: 'স্বাভাবিক (Low)',
     scoreRange: '0 – 30',
     actionRequired: 'Automated Real-Time Pass',
   },
 };
-
-const RADIAN = Math.PI / 180;
 
 export const RiskDistributionDonutChart: React.FC<RiskDistributionDonutChartProps> = ({
   transactions = [],
@@ -103,7 +97,7 @@ export const RiskDistributionDonutChart: React.FC<RiskDistributionDonutChartProp
   const [hoveredBand, setHoveredBand] = useState<RiskBand | null>(null);
 
   // Compute aggregated distribution stats across the transaction feed
-  const { slices, totalTxns, criticalAndHighCount } = useMemo(() => {
+  const { slices, totalTxns, totalVolume, criticalAndHighCount } = useMemo(() => {
     const counts: Record<RiskBand, number> = {
       CRITICAL: 0,
       HIGH: 0,
@@ -129,6 +123,8 @@ export const RiskDistributionDonutChart: React.FC<RiskDistributionDonutChartProp
       }
     });
 
+    const total = transactions.length || 1;
+
     const bandsOrder: RiskBand[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
 
     const data: RiskSliceData[] = bandsOrder.map((band) => {
@@ -138,7 +134,6 @@ export const RiskDistributionDonutChart: React.FC<RiskDistributionDonutChartProp
       return {
         band,
         name: lang === 'BN' ? cfg.labelBN : cfg.labelEN,
-        shortName: lang === 'BN' ? cfg.shortLabelBN : cfg.shortLabelEN,
         count,
         percentage: Number(percentage.toFixed(1)),
         volumeBDT: volumes[band],
@@ -163,124 +158,17 @@ export const RiskDistributionDonutChart: React.FC<RiskDistributionDonutChartProp
     const nonZero = slices.filter((s) => s.count > 0);
     // If all are 0, fallback to a placeholder
     if (nonZero.length === 0) {
-      return [{
-        name: lang === 'BN' ? 'কোনো লেনদেন নেই' : 'No Transactions',
-        shortName: lang === 'BN' ? 'নেই' : 'None',
-        value: 1,
-        color: '#CBD5E1',
-        band: 'LOW' as RiskBand,
-        percentage: 100,
-        volumeBDT: 0,
-      }];
+      return [{ name: 'No Transactions', value: 1, color: '#CBD5E1', band: 'LOW' as RiskBand }];
     }
     return nonZero.map((s) => ({
       name: s.name,
-      shortName: s.shortName,
       value: s.count,
       band: s.band,
       color: s.color,
       percentage: s.percentage,
       volumeBDT: s.volumeBDT,
     }));
-  }, [slices, lang]);
-
-  const hoveredSlice = useMemo(() => {
-    if (!hoveredBand) return null;
-    return slices.find((s) => s.band === hoveredBand) || null;
-  }, [hoveredBand, slices]);
-
-  /**
-   * Custom Label Renderer with Leader Lines (Callout Lines)
-   * Inspired by professional executive charts to completely eliminate
-   * overlapping popovers and display each slice's label & percentage clearly.
-   */
-  const renderCustomizedLabel = (props: any) => {
-    const {
-      cx,
-      cy,
-      midAngle,
-      outerRadius,
-      index,
-      payload,
-    } = props;
-
-    // Do not draw callouts for placeholder or zero slices
-    if (!payload || payload.value === 0 || payload.name === 'No Transactions' || payload.name === 'কোনো লেনদেন নেই') {
-      return null;
-    }
-
-    const isSelected = activeFilter === payload.band;
-    const isHovered = hoveredBand === payload.band;
-
-    // Trigonometry for Recharts Pie (SVG y-axis points downward, midAngle starts at 3 o'clock)
-    const cos = Math.cos(-midAngle * RADIAN);
-    const sin = Math.sin(-midAngle * RADIAN);
-
-    // 1. Start point on the outer arc of the slice
-    const sx = cx + (outerRadius + 2) * cos;
-    const sy = cy + (outerRadius + 2) * sin;
-
-    // 2. Elbow point extending diagonally outward
-    const elbowRadius = outerRadius + 15;
-    const mx = cx + elbowRadius * cos;
-    const my = cy + elbowRadius * sin;
-
-    // 3. Horizontal line extending toward the label
-    const isRight = cos >= 0;
-    const horizontalLength = 16;
-    const ex = mx + (isRight ? horizontalLength : -horizontalLength);
-    const ey = my;
-
-    // Label anchor and positioning
-    const textX = ex + (isRight ? 6 : -6);
-    const textAnchor = isRight ? 'start' : 'end';
-
-    const sliceColor = payload.color || '#3B82F6';
-    const labelTitle = payload.shortName || payload.name;
-    const percentText = `${payload.percentage}%`;
-
-    return (
-      <g
-        key={`callout-label-${index}`}
-        className="transition-all duration-200 pointer-events-none"
-        opacity={hoveredBand && !isHovered ? 0.35 : 1}
-      >
-        {/* Anchor point on the slice edge */}
-        <circle cx={sx} cy={sy} r={2.5} fill={sliceColor} />
-
-        {/* Dynamic Leader Line (matches slice color) */}
-        <path
-          d={`M ${sx.toFixed(1)} ${sy.toFixed(1)} L ${mx.toFixed(1)} ${my.toFixed(1)} L ${ex.toFixed(1)} ${ey.toFixed(1)}`}
-          stroke={sliceColor}
-          strokeWidth={isHovered || isSelected ? 2 : 1.25}
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-
-        {/* Descriptive Callout Label (e.g., "Low / Clean - 60%") */}
-        <text
-          x={textX.toFixed(1)}
-          y={ey.toFixed(1)}
-          textAnchor={textAnchor}
-          dominantBaseline="central"
-          className="font-sans select-none"
-        >
-          <tspan
-            className="fill-slate-800 dark:fill-slate-100 text-[11px] font-bold"
-          >
-            {labelTitle}
-          </tspan>
-          <tspan
-            fill={sliceColor}
-            className="text-[11px] font-extrabold"
-          >
-            {` - ${percentText}`}
-          </tspan>
-        </text>
-      </g>
-    );
-  };
+  }, [slices]);
 
   return (
     <div className="bg-white dark:bg-[#0F172A] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 flex flex-col justify-between space-y-4 font-sans h-full text-slate-900 dark:text-slate-100">
@@ -291,8 +179,11 @@ export const RiskDistributionDonutChart: React.FC<RiskDistributionDonutChartProp
             <PieChartIcon className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-              {lang === 'BN' ? 'ঝুঁকি স্তরের বণ্টন' : 'Risk Level Distribution'}
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span>{lang === 'BN' ? 'ঝুঁকি স্তরের বণ্টন' : 'Risk Level Distribution'}</span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold border border-slate-200 dark:border-slate-700">
+                Recharts Donut
+              </span>
             </h3>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
               {lang === 'BN'
@@ -306,7 +197,7 @@ export const RiskDistributionDonutChart: React.FC<RiskDistributionDonutChartProp
         {activeFilter !== 'ALL' && (
           <button
             onClick={() => onSelectFilter?.('ALL')}
-            className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 dark:bg-rose-950/50 px-2 py-1 rounded-lg border border-rose-200 dark:border-rose-900 transition-colors cursor-pointer"
+            className="flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-800 bg-rose-50 px-2 py-1 rounded-lg border border-rose-200 transition-colors cursor-pointer"
             title="Reset to show all risk bands"
           >
             <X className="w-3 h-3" />
@@ -315,22 +206,47 @@ export const RiskDistributionDonutChart: React.FC<RiskDistributionDonutChartProp
         )}
       </div>
 
-      {/* Main Recharts Donut Chart Container with Non-Overlapping Leader Lines */}
-      <div className="relative flex items-center justify-center min-h-[260px] my-1 overflow-visible">
-        <ResponsiveContainer width="100%" height={260}>
-          <PieChart margin={{ top: 12, right: 16, bottom: 12, left: 16 }}>
+      {/* Main Recharts Donut Chart Container */}
+      <div className="relative flex items-center justify-center min-h-[200px] my-1">
+        <ResponsiveContainer width="100%" height={200}>
+          <PieChart>
+            <Tooltip
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const data: any = payload[0].payload;
+                  return (
+                    <div className="bg-slate-900/95 backdrop-blur-md text-white text-xs p-3 rounded-xl shadow-xl border border-slate-700 font-sans z-50">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: data.color }} />
+                        <span className="font-bold">{data.name}</span>
+                      </div>
+                      <div className="space-y-0.5 font-mono text-[11px] text-slate-300">
+                        <div>
+                          Count: <strong className="text-white">{data.value} transactions</strong> ({data.percentage}%)
+                        </div>
+                        <div>
+                          Volume: <strong className="text-white">৳{data.volumeBDT?.toLocaleString()}</strong>
+                        </div>
+                      </div>
+                      <div className="mt-1.5 pt-1.5 border-t border-slate-800 text-[10px] text-slate-400">
+                        Click slice to filter feed
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
             <Pie
               data={chartData}
               cx="50%"
               cy="50%"
-              innerRadius={62}
-              outerRadius={86}
-              paddingAngle={3}
+              innerRadius={58}
+              outerRadius={84}
+              paddingAngle={4}
               dataKey="value"
-              animationDuration={600}
+              animationDuration={800}
               cursor="pointer"
-              label={renderCustomizedLabel}
-              labelLine={false}
               onClick={(entry: any) => {
                 if (entry && entry.band) {
                   onSelectFilter?.(activeFilter === entry.band ? 'ALL' : entry.band);
@@ -350,15 +266,10 @@ export const RiskDistributionDonutChart: React.FC<RiskDistributionDonutChartProp
                     key={`cell-${index}`}
                     fill={entry.color}
                     stroke={isSelected || isHovered ? '#0F172A' : '#FFFFFF'}
-                    strokeWidth={isSelected ? 3.5 : isHovered ? 2.5 : 1.5}
+                    strokeWidth={isSelected ? 3 : isHovered ? 2 : 1.5}
                     style={{
-                      filter: isSelected
-                        ? 'drop-shadow(0px 0px 8px rgba(0,0,0,0.35))'
-                        : isHovered
-                        ? 'drop-shadow(0px 0px 4px rgba(0,0,0,0.2))'
-                        : 'none',
+                      filter: isSelected ? 'drop-shadow(0px 0px 6px rgba(0,0,0,0.3))' : 'none',
                       transition: 'all 0.2s ease-out',
-                      outline: 'none',
                     }}
                   />
                 );
@@ -367,41 +278,17 @@ export const RiskDistributionDonutChart: React.FC<RiskDistributionDonutChartProp
           </PieChart>
         </ResponsiveContainer>
 
-        {/* Central Overlay Summary Metric inside the Donut hole (Never Overlapped) */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none text-center px-1">
-          {hoveredSlice ? (
-            <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-150">
-              <span
-                className="text-[9.5px] uppercase font-bold font-mono tracking-wider px-2 py-0.5 rounded-full mb-1 border"
-                style={{
-                  backgroundColor: `${hoveredSlice.color}15`,
-                  color: hoveredSlice.color,
-                  borderColor: `${hoveredSlice.color}40`,
-                }}
-              >
-                {hoveredSlice.shortName}
-              </span>
-              <span className="text-2xl font-black font-mono text-slate-900 dark:text-white leading-none my-0.5">
-                {hoveredSlice.count} <span className="text-xs font-semibold opacity-75">({hoveredSlice.percentage}%)</span>
-              </span>
-              <span className="text-[10px] font-bold font-mono text-slate-600 dark:text-slate-300 mt-1">
-                ৳{hoveredSlice.volumeBDT.toLocaleString()}
-              </span>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center">
-              <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 font-mono tracking-widest leading-none mb-1">
-                {lang === 'BN' ? 'মোট' : 'TOTAL'}
-              </span>
-              <span className="text-3xl font-black font-mono text-slate-900 dark:text-white leading-none my-1">
-                {totalTxns}
-              </span>
-              <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold font-mono text-rose-600 dark:text-rose-400 leading-none mt-1 whitespace-nowrap">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
-                <span>{criticalAndHighCount} {lang === 'BN' ? 'ঝুঁকিপূর্ণ' : 'Critical/High'}</span>
-              </div>
-            </div>
-          )}
+        {/* Central Overlay Summary Metric inside the Donut hole */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none text-center">
+          <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 font-mono tracking-wider">
+            Total Monitored
+          </span>
+          <span className="text-2xl font-black font-mono text-slate-900 dark:text-white leading-tight">
+            {totalTxns}
+          </span>
+          <span className="text-[10px] text-rose-600 dark:text-rose-400 font-bold font-mono">
+            {criticalAndHighCount} Critical/High
+          </span>
         </div>
       </div>
 
@@ -453,4 +340,3 @@ export const RiskDistributionDonutChart: React.FC<RiskDistributionDonutChartProp
     </div>
   );
 };
-

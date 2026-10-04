@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import { matchAssistantQuery } from '../../data/assistantKnowledge';
 import {
-  TAKASAFE_PROJECT_ABSTRACT_BASE,
-  TAKASAFE_PROJECT_ABSTRACT_FULL,
-  FIVE_CORE_CAPABILITIES,
-  UN_SDG_ALIGNMENTS,
-} from '../../data/abstractData';
-import {
   X,
   ShieldCheck,
   CreditCard,
@@ -28,14 +22,6 @@ import {
   Smartphone,
   Phone,
   ArrowRight,
-  Copy,
-  Check,
-  BookOpen,
-  Network,
-  CloudLightning,
-  Radar,
-  Globe,
-  Award,
 } from 'lucide-react';
 
 interface UpayInfoModalProps {
@@ -63,8 +49,6 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   onNavigateView,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [abstractTab, setAbstractTab] = useState<'FULL' | 'BASE' | 'CAPABILITIES' | 'SDG'>('FULL');
-  const [abstractCopied, setAbstractCopied] = useState<boolean>(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       sender: 'bot',
@@ -113,229 +97,6 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
 
   const renderContent = () => {
     switch (modalType) {
-      case 'ABSTRACT':
-      case 'RESEARCH_NOTE':
-        return (
-          <div className="space-y-4">
-            {/* Top Badge Banner */}
-            <div className="bg-gradient-to-r from-blue-900 via-[#0054A6] to-indigo-900 text-white p-4 sm:p-5 rounded-2xl border border-blue-400/30 shadow-md">
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="bg-amber-400 text-blue-950 font-black text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                    Official Hackathon Abstract
-                  </span>
-                  <span className="text-blue-200 text-xs font-mono">DIU CPC × upay 2026</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const textToCopy = abstractTab === 'BASE' ? TAKASAFE_PROJECT_ABSTRACT_BASE : TAKASAFE_PROJECT_ABSTRACT_FULL;
-                    navigator.clipboard?.writeText(textToCopy);
-                    setAbstractCopied(true);
-                    setTimeout(() => setAbstractCopied(false), 2200);
-                  }}
-                  className="flex items-center gap-1.5 text-xs font-bold bg-white/10 hover:bg-white/20 active:bg-white/30 text-amber-300 px-3 py-1.5 rounded-xl border border-amber-300/40 transition-all cursor-pointer"
-                  title="Copy full abstract to clipboard"
-                >
-                  {abstractCopied ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-300">Copied to Clipboard!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copy Abstract</span>
-                    </>
-                  )}
-                </button>
-              </div>
-              <h3 className="text-base sm:text-lg font-bold text-white leading-snug">
-                TakaSafe: Modular Explainable AI Trust & Resilience Platform for MFS
-              </h3>
-              <p className="text-xs text-blue-100 mt-1">
-                Connecting 5 core capabilities, 2 primary novel contributions, SHAP explainability, human-in-the-loop governance, and UN SDGs 8, 9 & 16.
-              </p>
-            </div>
-
-            {/* Sub-Navigation Tabs */}
-            <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200 overflow-x-auto no-scrollbar">
-              <button
-                type="button"
-                onClick={() => setAbstractTab('FULL')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                  abstractTab === 'FULL'
-                    ? 'bg-white text-[#0054A6] shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Comprehensive Abstract (Full)
-              </button>
-              <button
-                type="button"
-                onClick={() => setAbstractTab('BASE')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                  abstractTab === 'BASE'
-                    ? 'bg-white text-[#0054A6] shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Core Abstract (Base)
-              </button>
-              <button
-                type="button"
-                onClick={() => setAbstractTab('CAPABILITIES')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                  abstractTab === 'CAPABILITIES'
-                    ? 'bg-white text-[#0054A6] shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                5 Capabilities & Novelties
-              </button>
-              <button
-                type="button"
-                onClick={() => setAbstractTab('SDG')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                  abstractTab === 'SDG'
-                    ? 'bg-white text-[#0054A6] shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                UN SDGs (8, 9, 16)
-              </button>
-            </div>
-
-            {/* Tab 1: Comprehensive Abstract */}
-            {abstractTab === 'FULL' && (
-              <div className="space-y-3">
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-800 leading-relaxed font-sans space-y-3">
-                  <p className="font-semibold text-slate-950 bg-amber-50/80 p-3 rounded-xl border border-amber-200/80 text-[12.5px] leading-relaxed">
-                    {TAKASAFE_PROJECT_ABSTRACT_BASE}
-                  </p>
-                  <p className="text-slate-700">
-                    Architecturally, TakaSafe operates on a <strong>sub-18ms inference latency budget</strong> to evaluate multi-modal threat vectors in real time, guaranteeing uninterrupted straight-through processing for legitimate micro-merchants and citizens. The classification pipeline pairs supervised gradient-boosted decision trees (mitigating a <strong>20.68:1 class imbalance ratio</strong> via scale_pos_weight optimization across 8,000 synthetic transactions) with unsupervised Isolation Forest temporal deviations, circadian velocity burst multipliers, and SIM/IMEI device telemetry. For consumer protection, <strong>ScamShield</strong> delivers contextual, bilingual (Bengali and English) cognitive duress warnings and introduces a non-custodial <strong>24-hour cooling-off safety buffer</strong>, giving vulnerable victims full autonomy to recall coerced transfers. Complementing point-of-sale defenses, <strong>MuleVision</strong> models fund flow topologies via D3 force-directed network graphs to uncover multi-hop smurfing chains, circular pass-through rings, and illicit aggregator nodes, enabling surgical single-click wallet quarantine.
-                  </p>
-                  <p className="text-slate-700">
-                    The platform's dual primary novel contributions address critical macro-resilience gaps in developing digital financial ecosystems. The <strong>Disaster Financial Resilience Mode</strong> simulates the compounded shocks of climatic catastrophes—such as Cyclone Remal in coastal Barishal and Patuakhali or seasonal riverine inundation in northeastern Sylhet—forecasting agent cash-out liquidity exhaustion 24 to 48 hours in advance and orchestrating automated armored vehicle replenishment routes. Concurrently, the <strong>Financial Early-Warning Radar</strong> continuously aggregates divisional velocity shifts, fraud incident rates, scam dispute frequencies, and infrastructure telemetry into a composite 0–100 regional risk score, empowering regulatory authorities with anticipatory surveillance rather than reactive mitigation.
-                  </p>
-                  <p className="text-slate-700">
-                    To uphold institutional trust and eliminate black-box opacity, every risk score is mathematically decomposed via <strong>SHAP (SHapley Additive exPlanations)</strong> values into intuitive directional attribution factors (e.g., nocturnal circadian anomaly +31%, velocity surge +24%, device fingerprint drift +17%). A deterministic <strong>Action Engine</strong> routes these explanations across four graduated regulatory tiers: Low (0–30: straight-through settlement), Medium (31–60: step-up biometric/OTP re-verification), High (61–80: ScamShield 24-hour cooling-off intercept), and Critical (81–100: automated wallet isolation and instant BFIU Form 2 Suspicious Transaction Report generation under Section 19 of the Anti-Money Laundering Act, 2012). Constrained LLM synthesizers (<strong>Google Gemini 2.5 Flash</strong>) narrate structured evidence dossiers without hallucination, ensuring that authorised human SOC supervisors retain full accountability for every high-impact enforcement action. Validated exclusively on statistically grounded, zero-PII synthetic data, TakaSafe provides a production-grade blueprint for safeguarding digital financial sovereignty, protecting vulnerable informal economies, and advancing United Nations Sustainable Development Goals 8, 9, and 16 across the Global South.
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-blue-50/70 rounded-xl border border-blue-200/80 text-xs">
-                  <div className="flex items-center gap-1.5 text-blue-900 font-semibold">
-                    <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
-                    <span>Want to step through the chronological 10:00 - 10:15 scenario?</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onNavigateView?.('STORYLINE');
-                      onClose();
-                    }}
-                    className="px-3 py-1 bg-[#0054A6] hover:bg-[#004080] text-white font-bold rounded-lg text-[11px] transition-colors cursor-pointer flex items-center gap-1"
-                  >
-                    <span>Launch Storyline Runner</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Tab 2: Core Abstract (Base) */}
-            {abstractTab === 'BASE' && (
-              <div className="space-y-3">
-                <div className="p-4 bg-amber-50/60 rounded-2xl border border-amber-200 text-xs text-slate-800 leading-relaxed font-sans">
-                  <span className="text-[10px] font-black text-amber-800 uppercase tracking-wider block mb-2">
-                    Executive Concise Abstract (Base Submission)
-                  </span>
-                  <p className="font-medium text-slate-900 text-sm leading-relaxed whitespace-pre-line">
-                    {TAKASAFE_PROJECT_ABSTRACT_BASE}
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                    <span className="font-bold text-slate-900 block">Framework</span>
-                    <span className="text-slate-600 text-[11px] block mt-0.5">Modular Explainable AI (SHAP + Action Engine)</span>
-                  </div>
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                    <span className="font-bold text-slate-900 block">Governance</span>
-                    <span className="text-slate-600 text-[11px] block mt-0.5">Human-in-the-Loop; Zero automated freeze without oversight</span>
-                  </div>
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                    <span className="font-bold text-slate-900 block">Data Grounding</span>
-                    <span className="text-slate-600 text-[11px] block mt-0.5">100% Synthetic Data (Zero PII, BFIU compliant)</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Tab 3: Five Core Capabilities & 2 Novelties */}
-            {abstractTab === 'CAPABILITIES' && (
-              <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
-                {FIVE_CORE_CAPABILITIES.map((cap, i) => (
-                  <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-bold text-slate-900 text-xs">{cap.title}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cap.badgeColor}`}>
-                        {cap.badge}
-                      </span>
-                    </div>
-                    <p className="text-slate-600 text-[11.5px] leading-relaxed">{cap.description}</p>
-                    <div className="text-[10.5px] font-mono text-slate-500 bg-white px-2 py-1 rounded border border-slate-200/80">
-                      Tech: {cap.keyTech}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Tab 4: UN SDGs (8, 9, 16) */}
-            {abstractTab === 'SDG' && (
-              <div className="space-y-3">
-                <p className="text-xs text-slate-600">
-                  TakaSafe is architected to advance sustainable digital finance and financial inclusion aligned with the United Nations 2030 Agenda:
-                </p>
-                <div className="space-y-2.5">
-                  {UN_SDG_ALIGNMENTS.map((sdg) => (
-                    <div
-                      key={sdg.id}
-                      className={`p-3.5 rounded-2xl border ${sdg.borderColor} bg-white shadow-xs space-y-1.5`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="w-7 h-7 rounded-lg text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs"
-                            style={{ backgroundColor: sdg.color }}
-                          >
-                            {sdg.goalNumber}
-                          </span>
-                          <div>
-                            <span className="font-bold text-slate-900 text-xs block">
-                              SDG {sdg.goalNumber}: {sdg.goalTitle}
-                            </span>
-                          </div>
-                        </div>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${sdg.badgeBg}`}>
-                          Verified
-                        </span>
-                      </div>
-                      <p className="text-slate-700 text-xs leading-relaxed">
-                        {sdg.howTakaSafeContributes}
-                      </p>
-                      <div className="text-[11px] text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 font-medium">
-                        <strong>Measurable Outcome:</strong> {sdg.measurableMetric}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        );
-
       case 'ABOUT_US':
         return (
           <div className="space-y-4">
@@ -343,70 +104,29 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
               <div className="w-12 h-12 rounded-xl bg-[#0054A6] text-white flex items-center justify-center font-bold text-xl">
                 TS
               </div>
-              <div className="flex-1 min-w-0">
+              <div>
                 <h4 className="font-bold text-slate-900 text-sm">TakaSafe MFS Platform</h4>
                 <p className="text-xs text-slate-600">
                   Developed for DIU CPC × upay AI DEV FEST 2026 by Team 3AM Runtime
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setAbstractTab('FULL')}
-                className="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-blue-950 font-bold text-[11px] rounded-lg transition-colors cursor-pointer shrink-0"
-              >
-                View Abstract
-              </button>
             </div>
             <p className="text-xs text-slate-700 leading-relaxed">
               TakaSafe is a next-generation Mobile Financial Services (MFS) Trust & Resilience Engine designed to empower Bangladeshi aspirers with financial inclusion, zero-compromise security, and proactive protection.
             </p>
-
-            {/* Quick Abstract Preview Box */}
-            <div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200 text-xs text-slate-800 space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-blue-950">Official Abstract & UN SDGs</span>
-                <span className="text-[10px] font-bold text-amber-800 bg-amber-200/80 px-2 py-0.5 rounded-full">
-                  SDG 8, 9, 16
-                </span>
-              </div>
-              <p className="text-[11.5px] text-slate-700 line-clamp-3">
-                {TAKASAFE_PROJECT_ABSTRACT_BASE}
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  // Switch to abstract view inside modal
-                  setAbstractTab('FULL');
-                }}
-                className="text-[11px] font-bold text-[#0054A6] hover:underline cursor-pointer flex items-center gap-1"
-              >
-                <span>Read Full Research Abstract & Novelties</span>
-                <ArrowRight className="w-3 h-3" />
-              </button>
-            </div>
-
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                 <span className="font-bold text-slate-900 block">Core Architecture</span>
-                <span className="text-slate-600 text-[11px] block mt-0.5">AI Risk Engine: LightGBM + Calibration + Conformal Doubt Check & Novelty · GAT Graph Defense</span>
+                <span className="text-slate-600 text-[11px] block mt-0.5">Dual-Head Neural Fusion + Graph Attention Network (GAT)</span>
               </div>
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <span className="font-bold text-slate-900 block">Compliance & Explainability</span>
-                <span className="text-slate-600 text-[11px] block mt-0.5">Bangladesh Bank MFS Regulations & BFIU Guidelines 2026 · 95% Conformal Coverage</span>
+                <span className="font-bold text-slate-900 block">Compliance</span>
+                <span className="text-slate-600 text-[11px] block mt-0.5">Bangladesh Bank MFS Regulations & BFIU Guidelines 2026</span>
               </div>
             </div>
-            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <span className="font-bold block">Team 3AM Runtime:</span>
-                <span>Md. Tanvir Hasan (Chief Risk Analyst & Lead) · Md. Sadman Al Islam Shabab (Model Architecture Lead) · Sourov Kumar (SOC Operations)</span>
-              </div>
-              <a
-                href="/api/notebook/ai1"
-                download="TakaSafe_AI1_LightGBM_Conformal_DoubtCheck.ipynb"
-                className="shrink-0 px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold text-[11px] rounded-lg transition-colors flex items-center gap-1 w-fit"
-              >
-                <span>AI-1 Notebook (.ipynb)</span>
-              </a>
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900">
+              <span className="font-bold block">Team 3AM Runtime:</span>
+              <span>Md. Tanvir Hasan (Chief Risk Analyst & Lead) · Md. Sadman Al Islam Shabab (Model Architecture Lead) · Sourov Kumar (SOC Operations)</span>
             </div>
           </div>
         );
@@ -708,14 +428,15 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
               <Smartphone className="w-8 h-8 text-amber-300" />
             </div>
             <div>
-              <h4 className="font-bold text-slate-900 text-sm">TakaSafe Web App Demo</h4>
-              <p className="text-xs text-slate-500 mt-1">This project is a browser-based demonstration. A mobile app and app-store download are not available.</p>
+              <h4 className="font-bold text-slate-900 text-sm">Download TakaSafe MFS Mobile App</h4>
+              <p className="text-xs text-slate-500 mt-1">Available for Android & iOS devices with built-in ScamShield AI protection.</p>
             </div>
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 inline-block">
-              <div className="w-32 h-32 bg-white p-2 rounded-xl border border-slate-300 mx-auto flex items-center justify-center text-xs text-slate-500 text-center">
-                No mobile app download
+              {/* QR Mockup */}
+              <div className="w-32 h-32 bg-white p-2 rounded-xl border border-slate-300 mx-auto flex items-center justify-center font-mono text-[9px] text-slate-400 text-center">
+                [ SCAN QR CODE TO INSTALL TAKASAFE APP ]
               </div>
-              <span className="text-[10px] text-slate-500 block mt-2 font-medium">Use the web simulator on this site</span>
+              <span className="text-[10px] text-slate-500 block mt-2 font-medium">Scan with your smartphone camera</span>
             </div>
             <div className="flex items-center justify-center gap-3">
               <button
@@ -725,27 +446,9 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
                 }}
                 className="bg-[#0054A6] hover:bg-[#004080] text-white px-5 py-2 rounded-xl text-xs font-bold transition-all shadow"
               >
-                Open Web App Simulator
+                Launch Web App Simulator
               </button>
             </div>
-          </div>
-        );
-
-      case 'TERMS':
-        return (
-          <div className="space-y-3 text-xs text-slate-700">
-            <p><strong>Demonstration only.</strong> TakaSafe is a software prototype for evaluation. It does not provide banking, payment, fraud prevention, or regulatory services.</p>
-            <p>Sign-in uses sample profiles. Passwords are not authenticated, and customer transactions change simulated balances and browser or local demo records only. Do not enter real credentials or rely on displayed decisions for financial activity.</p>
-            <p>Use of this demo is at your discretion. Sample data and generated reports may be incomplete or inaccurate.</p>
-          </div>
-        );
-
-      case 'PRIVACY_POLICY':
-        return (
-          <div className="space-y-3 text-xs text-slate-700">
-            <p><strong>Demo data only.</strong> Use the sample profiles and fictional information. Do not submit real passwords, account details, identity documents, or other sensitive personal information.</p>
-            <p>The demo may store its session, theme, and sample customer activity in this browser. When run with its development server, sample activity and audit actions can also be written to local CSV files in the project. Those files are not a secure production data store.</p>
-            <p>Clearing this browser's site data removes browser-stored demo records. This prototype has no production account, data export, or deletion service.</p>
           </div>
         );
 
@@ -788,15 +491,13 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
 
   const getTitle = () => {
     switch (modalType) {
-      case 'ABSTRACT':
-      case 'RESEARCH_NOTE': return lang === 'BN' ? 'অফিসিয়াল রিসার্চ অ্যাবস্ট্রাক্ট ও SDG' : 'Official Project Abstract & UN SDGs';
       case 'ABOUT_US': return 'About TakaSafe';
       case 'PREPAID_CARD': return 'TakaSafe Prepaid Cards';
       case 'SERVICE_LOCATIONS': return 'Service Locations & ATM Finder';
       case 'LIMITS_CHARGES': return lang === 'BN' ? 'লিমিট ও সার্ভিস চার্জ' : 'Limits and Service Charges';
       case 'LIVE_CHAT': return lang === 'BN' ? '২৪/৭ লাইভ সাপোর্ট সহকারী' : '24/7 Live Support Assistant';
       case 'SEARCH': return lang === 'BN' ? 'দ্রুত অনুসন্ধান' : 'Quick Search Directory';
-      case 'APP_DOWNLOAD': return 'TakaSafe Web App Demo';
+      case 'APP_DOWNLOAD': return 'Download TakaSafe App';
       case 'MEDIA': return 'Press Releases & Media';
       case 'NEED_HELP': return 'Customer Help & Support';
       case 'PARTNER': return 'Partner & Merchant Enrollment';
@@ -807,16 +508,9 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
     }
   };
 
-  const modalMaxWidth =
-    modalType === 'ABSTRACT' || modalType === 'RESEARCH_NOTE'
-      ? 'max-w-3xl'
-      : modalType === 'LIVE_CHAT'
-      ? 'max-w-xl'
-      : 'max-w-lg';
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs modal-backdrop-enter">
-      <div className={`bg-white rounded-3xl ${modalMaxWidth} w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col modal-panel-enter`}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in">
+      <div className={`bg-white rounded-3xl ${modalType === 'LIVE_CHAT' ? 'max-w-xl' : 'max-w-lg'} w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col`}>
         {/* Header */}
         <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
           <div className="flex items-center gap-2">

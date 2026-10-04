@@ -24,11 +24,10 @@ import {
 interface UpayHeroServicesProps {
   onServiceSelect?: (serviceName: string) => void;
   onOpenModal?: (modalType: string) => void;
-  showCashIn?: boolean;
   lang: 'EN' | 'BN';
 }
 
-export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSelect, onOpenModal, showCashIn = true, lang }) => {
+export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSelect, onOpenModal, lang }) => {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [showAllServices, setShowAllServices] = useState<boolean>(false);
@@ -98,7 +97,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
 
                 <div className="mt-5 flex items-center justify-center md:justify-start gap-4">
                   <button
-                    onClick={() => onOpenModal?.('ABOUT_US')}
+                    onClick={() => (onOpenModal ? onOpenModal('ABOUT_US') : onServiceSelect?.('Cash In'))}
                     className="flex items-center gap-2 bg-[#FAB915] hover:bg-[#e5a80f] text-slate-950 px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                   >
                     <span>{lang === 'BN' ? 'বিস্তারিত দেখুন' : 'Read More'}</span>
@@ -111,7 +110,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
               {/* Right Visual Card */}
               <div
                 onClick={() => onOpenModal?.('ABOUT_US')}
-                className="interactive-lift w-full max-w-[270px] h-48 sm:max-w-xs sm:h-56 bg-white/70 backdrop-blur-sm rounded-3xl p-5 border-2 border-amber-300 shadow-xl flex flex-col justify-between relative overflow-hidden cursor-pointer hover:border-amber-400 transition-colors"
+                className="w-full max-w-[270px] h-48 sm:max-w-xs sm:h-56 bg-white/70 backdrop-blur-sm rounded-3xl p-5 border-2 border-amber-300 shadow-xl flex flex-col justify-between relative overflow-hidden cursor-pointer hover:border-amber-400 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-[#0054A6]">TakaSafe Digital Trust</span>
@@ -184,7 +183,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
 
                 <div className="mt-5 flex items-center justify-center md:justify-start gap-4">
                   <button
-                    onClick={() => onServiceSelect?.('Cash Out')}
+                    onClick={() => (onOpenModal ? onOpenModal('LIMITS_CHARGES') : onServiceSelect?.('Cash Out'))}
                     className="flex items-center gap-2 bg-[#FAB915] hover:bg-[#e5a80f] text-slate-950 px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                   >
                     <span>{lang === 'BN' ? 'বিস্তারিত দেখুন' : 'Read More'}</span>
@@ -403,9 +402,9 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
         </div>
 
         {/* 6 Core Services Grid matching wireframe Image 4 with Staggered Slide Up Animation */}
-        <div className={`services-card-grid grid w-full min-w-0 grid-cols-2 sm:grid-cols-3 ${showCashIn ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} gap-3 sm:gap-5 lg:gap-6 stagger-grid`}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 stagger-grid">
           {/* 1. Cash In */}
-          {showCashIn && <div
+          <div
             onClick={() => onServiceSelect?.('Cash In')}
             className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center card-hover-lift"
           >
@@ -416,7 +415,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
               {lang === 'BN' ? 'ক্যাশ ইন' : 'Cash In'}
             </span>
             <span className="text-[11px] text-slate-500 mt-0.5">Free from Agents</span>
-          </div>}
+          </div>
 
           {/* 2. Cash Out */}
           <div
@@ -490,9 +489,11 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
             </span>
             <span className="text-[11px] text-slate-500 mt-0.5">DESCO, WASA, Titas</span>
           </div>
-          {/* Expanded services continue in the same responsive grid so mobile rows fill side by side. */}
-          {showAllServices && (
-            <>
+        </div>
+
+        {/* Expanded Services Grid (Revealed on View More) */}
+        {showAllServices && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6 mt-6 stagger-grid">
             {/* 7. Mobile Recharge */}
             <div
               onClick={() => onServiceSelect?.('Mobile Recharge')}
@@ -509,7 +510,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
 
             {/* 8. Remittance */}
             <div
-              onClick={() => onServiceSelect?.('Remittance')}
+              onClick={() => (onOpenModal ? onOpenModal('LIMITS_CHARGES') : onServiceSelect?.('Remittance'))}
               className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center"
             >
               <div className="w-16 h-16 rounded-2xl bg-cyan-50 group-hover:bg-cyan-100 flex items-center justify-center mb-3 transition-colors text-cyan-600">
@@ -523,7 +524,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
 
             {/* 9. Micro-Savings */}
             <div
-              onClick={() => onServiceSelect?.('Savings')}
+              onClick={() => (onOpenModal ? onOpenModal('ABOUT_US') : onServiceSelect?.('Savings'))}
               className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center"
             >
               <div className="w-16 h-16 rounded-2xl bg-rose-50 group-hover:bg-rose-100 flex items-center justify-center mb-3 transition-colors text-rose-600">
@@ -537,7 +538,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
 
             {/* 10. Education Fees */}
             <div
-              onClick={() => onServiceSelect?.('Education')}
+              onClick={() => (onOpenModal ? onOpenModal('LIMITS_CHARGES') : onServiceSelect?.('Education'))}
               className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center"
             >
               <div className="w-16 h-16 rounded-2xl bg-amber-50 group-hover:bg-amber-100 flex items-center justify-center mb-3 transition-colors text-amber-600">
@@ -551,7 +552,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
 
             {/* 11. Insurance / Takaful */}
             <div
-              onClick={() => onServiceSelect?.('Insurance')}
+              onClick={() => (onOpenModal ? onOpenModal('ABOUT_US') : onServiceSelect?.('Insurance'))}
               className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center"
             >
               <div className="w-16 h-16 rounded-2xl bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center mb-3 transition-colors text-blue-600">
@@ -565,7 +566,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
 
             {/* 12. Business Settlement */}
             <div
-              onClick={() => onServiceSelect?.('Business')}
+              onClick={() => (onOpenModal ? onOpenModal('BUSINESS') : onServiceSelect?.('Business'))}
               className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center"
             >
               <div className="w-16 h-16 rounded-2xl bg-slate-100 group-hover:bg-slate-200 flex items-center justify-center mb-3 transition-colors text-slate-700">
@@ -576,9 +577,8 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
               </span>
               <span className="text-[11px] text-slate-500 mt-0.5">Payroll & Bulk MFS</span>
             </div>
-            </>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* View More / View Less Button */}
         <div className="mt-8 text-center">
