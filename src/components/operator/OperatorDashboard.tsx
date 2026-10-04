@@ -347,10 +347,10 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         <div className="bg-white dark:bg-[#0F172A] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm card-hover-lift text-slate-900 dark:text-slate-100">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">High / Critical Alerts</span>
-            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black font-mono text-rose-600 dark:text-rose-400">{criticalCount}</span>
+            <span key={criticalCount} className="text-2xl font-black font-mono text-rose-600 dark:text-rose-400 metric-change">{criticalCount}</span>
             <span className="text-xs text-slate-500 dark:text-slate-400">Active</span>
           </div>
           <span className="text-[10px] text-rose-600 dark:text-rose-400 font-semibold block mt-1">
@@ -392,7 +392,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
             <FileCheck2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black font-mono text-slate-900 dark:text-white">{auditLogs.length}</span>
+            <span key={auditLogs.length} className="text-2xl font-black font-mono text-slate-900 dark:text-white metric-change">{auditLogs.length}</span>
             <span className="text-xs text-slate-500 dark:text-slate-400">Decisions</span>
           </div>
           <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block mt-1">
