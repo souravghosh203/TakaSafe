@@ -199,25 +199,8 @@ body, .bg-white, input, table, header {
 }
 
 @keyframes slideUp {
-  0% {
-    opacity: 0;
-    transform: translateY(32px) scale(0.988);
-    filter: blur(4px);
-  }
-  60% {
-    opacity: 0.95;
-    filter: blur(0.5px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0px);
-  }
-}
-
-.page-enter {
-  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform, opacity, filter;
+  from { opacity: 0; transform: translate3d(0, 18px, 0) scale(0.995); filter: blur(3px); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
 }
 
 /* Staggered entrance for internal page blocks */
@@ -246,8 +229,27 @@ body, .bg-white, input, table, header {
 }
 
 .page-enter {
-  animation: pageReveal 0.58s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: pageReveal 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
 }
+
+@keyframes modalBackdropIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modalPanelIn { from { opacity: 0; transform: translate3d(0, 12px, 0) scale(.98); } to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); } }
+.modal-backdrop-enter { animation: modalBackdropIn 180ms ease-out both; }
+.modal-panel-enter { animation: modalPanelIn 240ms cubic-bezier(.22, 1, .36, 1) both; }
+
+@keyframes alert-arrive {
+  0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, .35); }
+  100% { box-shadow: 0 0 0 8px rgba(244, 63, 94, 0); }
+}
+.alert-arrive { animation: alert-arrive 700ms ease-out 2; }
+
+.tab-indicator { transition: transform 220ms cubic-bezier(.22, 1, .36, 1), opacity 180ms ease; }
+.metric-change { animation: metric-change 500ms ease-out; }
+@keyframes metric-change { 0% { color: #0054A6; transform: translateY(-2px); } 100% { color: inherit; transform: translateY(0); } }
+
+.skeleton-shimmer { background: linear-gradient(100deg, rgba(148,163,184,.12) 20%, rgba(148,163,184,.28) 38%, rgba(148,163,184,.12) 56%); background-size: 220% 100%; animation: skeleton-shimmer 1.4s ease-in-out infinite; }
+@keyframes skeleton-shimmer { to { background-position-x: -220%; } }
 
 .interactive-lift {
   transform: translateZ(0);
@@ -280,6 +282,8 @@ a:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  .page-enter, .modal-backdrop-enter, .modal-panel-enter, .alert-arrive, .metric-change, .skeleton-shimmer { animation: none !important; }
+  .interactive-lift:hover, .interactive-lift:active { transform: none; }
 }
 
 /* =========================================================
