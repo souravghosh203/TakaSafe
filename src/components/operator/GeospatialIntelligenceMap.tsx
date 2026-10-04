@@ -2121,13 +2121,25 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                         ৳{(selectedDistrict.hourlyVolumeBDT / 1000000).toFixed(2)}M
                       </span>
                     </div>
-                    <button
-                      onClick={() => flyToCoordinates(selectedDistrict.coordinates[0], selectedDistrict.coordinates[1], 2.8)}
-                      className="px-2.5 py-1.5 bg-[#0054A6] hover:bg-[#004284] text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
-                    >
-                      <Crosshair className="w-3.5 h-3.5" />
-                      <span>Zoom In</span>
-                    </button>
+                    {mapTransform.k > 1.35 ? (
+                      <button
+                        onClick={handleResetZoom}
+                        className="px-2.5 py-1.5 bg-slate-700 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        title={lang === 'BN' ? 'সমগ্র বাংলাদেশ ভিউতে ফিরে যান' : 'Zoom out to entire Bangladesh view'}
+                      >
+                        <ZoomOut className="w-3.5 h-3.5" />
+                        <span>{lang === 'BN' ? 'জুম আউট' : 'Zoom Out'}</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => flyToCoordinates(selectedDistrict.coordinates[0], selectedDistrict.coordinates[1], 2.8)}
+                        className="px-2.5 py-1.5 bg-[#0054A6] hover:bg-[#004284] text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        title={lang === 'BN' ? 'এই জেলাটি জুম করুন' : 'Zoom in to this district'}
+                      >
+                        <Crosshair className="w-3.5 h-3.5" />
+                        <span>{lang === 'BN' ? 'জুম ইন' : 'Zoom In'}</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
