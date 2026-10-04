@@ -246,6 +246,7 @@ app.post('/api/customer-history/:wallet', async (req: Request, res: Response) =>
     ];
     const content = `${needsHeader ? `${customerTransactionHeaders.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`;
     await fs.appendFile(customerTransactionsCsv, content, 'utf8');
+    publishServerEvent('state-change', { kind: 'customer-transaction', wallet: customerWallet.trim() });
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -334,6 +335,29 @@ app.get('/api/health', (req: Request, res: Response) => {
   });
 });
 
+// Server-sent events provide a lightweight live channel; EventSource reconnects automatically.
+app.get('/api/events', (req: Request, res: Response) => {
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  res.flushHeaders();
+  res.write(`event: connected\ndata: ${JSON.stringify({ timestamp: new Date().toISOString() })}\n\n`);
+  eventClients.add(res);
+  const heartbeat = setInterval(() => res.write(': heartbeat\n\n'), 20000);
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    eventClients.delete(res);
+  });
+});
+
+app.get('/api/snapshot', (_req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ success: true, transactions: serverTransactions, auditLogs, timestamp: new Date().toISOString() });
+});
+
 // Audit Logs APIs
 app.get('/api/audit-logs', (req: Request, res: Response) => {
   res.json({ success: true, logs: auditLogs });
@@ -361,6 +385,14 @@ app.post('/api/audit-action', (req: Request, res: Response) => {
     };
 
     auditLogs.unshift(newEntry);
+    const nextStatus = actionTaken === 'FREEZE_WALLET' ? 'BLOCKED'
+      : actionTaken === 'HOLD_FOR_REVIEW' ? 'HELD' : 'APPROVED';
+    if (entityType === 'TRANSACTION') {
+      serverTransactions = serverTransactions.map((transaction) => transaction.id === entityId
+        ? { ...transaction, status: nextStatus }
+        : transaction);
+    }
+    publishServerEvent('state-change', { kind: 'audit-action', entityId });
     res.json({ success: true, entry: newEntry, totalLogs: auditLogs.length });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
