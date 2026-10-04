@@ -154,8 +154,31 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
       }));
       if (!cancelled) setQuickLoginProfiles(profiles);
     };
+    const refreshOneProfile = (event: Event) => {
+      const detail = (event as CustomEvent<{ kind?: string; userId?: string }>).detail;
+      if (detail?.kind !== 'customer-profile' || !detail.userId) return;
+      const profile = DEMO_PROFILES.find((candidate) => candidate.id === detail.userId);
+      if (!profile) return;
+      fetch(`/api/customer-profiles/${encodeURIComponent(profile.id)}`, { cache: 'no-store' })
+        .then((response) => response.ok ? response.json() : null)
+        .then((result) => {
+          if (cancelled || !result?.profile) return;
+          try { localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${profile.id}`, JSON.stringify(result.profile)); } catch { /* Keep server profile in the login view. */ }
+          setQuickLoginProfiles((current) => current.map((item) => item.id === profile.id ? { ...item, ...result.profile } : item));
+        }).catch(() => undefined);
+    };
+    const refreshOnFocus = () => { if (document.visibilityState === 'visible') void refreshProfiles(); };
     void refreshProfiles();
-    return () => { cancelled = true; };
+    const stream = new EventSource('/api/events');
+    stream.addEventListener('state-change', refreshOneProfile);
+    window.addEventListener('focus', refreshOnFocus);
+    document.addEventListener('visibilitychange', refreshOnFocus);
+    return () => {
+      cancelled = true;
+      stream.close();
+      window.removeEventListener('focus', refreshOnFocus);
+      document.removeEventListener('visibilitychange', refreshOnFocus);
+    };
   }, []);
 
   // Switch role selection and autofill matching demo credentials

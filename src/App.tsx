@@ -207,11 +207,22 @@ export default function App() {
     void refreshAuditLogs();
     const stream = new EventSource('/api/events');
     stream.addEventListener('state-change', (rawEvent) => {
-      let detail: { kind?: string; entityType?: string; entityId?: string; actionTaken?: string };
+      let detail: { kind?: string; userId?: string; entityType?: string; entityId?: string; actionTaken?: string };
       try { detail = JSON.parse((rawEvent as MessageEvent<string>).data); }
       catch { return; }
 
       window.dispatchEvent(new CustomEvent('takasafe-server-update', { detail }));
+      if (detail.kind === 'customer-profile' && detail.userId) {
+        const profileUserId = detail.userId;
+        fetch(`/api/customer-profiles/${encodeURIComponent(profileUserId)}`, { cache: 'no-store' })
+          .then((response) => response.ok ? response.json() : null)
+          .then((result) => {
+            if (!result?.profile) return;
+            try { localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${profileUserId}`, JSON.stringify(result.profile)); } catch { /* Keep the server profile active in memory. */ }
+            setCurrentUser((activeUser) => activeUser?.id === profileUserId ? { ...activeUser, ...result.profile } : activeUser);
+          })
+          .catch(() => undefined);
+      }
       if (detail.kind === 'audit-action') {
         void refreshAuditLogs();
         if (detail.entityType === 'TRANSACTION' && detail.entityId) {

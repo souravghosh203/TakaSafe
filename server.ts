@@ -86,6 +86,7 @@ app.put('/api/customer-profiles/:userId', async (req: Request, res: Response) =>
     else existingRows.push(updatedRow);
     const contents = [profileHeaders.join(','), ...existingRows.map((row) => profileHeaders.map((header) => toCsvCell(row[header])).join(','))].join('\r\n') + '\r\n';
     await fs.writeFile(customerProfilesCsv, contents, 'utf8');
+    publishServerEvent('state-change', { kind: 'customer-profile', userId, profile: { name: updatedRow.name, email: updatedRow.email, phone: updatedRow.phone, avatar: updatedRow.avatar } });
     res.json({ success: true });
   } catch (error: any) { res.status(500).json({ error: error.message }); }
 });
@@ -138,6 +139,7 @@ app.post('/api/customer-logins/:userId', async (req: Request, res: Response) => 
     } catch (error: any) { if (error.code === 'ENOENT') needsHeader = true; else throw error; }
     const values = [userId, wallet.trim(), date.toISOString(), device];
     await fs.appendFile(customerLoginsCsv, `${needsHeader ? `${headers.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`, 'utf8');
+    publishServerEvent('state-change', { kind: 'customer-login', userId });
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

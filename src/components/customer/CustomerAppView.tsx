@@ -214,7 +214,17 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
 
   useEffect(() => {
     const refreshOnServerEvent = (event: Event) => {
-      const detail = (event as CustomEvent<{ kind?: string }>).detail;
+      const detail = (event as CustomEvent<{ kind?: string; userId?: string }>).detail;
+      if (detail?.kind === 'customer-login' && detail.userId === userId) {
+        fetch(`/api/customer-logins/${encodeURIComponent(userId)}`, { cache: 'no-store' })
+          .then((response) => response.ok ? response.json() : Promise.reject(new Error('Login history refresh failed')))
+          .then(({ logins }: { logins: CustomerLogin[] }) => {
+            if (!Array.isArray(logins)) return;
+            setLoginHistory(logins);
+            try { window.localStorage.setItem(`takasafe-logins:${userId}:${customer.wallet}`, JSON.stringify(logins)); } catch { /* Keep refreshed history in memory. */ }
+          }).catch(() => undefined);
+        return;
+      }
       if (detail?.kind !== 'customer-transaction') return;
       fetch(`/api/customer-history/${encodeURIComponent(userId)}`, { cache: 'no-store' })
         .then((response) => response.ok ? response.json() : Promise.reject(new Error('History refresh failed')))
