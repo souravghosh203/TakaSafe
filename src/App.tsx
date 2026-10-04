@@ -30,42 +30,6 @@ import { ShieldCheck, Info } from 'lucide-react';
 // discarded after upgrade. New sessions are saved only after explicit sign-in.
 const APP_SESSION_KEY = 'takasafe-app-session-v2';
 const PROFILE_STORAGE_PREFIX = 'takasafe-profile:';
-const PROFILE_OUTBOX_KEY = 'takasafe-profile-outbox-v1';
-type EditableProfile = Pick<AuthUser, 'name' | 'email' | 'phone' | 'avatar'>;
-type PendingProfile = { userId: string; profile: EditableProfile; queuedAt: string };
-const readProfileOutbox = (): PendingProfile[] => {
-  try {
-    const value = JSON.parse(localStorage.getItem(PROFILE_OUTBOX_KEY) || '[]');
-    return Array.isArray(value) ? value : [];
-  } catch { return []; }
-};
-const hasPendingProfile = (userId: string) => readProfileOutbox().some((item) => item.userId === userId);
-const queueProfileUpdate = (userId: string, profile: EditableProfile) => {
-  try {
-    const outbox = readProfileOutbox();
-    outbox.push({ userId, profile, queuedAt: `${Date.now()}-${Math.random()}` });
-    localStorage.setItem(PROFILE_OUTBOX_KEY, JSON.stringify(outbox));
-    return true;
-  } catch { return false; }
-};
-let profileOutboxFlush: Promise<boolean> | null = null;
-const flushProfileOutbox = (userId?: string): Promise<boolean> => {
-  if (profileOutboxFlush) return profileOutboxFlush.then(() => flushProfileOutbox(userId));
-  profileOutboxFlush = (async () => {
-    let allSaved = true;
-    for (const pending of readProfileOutbox().filter((item) => !userId || item.userId === userId)) {
-      try {
-        const response = await fetch(`/api/customer-profiles/${encodeURIComponent(pending.userId)}`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pending.profile),
-        });
-        if (!response.ok) { allSaved = false; break; }
-        localStorage.setItem(PROFILE_OUTBOX_KEY, JSON.stringify(readProfileOutbox().filter((item) => item.queuedAt !== pending.queuedAt)));
-      } catch { allSaved = false; break; }
-    }
-    return allSaved;
-  })().finally(() => { profileOutboxFlush = null; });
-  return profileOutboxFlush;
-};
 const loadSavedProfile = (user: AuthUser | null): AuthUser | null => {
   if (!user) return null;
   try {
@@ -157,27 +121,15 @@ export default function App() {
 
   useEffect(() => {
     if (!currentUser) return;
-    let cancelled = false;
-    const refreshProfile = async () => {
-      await flushProfileOutbox(currentUser.id);
-      if (cancelled || hasPendingProfile(currentUser.id)) return;
+    const refreshProfileFromThisBrowser = (event: StorageEvent) => {
+      if (event.key !== `${PROFILE_STORAGE_PREFIX}${currentUser.id}` || !event.newValue) return;
       try {
-        const response = await fetch(`/api/customer-profiles/${encodeURIComponent(currentUser.id)}`, { cache: 'no-store' });
-        const result = response.ok ? await response.json() : null;
-        if (cancelled || hasPendingProfile(currentUser.id) || !result?.profile) return;
-        setCurrentUser((active) => active?.id === currentUser.id ? { ...active, ...result.profile } : active);
-        try { localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${currentUser.id}`, JSON.stringify(result.profile)); } catch { /* Keep the server profile active in memory. */ }
-      } catch { /* Browser storage remains available if the profile API is offline. */ }
+        const profile = JSON.parse(event.newValue);
+        setCurrentUser((active) => active?.id === currentUser.id ? { ...active, ...profile } : active);
+      } catch { /* Ignore invalid browser storage values. */ }
     };
-    const refreshWhenOnline = () => { if (navigator.onLine) void refreshProfile(); };
-    void refreshProfile();
-    window.addEventListener('online', refreshWhenOnline);
-    window.addEventListener('focus', refreshWhenOnline);
-    return () => {
-      cancelled = true;
-      window.removeEventListener('online', refreshWhenOnline);
-      window.removeEventListener('focus', refreshWhenOnline);
-    };
+    window.addEventListener('storage', refreshProfileFromThisBrowser);
+    return () => window.removeEventListener('storage', refreshProfileFromThisBrowser);
   }, [currentUser?.id]);
 
   // Dark/Light Theme state with localStorage persistence
@@ -258,18 +210,6 @@ export default function App() {
       catch { return; }
 
       window.dispatchEvent(new CustomEvent('takasafe-server-update', { detail }));
-      if (detail.kind === 'customer-profile' && detail.userId) {
-        const profileUserId = detail.userId;
-        if (hasPendingProfile(profileUserId)) return;
-        fetch(`/api/customer-profiles/${encodeURIComponent(profileUserId)}`, { cache: 'no-store' })
-          .then((response) => response.ok ? response.json() : null)
-          .then((result) => {
-            if (!result?.profile) return;
-            try { localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${profileUserId}`, JSON.stringify(result.profile)); } catch { /* Keep the server profile active in memory. */ }
-            setCurrentUser((activeUser) => activeUser?.id === profileUserId ? { ...activeUser, ...result.profile } : activeUser);
-          })
-          .catch(() => undefined);
-      }
       if (detail.kind === 'audit-action') {
         void refreshAuditLogs();
         if (detail.entityType === 'TRANSACTION' && detail.entityId) {
@@ -548,14 +488,10 @@ export default function App() {
           if (!currentUser) return;
           const updatedUser = { ...currentUser, ...profile };
           setCurrentUser(updatedUser);
-          try { localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${currentUser.id}`, JSON.stringify(profile)); } catch { /* Keep edits active for this session if storage is full. */ }
-          if (!queueProfileUpdate(currentUser.id, profile)) {
-            showToast('Profile updated for this session, but browser storage is unavailable.');
-            return;
-          }
-          void flushProfileOutbox(currentUser.id).then((saved) => {
-            showToast(saved ? 'Profile updated and saved to the server.' : 'Profile saved on this device and queued to sync when the server is reachable.');
-          });
+          try {
+            localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${currentUser.id}`, JSON.stringify(profile));
+            showToast('Profile saved in this browser.');
+          } catch { showToast('Profile updated for this session, but browser storage is unavailable.'); }
         }}
         theme={theme}
         onToggleTheme={toggleTheme}

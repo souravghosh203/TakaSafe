@@ -28,8 +28,6 @@ app.use(express.json({ limit: '2mb' }));
 const customerTransactionsCsv = path.resolve(process.cwd(), 'dataset', 'customer_transactions.csv');
 const customerLoginsCsv = path.resolve(process.cwd(), 'dataset', 'customer_logins.csv');
 const alertFeedbackCsv = path.resolve(process.cwd(), 'dataset', 'alert_feedback.csv');
-const customerProfilesCsv = path.resolve(process.cwd(), 'dataset', 'customer_profiles.csv');
-const customerProfileHistoryCsv = path.resolve(process.cwd(), 'dataset', 'customer_profile_changes.csv');
 const customerTransactionHeaders = ['user_id', 'wallet', 'amount', 'recipient', 'timestamp', 'reference', 'status', 'risk_score', 'service_type', 'direction', 'fee'];
 const toCsvCell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
 const parseCsvLine = (line: string): string[] => {
@@ -46,81 +44,6 @@ const parseCsvLine = (line: string): string[] => {
   cells.push(cell);
   return cells;
 };
-
-const profileHeaders = ['user_id', 'name', 'email', 'phone', 'avatar', 'updated_at'];
-const profileHistoryHeaders = [
-  'user_id', 'changed_at',
-  'previous_name', 'updated_name', 'previous_email', 'updated_email',
-  'previous_phone', 'updated_phone', 'previous_avatar', 'updated_avatar',
-];
-app.get('/api/customer-profiles/:userId', async (req: Request, res: Response) => {
-  const userId = String(req.params.userId || '').trim();
-  if (!userId || userId.length > 64) return res.status(400).json({ error: 'Invalid user ID' });
-  try {
-    const csv = await fs.readFile(customerProfilesCsv, 'utf8').catch((error: NodeJS.ErrnoException) => {
-      if (error.code === 'ENOENT') return '';
-      throw error;
-    });
-    const [headerLine, ...lines] = csv.split(/\r?\n/).filter(Boolean);
-    const headers = headerLine ? parseCsvLine(headerLine) : profileHeaders;
-    const row = lines.map(parseCsvLine).map((cells) => Object.fromEntries(headers.map((header, index) => [header, cells[index] || ''])))
-      .find((candidate) => candidate.user_id === userId);
-    res.json({ success: true, profile: row ? { name: row.name, email: row.email, phone: row.phone, avatar: row.avatar || '' } : null });
-  } catch (error: any) { res.status(500).json({ error: error.message }); }
-});
-
-app.put('/api/customer-profiles/:userId', async (req: Request, res: Response) => {
-  const userId = String(req.params.userId || '').trim();
-  const { name, email, phone, avatar = '' } = req.body || {};
-  if (!userId || userId.length > 64 || typeof name !== 'string' || !name.trim() || name.length > 120 ||
-    typeof email !== 'string' || !email.trim() || email.length > 254 || typeof phone !== 'string' || !phone.trim() || phone.length > 64 ||
-    typeof avatar !== 'string' || avatar.length > 1_800_000 || (avatar && !(/^data:image\/(jpeg|png|webp);base64,/.test(avatar) || /^https:\/\/images\.unsplash\.com\//.test(avatar)))) {
-    return res.status(400).json({ error: 'Invalid customer profile' });
-  }
-  try {
-    await fs.mkdir(path.dirname(customerProfilesCsv), { recursive: true });
-    const csv = await fs.readFile(customerProfilesCsv, 'utf8').catch((error: NodeJS.ErrnoException) => {
-      if (error.code === 'ENOENT') return '';
-      throw error;
-    });
-    const [headerLine, ...lines] = csv.split(/\r?\n/).filter(Boolean);
-    const headers = headerLine ? parseCsvLine(headerLine) : profileHeaders;
-    const existingRows = lines.map(parseCsvLine).map((cells) => Object.fromEntries(headers.map((header, index) => [header, cells[index] || ''])));
-    const changedAt = new Date().toISOString();
-    const updatedRow = { user_id: userId, name: name.trim(), email: email.trim(), phone: phone.trim(), avatar, updated_at: changedAt };
-    const index = existingRows.findIndex((row) => row.user_id === userId);
-    const previousRow = index >= 0 ? existingRows[index] : { name: '', email: '', phone: '', avatar: '' };
-    const hasChanges = ['name', 'email', 'phone', 'avatar'].some((field) => String(previousRow[field] || '') !== updatedRow[field as keyof typeof updatedRow]);
-    if (hasChanges) {
-      const historyCsv = await fs.readFile(customerProfileHistoryCsv, 'utf8').catch((error: NodeJS.ErrnoException) => {
-        if (error.code === 'ENOENT') return '';
-        throw error;
-      });
-      const historyRows = historyCsv.split(/\r?\n/).filter(Boolean);
-      const historyHeaders = historyRows.length ? parseCsvLine(historyRows[0]) : profileHistoryHeaders;
-      const historyRow: Record<string, string> = {
-        user_id: userId,
-        changed_at: changedAt,
-        previous_name: previousRow.name || '', updated_name: updatedRow.name,
-        previous_email: previousRow.email || '', updated_email: updatedRow.email,
-        previous_phone: previousRow.phone || '', updated_phone: updatedRow.phone,
-        previous_avatar: previousRow.avatar || '', updated_avatar: updatedRow.avatar,
-      };
-      const historyContents = [
-        historyRows.length ? historyRows[0] : profileHistoryHeaders.join(','),
-        ...historyRows.slice(1),
-        historyHeaders.map((header) => toCsvCell(historyRow[header] || '')).join(','),
-      ].join('\r\n') + '\r\n';
-      await fs.writeFile(customerProfileHistoryCsv, historyContents, 'utf8');
-    }
-    if (index >= 0) existingRows[index] = updatedRow;
-    else existingRows.push(updatedRow);
-    const contents = [profileHeaders.join(','), ...existingRows.map((row) => profileHeaders.map((header) => toCsvCell(row[header])).join(','))].join('\r\n') + '\r\n';
-    await fs.writeFile(customerProfilesCsv, contents, 'utf8');
-    publishServerEvent('state-change', { kind: 'customer-profile', userId, profile: { name: updatedRow.name, email: updatedRow.email, phone: updatedRow.phone, avatar: updatedRow.avatar } });
-    res.json({ success: true });
-  } catch (error: any) { res.status(500).json({ error: error.message }); }
-});
 
 app.get('/api/customer-logins/:userId', async (req: Request, res: Response) => {
   const userId = String(req.params.userId || '').trim();
