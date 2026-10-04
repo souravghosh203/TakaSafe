@@ -242,13 +242,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
             <span className="text-[9px] font-bold uppercase tracking-[.2em] text-white/60">Transaction intelligence</span>
             <span className="flex items-center gap-1.5 text-[9px] font-semibold text-emerald-200"><span className="login-status-dot h-1.5 w-1.5 rounded-full bg-emerald-300" /> MONITORING</span>
           </div>
-          <svg viewBox="0 0 440 170" className="w-full h-40 sm:h-48" fill="none" role="presentation">
+          <div className="login-visual-stage relative">
+          <div className="login-float-chip login-float-payment absolute z-10 rounded-2xl border border-white/20 bg-[#f4fffb]/95 px-3 py-2 text-slate-800 shadow-xl">
+            <div className="flex items-center gap-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-xs font-black text-emerald-800">৳</span><span><span className="block text-[8px] font-semibold uppercase tracking-wider text-slate-500">Payment secured</span><span className="block text-xs font-black">৳ 1,250.00</span></span></div>
+          </div>
+          <div className="login-float-chip login-float-risk absolute z-10 rounded-xl border border-emerald-100/30 bg-emerald-950/90 px-3 py-2 text-white shadow-xl">
+            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,.8)]"/><span className="text-[8px] font-bold uppercase tracking-wider">Risk check</span><span className="rounded-md bg-emerald-300/15 px-1.5 py-0.5 text-[8px] font-black text-emerald-200">CLEAR</span></div>
+          </div>
+          <svg viewBox="0 0 440 170" className="login-network-svg relative z-0 w-full h-40 sm:h-48" fill="none" role="presentation">
             <path className="network-line" d="M42 112 128 66l82 37 88-57 100 47M128 66l24 70 58-33 51 39 37-96M42 112l110 24 68 22 51-16 127-49" />
             <circle className="network-pulse" cx="210" cy="103" r="34" />
             <path d="M210 81 226 87v14c0 12-7 21-16 25-9-4-16-13-16-25V87l16-6Z" fill="currentColor" fillOpacity=".2" stroke="currentColor" strokeWidth="2" />
             <path d="m203 101 5 5 10-11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             {[[42,112],[128,66],[152,136],[292,46],[398,93],[261,142],[278,126]].map(([cx,cy], i) => <circle key={i} cx={cx} cy={cy} r={i === 0 || i === 4 ? 5 : 3.5} className="network-node" />)}
           </svg>
+          </div>
           <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-3">
             <div className="rounded-xl bg-white/[.06] px-2.5 py-2"><div className="text-[9px] text-white/50">SIGNALS</div><div className="mt-1 text-sm font-bold">24<span className="ml-1 text-[9px] font-medium text-emerald-200">live</span></div></div>
             <div className="rounded-xl bg-white/[.06] px-2.5 py-2"><div className="text-[9px] text-white/50">NETWORK</div><div className="mt-1 text-sm font-bold">Connected</div></div>
