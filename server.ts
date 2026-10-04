@@ -2,6 +2,8 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import path from 'path';
 import { promises as fs } from 'node:fs';
+import { mkdirSync } from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
 
@@ -30,6 +32,40 @@ const customerLoginsCsv = path.resolve(process.cwd(), 'dataset', 'customer_login
 const alertFeedbackCsv = path.resolve(process.cwd(), 'dataset', 'alert_feedback.csv');
 const customerProfilesCsv = path.resolve(process.cwd(), 'dataset', 'customer_profiles.csv');
 const customerProfileHistoryCsv = path.resolve(process.cwd(), 'dataset', 'customer_profile_changes.csv');
+const dataDirectory = path.resolve(process.env.TAKASAFE_DATA_DIR || path.resolve(process.cwd(), 'dataset'));
+mkdirSync(dataDirectory, { recursive: true });
+const database = new DatabaseSync(path.join(dataDirectory, 'takasafe.sqlite'));
+database.exec(`
+  PRAGMA journal_mode = WAL;
+  PRAGMA foreign_keys = ON;
+  CREATE TABLE IF NOT EXISTS migration_markers (source TEXT PRIMARY KEY, imported_at TEXT NOT NULL);
+  CREATE TABLE IF NOT EXISTS customer_profiles (
+    user_id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT NOT NULL,
+    avatar TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS customer_profile_changes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, changed_at TEXT NOT NULL,
+    previous_name TEXT NOT NULL, updated_name TEXT NOT NULL, previous_email TEXT NOT NULL, updated_email TEXT NOT NULL,
+    previous_phone TEXT NOT NULL, updated_phone TEXT NOT NULL, previous_avatar TEXT NOT NULL, updated_avatar TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_profile_changes_user ON customer_profile_changes(user_id, id);
+  CREATE TABLE IF NOT EXISTS customer_logins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, wallet TEXT NOT NULL, timestamp TEXT NOT NULL, device TEXT NOT NULL DEFAULT ''
+  );
+  CREATE INDEX IF NOT EXISTS idx_customer_logins_user ON customer_logins(user_id, id);
+  CREATE TABLE IF NOT EXISTS customer_transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, wallet TEXT NOT NULL, amount REAL NOT NULL,
+    recipient TEXT NOT NULL, timestamp TEXT NOT NULL, reference TEXT NOT NULL DEFAULT '', status TEXT NOT NULL,
+    risk_score REAL NOT NULL DEFAULT 0, service_type TEXT NOT NULL DEFAULT 'SEND_MONEY',
+    direction TEXT NOT NULL DEFAULT 'OUT', fee REAL NOT NULL DEFAULT 0
+  );
+  CREATE INDEX IF NOT EXISTS idx_customer_transactions_user ON customer_transactions(user_id, timestamp);
+  CREATE INDEX IF NOT EXISTS idx_customer_transactions_wallet ON customer_transactions(wallet, timestamp);
+  CREATE TABLE IF NOT EXISTS alert_feedback (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, case_id TEXT NOT NULL, transaction_id TEXT NOT NULL,
+    analyst TEXT NOT NULL, outcome TEXT NOT NULL, risk_score REAL NOT NULL, notes TEXT NOT NULL DEFAULT ''
+  );
+`);
 const customerTransactionHeaders = ['user_id', 'wallet', 'amount', 'recipient', 'timestamp', 'reference', 'status', 'risk_score', 'service_type', 'direction', 'fee'];
 const toCsvCell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
 const parseCsvLine = (line: string): string[] => {
@@ -45,6 +81,53 @@ const parseCsvLine = (line: string): string[] => {
   }
   cells.push(cell);
   return cells;
+};
+
+const readLegacyCsv = async (filePath: string) => {
+  const csv = await fs.readFile(filePath, 'utf8').catch((error: NodeJS.ErrnoException) => {
+    if (error.code === 'ENOENT') return '';
+    throw error;
+  });
+  const [header, ...lines] = csv.split(/\r?\n/).filter(Boolean);
+  if (!header) return [];
+  const headers = parseCsvLine(header);
+  return lines.map((line) => Object.fromEntries(headers.map((key, index) => [key, parseCsvLine(line)[index] || ''])));
+};
+
+const importLegacyCsv = async (filePath: string, source: string, insertRow: (row: Record<string, string>) => void) => {
+  if (database.prepare('SELECT 1 FROM migration_markers WHERE source = ?').get(source)) return;
+  const rows = await readLegacyCsv(filePath);
+  database.exec('BEGIN IMMEDIATE');
+  try {
+    for (const row of rows) insertRow(row);
+    database.prepare('INSERT INTO migration_markers (source, imported_at) VALUES (?, ?)').run(source, new Date().toISOString());
+    database.exec('COMMIT');
+  } catch (error) {
+    database.exec('ROLLBACK');
+    throw error;
+  }
+};
+
+const initializePersistentStore = async () => {
+  await importLegacyCsv(customerProfilesCsv, 'customer_profiles.csv', (row) => {
+    database.prepare(`INSERT OR IGNORE INTO customer_profiles (user_id,name,email,phone,avatar,updated_at) VALUES (?,?,?,?,?,?)`)
+      .run(row.user_id, row.name, row.email, row.phone, row.avatar || '', row.updated_at || '');
+  });
+  await importLegacyCsv(customerProfileHistoryCsv, 'customer_profile_changes.csv', (row) => {
+    database.prepare(`INSERT INTO customer_profile_changes (user_id,changed_at,previous_name,updated_name,previous_email,updated_email,previous_phone,updated_phone,previous_avatar,updated_avatar) VALUES (?,?,?,?,?,?,?,?,?,?)`)
+      .run(row.user_id, row.changed_at, row.previous_name || '', row.updated_name, row.previous_email || '', row.updated_email, row.previous_phone || '', row.updated_phone, row.previous_avatar || '', row.updated_avatar || '');
+  });
+  await importLegacyCsv(customerLoginsCsv, 'customer_logins.csv', (row) => {
+    database.prepare(`INSERT INTO customer_logins (user_id,wallet,timestamp,device) VALUES (?,?,?,?)`).run(row.user_id, row.wallet, row.timestamp, row.device || '');
+  });
+  await importLegacyCsv(customerTransactionsCsv, 'customer_transactions.csv', (row) => {
+    database.prepare(`INSERT INTO customer_transactions (user_id,wallet,amount,recipient,timestamp,reference,status,risk_score,service_type,direction,fee) VALUES (?,?,?,?,?,?,?,?,?,?,?)`)
+      .run(row.user_id || row.wallet, row.wallet, Number(row.amount) || 0, row.recipient, row.timestamp, row.reference || '', row.status, Number(row.risk_score) || 0, row.service_type || 'SEND_MONEY', row.direction || 'OUT', Number(row.fee) || 0);
+  });
+  await importLegacyCsv(alertFeedbackCsv, 'alert_feedback.csv', (row) => {
+    database.prepare(`INSERT INTO alert_feedback (timestamp,case_id,transaction_id,analyst,outcome,risk_score,notes) VALUES (?,?,?,?,?,?,?)`)
+      .run(row.timestamp, row.case_id, row.transaction_id, row.analyst, row.outcome, Number(row.risk_score) || 0, row.notes || '');
+  });
 };
 
 const profileHeaders = ['user_id', 'name', 'email', 'phone', 'avatar', 'updated_at'];
