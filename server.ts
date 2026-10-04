@@ -4,11 +4,21 @@ import path from 'path';
 import { promises as fs } from 'node:fs';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
+import { MOCK_TRANSACTIONS } from './src/data/mockData';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const eventClients = new Set<Response>();
+let serverTransactions = [...MOCK_TRANSACTIONS];
+
+const publishServerEvent = (event: string, payload: unknown = {}) => {
+  const frame = `event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`;
+  for (const client of eventClients) {
+    try { client.write(frame); } catch { eventClients.delete(client); }
+  }
+};
 
 app.use(express.json());
 
