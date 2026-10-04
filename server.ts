@@ -68,7 +68,7 @@ app.put('/api/customer-profiles/:userId', async (req: Request, res: Response) =>
   const { name, email, phone, avatar = '' } = req.body || {};
   if (!userId || userId.length > 64 || typeof name !== 'string' || !name.trim() || name.length > 120 ||
     typeof email !== 'string' || !email.trim() || email.length > 254 || typeof phone !== 'string' || !phone.trim() || phone.length > 64 ||
-    typeof avatar !== 'string' || avatar.length > 1_800_000 || (avatar && !/^data:image\/(jpeg|png|webp);base64,/.test(avatar))) {
+    typeof avatar !== 'string' || avatar.length > 1_800_000 || (avatar && !(/^data:image\/(jpeg|png|webp);base64,/.test(avatar) || /^https:\/\/images\.unsplash\.com\//.test(avatar)))) {
     return res.status(400).json({ error: 'Invalid customer profile' });
   }
   try {
