@@ -577,6 +577,7 @@ html.dark {
 .network-line { stroke: rgba(210,255,237,.34); stroke-width: 1.5; stroke-dasharray: 5 7; }
 .network-node { fill: #a7f3d0; filter: drop-shadow(0 0 5px rgba(167,243,208,.8)); }
 .network-pulse { stroke: var(--brand-accent); stroke-width: 1; opacity: .45; animation: network-pulse 3.2s ease-out infinite; transform-origin: 210px 103px; }
+.login-status-dot { box-shadow: 0 0 0 0 rgba(110,231,183,.55); animation: status-glow 2.4s ease-out infinite; }
 .login-input-admin:focus { border-color: #0054a6; box-shadow: 0 0 0 4px rgba(0,84,166,.12), 0 3px 10px -6px rgba(0,84,166,.35); }
 .login-input-user:focus { border-color: #164e3d; box-shadow: 0 0 0 4px rgba(22,78,61,.12), 0 3px 10px -6px rgba(22,78,61,.35); }
 
@@ -660,8 +661,12 @@ html.dark {
   70%, 100% { opacity: 0; transform: scale(1.55); }
 }
 
+@keyframes status-glow {
+  70%, 100% { box-shadow: 0 0 0 6px rgba(110,231,183,0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .login-glow, .login-card, .login-privileges, .login-error, .network-pulse { animation: none !important; }
+  .login-glow, .login-card, .login-privileges, .login-error, .network-pulse, .login-status-dot { animation: none !important; }
   .login-card, .login-role-option, .login-input, .login-submit, .login-profile { transition: none !important; }
   .login-card:hover, .login-role-option:hover, .login-role-option:active,
   .login-submit:hover:not(:disabled), .login-submit:active:not(:disabled), .login-profile:hover { transform: none; }

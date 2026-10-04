@@ -222,14 +222,30 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
           </div>
         </div>
 
-        <div className="login-network relative z-10 my-7 h-36 sm:h-44" aria-hidden="true">
-          <svg viewBox="0 0 440 170" className="w-full h-full" fill="none" role="presentation">
+        <div className="login-network relative z-10 my-7 flex-1 min-h-[270px] sm:min-h-[320px] flex items-center" aria-hidden="true">
+          <div className="login-network-card relative w-full h-full rounded-3xl border border-white/15 bg-slate-950/20 p-4 sm:p-5 flex flex-col justify-center">
+          <div className="flex items-center justify-between px-1 pb-2">
+            <span className="text-[9px] font-bold uppercase tracking-[.2em] text-white/60">Transaction intelligence</span>
+            <span className="flex items-center gap-1.5 text-[9px] font-semibold text-emerald-200"><span className="login-status-dot h-1.5 w-1.5 rounded-full bg-emerald-300" /> MONITORING</span>
+          </div>
+          <svg viewBox="0 0 440 170" className="w-full h-40 sm:h-48" fill="none" role="presentation">
             <path className="network-line" d="M42 112 128 66l82 37 88-57 100 47M128 66l24 70 58-33 51 39 37-96M42 112l110 24 68 22 51-16 127-49" />
             <circle className="network-pulse" cx="210" cy="103" r="34" />
             <path d="M210 81 226 87v14c0 12-7 21-16 25-9-4-16-13-16-25V87l16-6Z" fill="currentColor" fillOpacity=".2" stroke="currentColor" strokeWidth="2" />
             <path d="m203 101 5 5 10-11" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             {[[42,112],[128,66],[152,136],[292,46],[398,93],[261,142],[278,126]].map(([cx,cy], i) => <circle key={i} cx={cx} cy={cy} r={i === 0 || i === 4 ? 5 : 3.5} className="network-node" />)}
           </svg>
+          <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-3">
+            <div className="rounded-xl bg-white/[.06] px-2.5 py-2"><div className="text-[9px] text-white/50">SIGNALS</div><div className="mt-1 text-sm font-bold">24<span className="ml-1 text-[9px] font-medium text-emerald-200">live</span></div></div>
+            <div className="rounded-xl bg-white/[.06] px-2.5 py-2"><div className="text-[9px] text-white/50">NETWORK</div><div className="mt-1 text-sm font-bold">Connected</div></div>
+            <div className="rounded-xl bg-white/[.06] px-2.5 py-2"><div className="text-[9px] text-white/50">COVERAGE</div><div className="mt-1 text-sm font-bold">24 / 7</div></div>
+          </div>
+          <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-200/10 bg-emerald-200/[.06] px-3 py-2.5">
+            <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-200" />
+            <span className="text-[10px] leading-relaxed text-white/70">Every transfer checked against a connected network of risk signals.</span>
+            <span className="ml-auto shrink-0 text-[9px] font-semibold text-emerald-200">SECURE</span>
+          </div>
+          </div>
         </div>
 
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-t border-white/15 pt-4">
