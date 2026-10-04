@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Transaction } from '../../types';
+import { ConnectionStatus } from '../../hooks/useRealtimeSync';
 import {
   Radio,
   Zap,
   ShieldAlert,
   Eye,
   AlertTriangle,
-  Play,
-  Pause,
   Download,
   FileCheck2,
   Activity,
@@ -24,6 +23,7 @@ interface LiveWebSocketTickerProps {
   onOpenComplianceReport: () => void;
   onDownloadCSV: () => void;
   lang: 'EN' | 'BN';
+  connectionStatus: ConnectionStatus;
 }
 
 export const LiveWebSocketTicker: React.FC<LiveWebSocketTickerProps> = ({
@@ -34,23 +34,10 @@ export const LiveWebSocketTicker: React.FC<LiveWebSocketTickerProps> = ({
   onOpenComplianceReport,
   onDownloadCSV,
   lang,
+  connectionStatus,
 }) => {
-  const [latency, setLatency] = useState<number>(9);
-  const [eventCount, setEventCount] = useState<number>(142);
-  const [isPaused, setIsPaused] = useState<boolean>(false);
-
-  // Subtle real-time ping fluctuation for authentic WebSocket feel
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setLatency(Math.floor(7 + Math.random() * 6));
-      if (!isPaused) {
-        setEventCount((prev) => prev + 1);
-      }
-    }, 4500);
-    return () => clearInterval(timer);
-  }, [isPaused]);
-
   const isHighRisk = latestTransaction && (latestTransaction.fusedRiskScore >= 75 || latestTransaction.riskBand === 'CRITICAL' || latestTransaction.riskBand === 'HIGH');
+  const connectionLabel = connectionStatus === 'connected' ? 'CONNECTED' : connectionStatus === 'polling' ? 'POLLING FALLBACK' : connectionStatus === 'offline' ? 'OFFLINE' : connectionStatus === 'connecting' ? 'CONNECTING' : 'RECONNECTING';
 
   return (
     <div
@@ -80,20 +67,19 @@ export const LiveWebSocketTicker: React.FC<LiveWebSocketTickerProps> = ({
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-[11px] font-mono shadow-2xs">
             <span className="relative flex h-2 w-2">
               <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                isPaused ? 'bg-amber-400' : 'bg-emerald-400 animate-ping'
+                connectionStatus === 'connected' ? 'bg-emerald-400 animate-ping' : connectionStatus === 'offline' ? 'bg-rose-400' : 'bg-amber-400'
               }`} />
               <span className={`relative inline-flex rounded-full h-2 w-2 ${
-                isPaused ? 'bg-amber-500' : 'bg-emerald-500'
+                connectionStatus === 'connected' ? 'bg-emerald-500' : connectionStatus === 'offline' ? 'bg-rose-500' : 'bg-amber-500'
               }`} />
             </span>
-            <span className="text-slate-500 dark:text-slate-400 font-bold">WS:</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold">{isPaused ? 'PAUSED' : 'STREAMING'}</span>
+            <span className="text-slate-500 dark:text-slate-400 font-bold">SERVER:</span>
+            <span className={`font-bold ${connectionStatus === 'connected' ? 'text-emerald-600 dark:text-emerald-400' : connectionStatus === 'offline' ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'}`}>{connectionLabel}</span>
             <span className="text-slate-400 dark:text-slate-600">·</span>
-            <span className="text-slate-600 dark:text-slate-300 font-semibold">{latency}ms</span>
           </div>
 
           <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 hidden xl:inline">
-            wss://guardian.stream.takasafe.internal
+            /api/events · automatic reconnect
           </span>
         </div>
 
