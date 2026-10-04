@@ -57,8 +57,15 @@ app.get('/api/customer-profiles/:userId', async (req: Request, res: Response) =>
   const userId = String(req.params.userId || '').trim();
   if (!userId || userId.length > 64) return res.status(400).json({ error: 'Invalid user ID' });
   try {
-    const row = database.prepare('SELECT name,email,phone,avatar FROM customer_profiles WHERE user_id = ?').get(userId) as { name: string; email: string; phone: string; avatar: string } | undefined;
-    res.json({ success: true, profile: row || null });
+    const csv = await fs.readFile(customerProfilesCsv, 'utf8').catch((error: NodeJS.ErrnoException) => {
+      if (error.code === 'ENOENT') return '';
+      throw error;
+    });
+    const [headerLine, ...lines] = csv.split(/\r?\n/).filter(Boolean);
+    const headers = headerLine ? parseCsvLine(headerLine) : profileHeaders;
+    const row = lines.map(parseCsvLine).map((cells) => Object.fromEntries(headers.map((header, index) => [header, cells[index] || ''])))
+      .find((candidate) => candidate.user_id === userId);
+    res.json({ success: true, profile: row ? { name: row.name, email: row.email, phone: row.phone, avatar: row.avatar || '' } : null });
   } catch (error: any) { res.status(500).json({ error: error.message }); }
 });
 
@@ -71,22 +78,46 @@ app.put('/api/customer-profiles/:userId', async (req: Request, res: Response) =>
     return res.status(400).json({ error: 'Invalid customer profile' });
   }
   try {
+    await fs.mkdir(path.dirname(customerProfilesCsv), { recursive: true });
+    const csv = await fs.readFile(customerProfilesCsv, 'utf8').catch((error: NodeJS.ErrnoException) => {
+      if (error.code === 'ENOENT') return '';
+      throw error;
+    });
+    const [headerLine, ...lines] = csv.split(/\r?\n/).filter(Boolean);
+    const headers = headerLine ? parseCsvLine(headerLine) : profileHeaders;
+    const existingRows = lines.map(parseCsvLine).map((cells) => Object.fromEntries(headers.map((header, index) => [header, cells[index] || ''])));
     const changedAt = new Date().toISOString();
-    const updatedRow = { name: name.trim(), email: email.trim(), phone: phone.trim(), avatar };
-    database.exec('BEGIN IMMEDIATE');
-    try {
-      const previous = database.prepare('SELECT name,email,phone,avatar FROM customer_profiles WHERE user_id = ?').get(userId) as typeof updatedRow | undefined;
-      const hasChanges = !previous || ['name', 'email', 'phone', 'avatar'].some((field) => previous[field as keyof typeof updatedRow] !== updatedRow[field as keyof typeof updatedRow]);
-      if (hasChanges) {
-        database.prepare(`INSERT INTO customer_profile_changes (user_id,changed_at,previous_name,updated_name,previous_email,updated_email,previous_phone,updated_phone,previous_avatar,updated_avatar)
-          VALUES (?,?,?,?,?,?,?,?,?,?)`).run(userId, changedAt, previous?.name || '', updatedRow.name, previous?.email || '', updatedRow.email, previous?.phone || '', updatedRow.phone, previous?.avatar || '', updatedRow.avatar);
-      }
-      database.prepare(`INSERT INTO customer_profiles (user_id,name,email,phone,avatar,updated_at) VALUES (?,?,?,?,?,?)
-        ON CONFLICT(user_id) DO UPDATE SET name=excluded.name,email=excluded.email,phone=excluded.phone,avatar=excluded.avatar,updated_at=excluded.updated_at`)
-        .run(userId, updatedRow.name, updatedRow.email, updatedRow.phone, updatedRow.avatar, changedAt);
-      database.exec('COMMIT');
-    } catch (error) { database.exec('ROLLBACK'); throw error; }
-    publishServerEvent('state-change', { kind: 'customer-profile', userId, profile: updatedRow });
+    const updatedRow = { user_id: userId, name: name.trim(), email: email.trim(), phone: phone.trim(), avatar, updated_at: changedAt };
+    const index = existingRows.findIndex((row) => row.user_id === userId);
+    const previousRow = index >= 0 ? existingRows[index] : { name: '', email: '', phone: '', avatar: '' };
+    const hasChanges = ['name', 'email', 'phone', 'avatar'].some((field) => String(previousRow[field] || '') !== updatedRow[field as keyof typeof updatedRow]);
+    if (hasChanges) {
+      const historyCsv = await fs.readFile(customerProfileHistoryCsv, 'utf8').catch((error: NodeJS.ErrnoException) => {
+        if (error.code === 'ENOENT') return '';
+        throw error;
+      });
+      const historyRows = historyCsv.split(/\r?\n/).filter(Boolean);
+      const historyHeaders = historyRows.length ? parseCsvLine(historyRows[0]) : profileHistoryHeaders;
+      const historyRow: Record<string, string> = {
+        user_id: userId,
+        changed_at: changedAt,
+        previous_name: previousRow.name || '', updated_name: updatedRow.name,
+        previous_email: previousRow.email || '', updated_email: updatedRow.email,
+        previous_phone: previousRow.phone || '', updated_phone: updatedRow.phone,
+        previous_avatar: previousRow.avatar || '', updated_avatar: updatedRow.avatar,
+      };
+      const historyContents = [
+        historyRows.length ? historyRows[0] : profileHistoryHeaders.join(','),
+        ...historyRows.slice(1),
+        historyHeaders.map((header) => toCsvCell(historyRow[header] || '')).join(','),
+      ].join('\r\n') + '\r\n';
+      await fs.writeFile(customerProfileHistoryCsv, historyContents, 'utf8');
+    }
+    if (index >= 0) existingRows[index] = updatedRow;
+    else existingRows.push(updatedRow);
+    const contents = [profileHeaders.join(','), ...existingRows.map((row) => profileHeaders.map((header) => toCsvCell(row[header])).join(','))].join('\r\n') + '\r\n';
+    await fs.writeFile(customerProfilesCsv, contents, 'utf8');
+    publishServerEvent('state-change', { kind: 'customer-profile', userId, profile: { name: updatedRow.name, email: updatedRow.email, phone: updatedRow.phone, avatar: updatedRow.avatar } });
     res.json({ success: true });
   } catch (error: any) { res.status(500).json({ error: error.message }); }
 });
