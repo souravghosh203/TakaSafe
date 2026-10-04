@@ -64,7 +64,8 @@ const getCustomerProfile = (user: AuthUser | null): CustomerBaseline => {
 export default function App() {
   const [initialSession] = useState(() => {
     try {
-      const rawSession = localStorage.getItem(APP_SESSION_KEY);
+      const rememberedSession = localStorage.getItem(APP_SESSION_KEY);
+      const rawSession = rememberedSession || sessionStorage.getItem(APP_SESSION_KEY);
       if (!rawSession) return null;
       const saved = JSON.parse(rawSession) as { userId?: string | null; activeView?: AppView };
       const user = DEMO_PROFILES.find((profile) => profile.id === saved.userId) || null;
@@ -74,7 +75,7 @@ export default function App() {
         : user
           ? (validViews.includes(saved.activeView as AppView) ? saved.activeView! : 'OPERATOR')
           : 'OPERATOR';
-      return { user, view };
+      return { user, view, remember: Boolean(rememberedSession) };
     } catch {
       return null;
     }
@@ -85,17 +86,30 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() =>
     initialSession ? initialSession.user : null
   );
+  const [rememberSession, setRememberSession] = useState(() => initialSession?.remember ?? true);
 
   useEffect(() => {
     try {
-      localStorage.setItem(APP_SESSION_KEY, JSON.stringify({
+      if (!currentUser) {
+        localStorage.removeItem(APP_SESSION_KEY);
+        sessionStorage.removeItem(APP_SESSION_KEY);
+        return;
+      }
+      const serializedSession = JSON.stringify({
         userId: currentUser?.id || null,
         activeView: currentUser?.role === 'USER' ? 'CUSTOMER' : activeView,
-      }));
+      });
+      if (rememberSession) {
+        localStorage.setItem(APP_SESSION_KEY, serializedSession);
+        sessionStorage.removeItem(APP_SESSION_KEY);
+      } else {
+        sessionStorage.setItem(APP_SESSION_KEY, serializedSession);
+        localStorage.removeItem(APP_SESSION_KEY);
+      }
     } catch {
       // Keep the in-memory session active if browser storage is unavailable.
     }
-  }, [activeView, currentUser]);
+  }, [activeView, currentUser, rememberSession]);
 
   // Dark/Light Theme state with localStorage persistence
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -434,6 +448,8 @@ export default function App() {
         onToggleTheme={toggleTheme}
         onLogout={() => {
           setCurrentUser(null);
+          localStorage.removeItem(APP_SESSION_KEY);
+          sessionStorage.removeItem(APP_SESSION_KEY);
           setActiveView('OPERATOR');
           showToast('Signed out of TakaSafe.');
         }}
@@ -474,8 +490,9 @@ export default function App() {
             <LoginPage
               showBackButton={Boolean(currentUser)}
               onOpenInfo={(modal) => setActiveModal(modal)}
-              onLogin={(user) => {
+              onLogin={(user, remember) => {
                 setCurrentUser(user);
+                setRememberSession(remember);
                 recordCustomerLogin(user);
                 if (user.role === 'ADMIN') {
                   setActiveView('OPERATOR');
