@@ -164,7 +164,7 @@ export default function App() {
       try {
         const response = await fetch(`/api/customer-profiles/${encodeURIComponent(currentUser.id)}`, { cache: 'no-store' });
         const result = response.ok ? await response.json() : null;
-        if (cancelled || !result?.profile) return;
+        if (cancelled || hasPendingProfile(currentUser.id) || !result?.profile) return;
         setCurrentUser((active) => active?.id === currentUser.id ? { ...active, ...result.profile } : active);
         try { localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${currentUser.id}`, JSON.stringify(result.profile)); } catch { /* Keep the server profile active in memory. */ }
       } catch { /* Browser storage remains available if the profile API is offline. */ }
