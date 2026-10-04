@@ -224,6 +224,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBac
 
         <div className="login-network relative z-10 my-7 flex-1 min-h-[270px] sm:min-h-[320px] flex items-center" aria-hidden="true">
           <div className="login-network-card relative w-full h-full rounded-3xl border border-white/15 bg-slate-950/20 p-4 sm:p-5 flex flex-col justify-center">
+          <div className="login-orbit-art" aria-hidden="true">
+            <div className="login-orbit-ring login-orbit-ring-back" />
+            <div className="login-orbit-ring login-orbit-ring-front" />
+            <div className="login-orbit-core"><ShieldCheck className="h-8 w-8" /></div>
+            <span className="login-orbit-spark login-orbit-spark-one" />
+            <span className="login-orbit-spark login-orbit-spark-two" />
+          </div>
           <div className="flex items-center justify-between px-1 pb-2">
             <span className="text-[9px] font-bold uppercase tracking-[.2em] text-white/60">Transaction intelligence</span>
             <span className="flex items-center gap-1.5 text-[9px] font-semibold text-emerald-200"><span className="login-status-dot h-1.5 w-1.5 rounded-full bg-emerald-300" /> MONITORING</span>

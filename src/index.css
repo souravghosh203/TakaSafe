@@ -574,6 +574,47 @@ html.dark {
   mask-image: linear-gradient(135deg, black, transparent 72%);
 }
 .login-brand-mark { color: var(--brand-accent); }
+.login-network-card { perspective: 900px; }
+.login-orbit-art {
+  position: absolute;
+  z-index: 1;
+  top: 2.2rem;
+  right: 1.35rem;
+  width: 4.4rem;
+  height: 4.4rem;
+  display: grid;
+  place-items: center;
+  transform-style: preserve-3d;
+  animation: login-orbit-float 5.5s ease-in-out infinite;
+  pointer-events: none;
+}
+.login-orbit-core {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  color: #d1fae5;
+  border: 1px solid rgba(209,250,229,.62);
+  border-radius: 1rem;
+  background: linear-gradient(145deg, rgba(167,243,208,.35), rgba(15,118,90,.28));
+  box-shadow: 0 0 26px rgba(110,231,183,.35), inset 0 1px 0 rgba(255,255,255,.5), 0 8px 18px rgba(2,20,17,.32);
+  transform: rotateY(-18deg) rotateX(12deg) translateZ(12px);
+  backdrop-filter: blur(5px);
+}
+.login-orbit-ring {
+  position: absolute;
+  inset: .42rem -.25rem;
+  border: 1px solid rgba(167,243,208,.66);
+  border-radius: 50%;
+  transform-style: preserve-3d;
+}
+.login-orbit-ring-back { transform: rotateX(66deg) rotateZ(-22deg); box-shadow: 0 0 12px rgba(110,231,183,.16); }
+.login-orbit-ring-front { inset: .55rem -.34rem; border-color: rgba(147,197,253,.5); transform: rotateX(66deg) rotateZ(54deg); animation: login-orbit-spin 12s linear infinite; }
+.login-orbit-spark { position: absolute; width: .38rem; height: .38rem; border-radius: 50%; background: #d1fae5; box-shadow: 0 0 12px #6ee7b7; }
+.login-orbit-spark-one { top: .3rem; right: .5rem; }
+.login-orbit-spark-two { bottom: .5rem; left: .1rem; width: .27rem; height: .27rem; background: #bfdbfe; box-shadow: 0 0 10px #93c5fd; }
 .network-line { stroke: rgba(210,255,237,.34); stroke-width: 1.5; stroke-dasharray: 5 7; }
 .network-node { fill: #a7f3d0; filter: drop-shadow(0 0 5px rgba(167,243,208,.8)); }
 .network-pulse { stroke: var(--brand-accent); stroke-width: 1; opacity: .45; animation: network-pulse 3.2s ease-out infinite; transform-origin: 210px 103px; }
@@ -665,8 +706,18 @@ html.dark {
   70%, 100% { box-shadow: 0 0 0 6px rgba(110,231,183,0); }
 }
 
+@keyframes login-orbit-float {
+  0%, 100% { transform: translateY(0) rotateX(-3deg) rotateY(5deg); }
+  50% { transform: translateY(-7px) rotateX(5deg) rotateY(-7deg); }
+}
+
+@keyframes login-orbit-spin {
+  from { transform: rotateX(66deg) rotateZ(54deg); }
+  to { transform: rotateX(66deg) rotateZ(414deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .login-glow, .login-card, .login-privileges, .login-error, .network-pulse, .login-status-dot { animation: none !important; }
+  .login-glow, .login-card, .login-privileges, .login-error, .network-pulse, .login-status-dot, .login-orbit-art, .login-orbit-ring-front { animation: none !important; }
   .login-card, .login-role-option, .login-input, .login-submit, .login-profile { transition: none !important; }
   .login-card:hover, .login-role-option:hover, .login-role-option:active,
   .login-submit:hover:not(:disabled), .login-submit:active:not(:disabled), .login-profile:hover { transform: none; }
