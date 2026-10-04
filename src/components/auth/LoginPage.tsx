@@ -72,7 +72,7 @@ export const DEMO_PROFILES: AuthUser[] = [
     phone: '+880 1912-403922',
     role: 'ADMIN',
     designation: 'Model Architecture & Explainability Lead',
-    avatar: ''
+    avatar: './assets/shabab.png'
     permissions: adminPermissions,
   },
   {
