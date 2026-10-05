@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MuleCluster, MuleNode } from '../../types';
 import {
   Network,
   ShieldAlert,
-  AlertTriangle,
-  CheckCircle,
   RefreshCw,
   ZoomIn,
   ZoomOut,
@@ -12,19 +10,6 @@ import {
   Zap,
   Play,
   Pause,
-  Clock,
-  Layers,
-  Sparkles,
-  ArrowRight,
-  TrendingDown,
-  TrendingUp,
-  Sliders,
-  DollarSign,
-  Maximize2,
-  Info,
-  ChevronRight,
-  ShieldCheck,
-  Radio,
 } from 'lucide-react';
 
 interface MuleVisionGraphProps {
@@ -99,7 +84,7 @@ const TIMELINE_STAGES: TimelineStage[] = [
     descriptionBn: 'বিভিন্ন এজেন্টে ও এটিএমে যুগপৎ নগদ অর্থ উত্তোলন সম্পন্ন',
     activeNodeIds: ['W401', 'AGT-881', 'AGT-882', 'W402'],
     activeEdgeIds: ['e10', 'e11', 'e12', 'e13'],
-    volumeBDT: 530000,
+    volumeBDT: 380000,
   },
 ];
 
@@ -109,20 +94,15 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
   lang = 'EN',
 }) => {
   const [selectedNodeId, setSelectedNodeId] = useState<string>('W302');
-  const [filterRole, setFilterRole] = useState<string>('ALL');
-  const [zoomLevel, setZoomLevel] = useState<number>(1);
-  const [activeInspectorTab, setActiveInspectorTab] = useState<'OVERVIEW' | 'FLOWS' | 'SIGNATURES'>('OVERVIEW');
-  const [animateParticles, setAnimateParticles] = useState<boolean>(true);
-  const [highlightCircular, setHighlightCircular] = useState<boolean>(true);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [animateParticles, setAnimateParticles] = useState<boolean>(true);
+  const [activeInspectorTab, setActiveInspectorTab] = useState<'OVERVIEW' | 'FLOWS' | 'SIGNATURES'>('OVERVIEW');
 
-  // Video-inspired Timeline Player state
+  // Automated Timeline Simulation Engine
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [currentStageIdx, setCurrentStageIdx] = useState<number>(2); // Default to Central Hub stage
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1); // 1x, 2x, 4x
-
-  // Animation ticker for digital timecode
-  const [digitalSeconds, setDigitalSeconds] = useState<number>(14);
 
   // Playback loop timer
   useEffect(() => {
@@ -130,7 +110,6 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
     const intervalTime = Math.max(1200, 3000 / playbackSpeed);
     const timer = setInterval(() => {
       setCurrentStageIdx((prev) => (prev + 1) % TIMELINE_STAGES.length);
-      setDigitalSeconds((s) => (s + 7) % 60);
     }, intervalTime);
     return () => clearInterval(timer);
   }, [isPlaying, playbackSpeed]);
@@ -140,7 +119,7 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
   // Fallback safe selected node
   const selectedNode = cluster.nodes.find((n) => n.id === selectedNodeId) || cluster.nodes[0];
 
-  // Video-inspired spatial topology coordinates (viewBox 840 x 480)
+  // Spatial topology coordinates (viewBox 840 x 480)
   const getNodeCoordinates = (node: MuleNode) => {
     switch (node.id) {
       // Stage 1: Victim Inflows (Left Column, x: 90)
@@ -150,7 +129,7 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
       // Stage 2: Layer 1 Smurf Mules (Mid-Left Column, x: 250)
       case 'W201': return { x: 250, y: 165 };
       case 'W202': return { x: 250, y: 315 };
-      // Stage 3: Central Aggregator Mega-Hub (Center, x: 425) - Like Paris in video
+      // Stage 3: Central Aggregator Mega-Hub (Center, x: 425)
       case 'W302': return { x: 425, y: 240 };
       // Stage 4: Circular Laundering Wash Orbit (Mid-Right Column, x: 600)
       case 'W204': return { x: 600, y: 135 };
@@ -164,78 +143,66 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
     }
   };
 
-  // TakaSafe brand color palette maintaining user request
+  // Node color palette for pristine Light Theme matching image 2
   const getNodeColor = (role: MuleNode['role'], status: MuleNode['status']) => {
     if (status === 'FROZEN') {
       return {
-        fill: '#334155',
-        stroke: '#64748B',
-        glow: 'rgba(100, 116, 139, 0.4)',
-        ring: '#94A3B8',
-        text: '#94A3B8',
+        fill: '#64748B',
+        stroke: '#475569',
+        glow: 'rgba(100, 116, 139, 0.25)',
+        text: '#475569',
+        border: '#94A3B8',
       };
     }
     switch (role) {
       case 'AGGREGATOR':
-        // Threat Crimson / Rose
+        // Threat Crimson / Red
         return {
-          fill: '#E11D48',
-          stroke: '#FDA4AF',
-          glow: 'rgba(225, 29, 72, 0.75)',
-          ring: '#F43F5E',
-          text: '#FECDD3',
+          fill: '#DC2626',
+          stroke: '#B91C1C',
+          glow: 'rgba(220, 38, 38, 0.35)',
+          text: '#DC2626',
+          border: '#F87171',
         };
       case 'MULE_LAYER_1':
-        // Upay Gold / Amber
+        // Orange / Amber
         return {
-          fill: '#F59E0B',
-          stroke: '#FDE68A',
-          glow: 'rgba(245, 158, 11, 0.6)',
-          ring: '#FBBF24',
-          text: '#FEF3C7',
+          fill: '#EA580C',
+          stroke: '#C2410C',
+          glow: 'rgba(234, 88, 12, 0.35)',
+          text: '#EA580C',
+          border: '#FB923C',
         };
       case 'MULE_LAYER_2':
-        // Neural Wash Purple
+        // Purple
         return {
-          fill: '#8B5CF6',
-          stroke: '#DDD6FE',
-          glow: 'rgba(139, 92, 246, 0.65)',
-          ring: '#A78BFA',
-          text: '#EDE9FE',
+          fill: '#7C3AED',
+          stroke: '#6D28D9',
+          glow: 'rgba(124, 58, 237, 0.35)',
+          text: '#7C3AED',
+          border: '#A78BFA',
         };
       case 'CASH_OUT_AGENT':
-        // Cyber Blue / UCB Brand Blue
+        // Blue / Sky
         return {
           fill: '#0284C7',
-          stroke: '#BAE6FD',
-          glow: 'rgba(2, 132, 199, 0.65)',
-          ring: '#38BDF8',
-          text: '#E0F2FE',
+          stroke: '#0369A1',
+          glow: 'rgba(2, 132, 199, 0.35)',
+          text: '#0284C7',
+          border: '#38BDF8',
         };
       case 'VICTIM':
-        // Security Emerald Green
+      default:
+        // Emerald Green
         return {
           fill: '#059669',
-          stroke: '#A7F3D0',
-          glow: 'rgba(5, 150, 105, 0.65)',
-          ring: '#34D399',
-          text: '#D1FAE5',
-        };
-      default:
-        return {
-          fill: '#0054A6',
-          stroke: '#93C5FD',
-          glow: 'rgba(0, 84, 166, 0.5)',
-          ring: '#60A5FA',
-          text: '#DBEAFE',
+          stroke: '#047857',
+          glow: 'rgba(5, 150, 105, 0.35)',
+          text: '#059669',
+          border: '#34D399',
         };
     }
   };
-
-  const filteredNodes = cluster.nodes.filter((node) => {
-    if (filterRole === 'ALL') return true;
-    return node.role === filterRole;
-  });
 
   // Calculate in-degree & out-degree
   const inEdges = cluster.edges.filter((e) => e.target === selectedNode.id);
@@ -243,7 +210,7 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
   const totalInflow = inEdges.reduce((acc, curr) => acc + curr.amount, 0);
   const totalOutflow = outEdges.reduce((acc, curr) => acc + curr.amount, 0);
 
-  // Connected node IDs for high-tech dimming/focusing
+  // Connected node IDs for focusing
   const activeFocusId = hoveredNodeId || selectedNodeId;
   const connectedNodeIds = new Set<string>([activeFocusId]);
   cluster.edges.forEach((edge) => {
@@ -309,29 +276,29 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
   };
 
   return (
-    <div className="bg-[#060A14] text-slate-100 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden font-sans select-none">
-      {/* Top Cyber Defense Command Bar */}
-      <div className="px-5 py-3 border-b border-slate-800/80 bg-[#0B1220]/90 backdrop-blur-md flex flex-wrap items-center justify-between gap-3">
+    <div className="bg-white text-slate-900 rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden font-sans select-none">
+      {/* Top Cyber Defense Command Bar (White Theme) */}
+      <div className="px-5 py-3.5 border-b border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3">
         {/* Title & Live Status */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-blue-950/60 border border-blue-500/40 flex items-center justify-center text-sky-400 shadow-[0_0_15px_rgba(2,132,199,0.3)]">
-            <Network className="w-5 h-5 animate-pulse" />
+          <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-[#0054A6] shadow-2xs">
+            <Network className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm font-black text-white tracking-tight flex items-center gap-2">
+              <h3 className="text-sm font-black text-slate-900 tracking-tight flex items-center gap-2">
                 <span>MuleVision™ Graph Attention Engine</span>
-                <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-blue-950 text-sky-300 border border-sky-500/40 font-bold shadow-xs">
+                <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-blue-50 text-[#0054A6] border border-blue-200 font-bold shadow-2xs">
                   GAT v2.4
                 </span>
               </h3>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-600/60 flex items-center gap-1.5 shadow-xs">
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1.5 shadow-2xs">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
                 <span>{cluster.name} (Risk {cluster.riskScore}/100)</span>
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
-              12 Cyber Nodes · 12 Flow Vectors · BDT 1.28M Syndicated Laundering Pipeline
+            <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
+              12 Nodes · 12 Flow Vectors · BDT 1.28M Laundering Ring
             </p>
           </div>
         </div>
@@ -339,9 +306,9 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
         {/* Node Focus Selector & Controls */}
         <div className="flex items-center gap-2">
           {/* Node Quick Switcher */}
-          <div className="flex items-center gap-1 bg-[#070D1B] p-1 rounded-xl border border-slate-800 text-[10px] font-mono">
+          <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200 text-[10px] font-mono">
             <span className="px-1.5 text-slate-500 uppercase tracking-wider font-bold hidden sm:inline">
-              Focus:
+              FOCUS :
             </span>
             {cluster.nodes.slice(0, 7).map((n) => (
               <button
@@ -349,8 +316,8 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
                 onClick={() => setSelectedNodeId(n.id)}
                 className={`px-2 py-0.5 rounded-lg font-bold transition-all cursor-pointer ${
                   selectedNodeId === n.id
-                    ? 'bg-[#0054A6] text-white shadow-[0_0_10px_rgba(0,84,166,0.6)] ring-1 ring-sky-400'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    ? 'bg-[#0054A6] text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                 }`}
               >
                 {n.id}
@@ -358,42 +325,42 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
             ))}
           </div>
 
-          {/* Velocity Pulse Toggle */}
+          {/* Flow Pulse Toggle */}
           <button
             onClick={() => setAnimateParticles(!animateParticles)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-[11px] font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all cursor-pointer ${
               animateParticles
-                ? 'bg-amber-950/60 text-amber-300 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.25)]'
-                : 'bg-slate-900 text-slate-400 border-slate-800'
+                ? 'bg-amber-100 hover:bg-amber-200 text-amber-950 border-amber-300 shadow-2xs'
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
             }`}
             title="Toggle Flow Pulses"
           >
-            <Zap className={`w-3.5 h-3.5 ${animateParticles ? 'text-amber-400 fill-amber-400' : ''}`} />
-            <span className="hidden md:inline font-mono">Pulse</span>
+            <Zap className={`w-3.5 h-3.5 ${animateParticles ? 'text-amber-600 fill-amber-500' : 'text-slate-400'}`} />
+            <span className="font-mono">Flow Pulse</span>
           </button>
 
           {/* Zoom controls */}
-          <div className="flex items-center gap-0.5 bg-slate-900 border border-slate-800 rounded-xl p-0.5 shadow-xs">
+          <div className="flex items-center gap-0.5 bg-white border border-slate-200 rounded-xl p-0.5 shadow-2xs">
             <button
               onClick={() => setZoomLevel((z) => Math.max(0.8, z - 0.1))}
-              className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
               title="Zoom Out"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
-            <span className="text-[10px] font-mono px-1 text-slate-300 font-semibold">
+            <span className="text-[10px] font-mono px-1 text-slate-700 font-semibold">
               {Math.round(zoomLevel * 100)}%
             </span>
             <button
               onClick={() => setZoomLevel((z) => Math.min(1.3, z + 0.1))}
-              className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
               title="Zoom In"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setZoomLevel(1)}
-              className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white transition-colors cursor-pointer"
+              className="p-1 hover:bg-slate-100 rounded text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
               title="Reset"
             >
               <RefreshCw className="w-3 h-3" />
@@ -404,57 +371,47 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
 
       {/* Main Graph & Sidebar Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
-        {/* Graph Canvas Visualizer (8 cols) - Inspired by France Train Network Video */}
-        <div className="lg:col-span-8 p-3 sm:p-5 bg-gradient-to-br from-[#060A14] via-[#091124] to-[#040810] relative overflow-hidden flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800/80">
-          {/* Subtle Ambient Radial Lighting around Central Hub */}
+        {/* Graph Canvas Visualizer (8 cols) - Pristine White Grid Background */}
+        <div className="lg:col-span-8 p-3 sm:p-5 bg-[#F8FAFC] relative overflow-hidden flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-200">
+          {/* Precision Engineering Light Grid */}
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[340px] pointer-events-none rounded-full blur-[90px] opacity-25"
-            style={{
-              background: 'radial-gradient(ellipse at center, #E11D48 0%, #0054A6 50%, transparent 75%)',
-            }}
-          />
-
-          {/* Precision Engineering Cyber Grid */}
-          <div
-            className="absolute inset-0 pointer-events-none opacity-20"
+            className="absolute inset-0 pointer-events-none"
             style={{
               backgroundImage:
-                'linear-gradient(to right, rgba(56, 189, 248, 0.15) 1px, transparent 1px), linear-gradient(to bottom, rgba(56, 189, 248, 0.15) 1px, transparent 1px)',
-              backgroundSize: '32px 32px',
+                'linear-gradient(to right, rgba(203, 213, 225, 0.45) 1px, transparent 1px), linear-gradient(to bottom, rgba(203, 213, 225, 0.45) 1px, transparent 1px)',
+              backgroundSize: '28px 28px',
             }}
           />
 
-          {/* Top-Left Video-Style Cyber HUD Ticker (Like "FRANCE / 05:39" in user video) */}
-          <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 mb-2">
-            <div className="flex items-center gap-3 bg-slate-950/80 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-slate-800 shadow-xl">
-              <div>
-                <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-slate-400 block font-bold">
-                  {lang === 'BN' ? 'এমএফএস নেটওয়ার্ক বিশ্লেষণ' : 'BANGLADESH MFS TOPOLOGY'}
-                </span>
-                <div className="flex items-baseline gap-2 mt-0.5">
-                  <span className="text-xl sm:text-2xl font-black font-mono tracking-wider text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
-                    {activeStage.timeLabel}:{digitalSeconds.toString().padStart(2, '0')}
-                  </span>
-                  <span className="text-[10px] font-mono text-emerald-400 font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    LIVE GNN
-                  </span>
-                </div>
-              </div>
+          {/* Top Stage Sequence Legend (Exact Match to Image 2) */}
+          <div className="relative z-10 flex items-center gap-2 bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl border border-slate-200/90 shadow-xs text-xs font-semibold select-none flex-wrap mb-2">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+              <span className="text-slate-700 text-[11px] font-mono">1. Inflows (Victims)</span>
             </div>
-
-            {/* Active Stage Indicator Badge */}
-            <div className="bg-slate-950/80 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-slate-800 shadow-xl text-right">
-              <span className="text-[9px] font-mono uppercase tracking-wider text-amber-400 font-bold block">
-                {lang === 'BN' ? 'বর্তমান সক্রিয় পর্যায়' : 'ACTIVE SIMULATION STAGE'}
-              </span>
-              <span className="text-xs font-bold text-white block mt-0.5">
-                {lang === 'BN' ? activeStage.stageNameBn : activeStage.stageNameEn}
-              </span>
+            <span className="text-slate-300">➔</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+              <span className="text-slate-700 text-[11px] font-mono">2. Smurf Mules</span>
+            </div>
+            <span className="text-slate-300">➔</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block"></span>
+              <span className="text-slate-700 text-[11px] font-mono">3. Aggregator Hub</span>
+            </div>
+            <span className="text-slate-300">➔</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block"></span>
+              <span className="text-slate-700 text-[11px] font-mono">4. Circular Ring</span>
+            </div>
+            <span className="text-slate-300">➔</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block"></span>
+              <span className="text-slate-700 text-[11px] font-mono">5. Cash-Out (ATMs)</span>
             </div>
           </div>
 
-          {/* Video-Style SVG Graph Component */}
+          {/* SVG Graph Component */}
           <div className="w-full h-full flex items-center justify-center min-h-[440px] relative">
             <svg
               viewBox="0 0 840 480"
@@ -462,120 +419,57 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
               style={{ transform: `scale(${zoomLevel})` }}
             >
               <defs>
-                {/* Glow Filter for Crimson Aggregator */}
-                <filter id="glow-crimson" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="5" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                {/* Glow Filter for Cyber Blue */}
-                <filter id="glow-blue" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="4" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                {/* Glow Filter for Emerald Victims */}
-                <filter id="glow-emerald" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="4" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                {/* Glow Filter for Amber Smurfs */}
-                <filter id="glow-amber" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="4" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
                 {/* Arrow markers */}
                 <marker
-                  id="arrow-neon-blue"
+                  id="arrow-light-blue"
                   markerWidth="7"
                   markerHeight="5"
                   refX="19"
                   refY="2.5"
                   orient="auto"
                 >
-                  <polygon points="0 0.5, 6 2.5, 0 4.5" fill="#38BDF8" />
+                  <polygon points="0 0.5, 6 2.5, 0 4.5" fill="#0284C7" />
                 </marker>
 
                 <marker
-                  id="arrow-neon-red"
+                  id="arrow-light-red"
                   markerWidth="7"
                   markerHeight="5"
                   refX="19"
                   refY="2.5"
                   orient="auto"
                 >
-                  <polygon points="0 0.5, 6 2.5, 0 4.5" fill="#F43F5E" />
+                  <polygon points="0 0.5, 6 2.5, 0 4.5" fill="#DC2626" />
                 </marker>
 
                 <marker
-                  id="arrow-neon-dim"
+                  id="arrow-light-dim"
                   markerWidth="6"
                   markerHeight="4"
                   refX="16"
                   refY="2"
                   orient="auto"
                 >
-                  <polygon points="0 0.5, 5 2, 0 3.5" fill="#475569" opacity="0.6" />
+                  <polygon points="0 0.5, 5 2, 0 3.5" fill="#94A3B8" opacity="0.8" />
                 </marker>
               </defs>
 
-              {/* Stage 4: Circular Laundering Wash Orbit Visual Zone (Inspired by orbit animation) */}
-              {highlightCircular && (
-                <g className="pointer-events-none">
-                  {/* Outer glowing orbital ellipse */}
-                  <ellipse
-                    cx="600"
-                    cy="240"
-                    rx="58"
-                    ry="150"
-                    fill="rgba(139, 92, 246, 0.05)"
-                    stroke="rgba(244, 63, 94, 0.45)"
-                    strokeWidth="1.8"
-                    strokeDasharray="6 4"
-                    className="animate-pulse"
-                  />
-                  {/* Orbit Label Chip */}
-                  <rect
-                    x="535"
-                    y="230"
-                    width="130"
-                    height="20"
-                    rx="10"
-                    fill="#0F172A"
-                    stroke="#F43F5E"
-                    strokeWidth="1"
-                    opacity="0.95"
-                  />
-                  <text
-                    x="600"
-                    y="243.5"
-                    fill="#FDA4AF"
-                    fontSize="8"
-                    fontFamily="JetBrains Mono, monospace"
-                    fontWeight="800"
-                    textAnchor="middle"
-                    className="uppercase tracking-wider select-none"
-                  >
-                    Circular Wash Orbit
-                  </text>
-                </g>
-              )}
+              {/* Stage 4: Circular Laundering Wash Orbit Visual Zone */}
+              <g className="pointer-events-none">
+                {/* Outer dashed orbital ellipse */}
+                <ellipse
+                  cx="600"
+                  cy="240"
+                  rx="55"
+                  ry="145"
+                  fill="rgba(244, 63, 94, 0.03)"
+                  stroke="rgba(225, 29, 72, 0.4)"
+                  strokeWidth="1.5"
+                  strokeDasharray="5 4"
+                />
+              </g>
 
-              {/* Flow Vectors (Curved Glowing Transit Lines) */}
+              {/* Flow Vectors */}
               {cluster.edges.map((edge) => {
                 const srcNode = cluster.nodes.find((n) => n.id === edge.source);
                 const tgtNode = cluster.nodes.find((n) => n.id === edge.target);
@@ -590,22 +484,22 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
                 const { pathD, labelX, labelY } = getEdgePath(edge.id, src, tgt);
 
                 const strokeColor = edge.isCircular
-                  ? '#F43F5E'
+                  ? '#DC2626'
                   : isConnected || isStageActive
-                  ? '#38BDF8'
-                  : '#334155';
+                  ? '#0284C7'
+                  : '#94A3B8';
 
-                const strokeWidth = edge.isCircular ? 2.8 : isConnected || isStageActive ? 2.6 : 1.4;
+                const strokeWidth = edge.isCircular ? 2.6 : isConnected || isStageActive ? 2.6 : 1.4;
 
                 return (
                   <g key={edge.id} className="transition-all duration-300">
-                    {/* Glowing bloom blur underlying stroke */}
+                    {/* Glowing highlight for active edge */}
                     {(edge.isCircular || isConnected || isStageActive) && (
                       <path
                         d={pathD}
                         fill="none"
-                        stroke={edge.isCircular ? 'rgba(244, 63, 94, 0.35)' : 'rgba(56, 189, 248, 0.35)'}
-                        strokeWidth={strokeWidth + 5}
+                        stroke={edge.isCircular ? 'rgba(220, 38, 38, 0.15)' : 'rgba(2, 132, 199, 0.18)'}
+                        strokeWidth={strokeWidth + 4}
                         strokeLinecap="round"
                         className="pointer-events-none"
                       />
@@ -617,68 +511,53 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
                       fill="none"
                       stroke={strokeColor}
                       strokeWidth={strokeWidth}
-                      strokeDasharray={edge.isCircular ? '6 4' : undefined}
+                      strokeDasharray={edge.isCircular ? '5 4' : undefined}
                       markerEnd={
                         edge.isCircular
-                          ? 'url(#arrow-neon-red)'
+                          ? 'url(#arrow-light-red)'
                           : isConnected || isStageActive
-                          ? 'url(#arrow-neon-blue)'
-                          : 'url(#arrow-neon-dim)'
+                          ? 'url(#arrow-light-blue)'
+                          : 'url(#arrow-light-dim)'
                       }
-                      opacity={isConnected || isStageActive || edge.isCircular ? 1 : 0.45}
+                      opacity={isConnected || isStageActive || edge.isCircular ? 1 : 0.6}
                       className="pointer-events-none"
                     />
 
-                    {/* Glowing Transit Photon Particle traveling along path (Video-Style) */}
+                    {/* Animated Flow Photon Particle traveling along path */}
                     {animateParticles && (edge.isCircular || isConnected || isStageActive) && (
-                      <>
-                        <circle
-                          r="4"
-                          fill={edge.isCircular ? '#FB7185' : '#38BDF8'}
-                          className="pointer-events-none filter drop-shadow-[0_0_8px_rgba(56,189,248,0.9)]"
-                        >
-                          <animateMotion
-                            path={pathD}
-                            dur={edge.isCircular ? '1.5s' : '2.0s'}
-                            repeatCount="indefinite"
-                          />
-                        </circle>
-                        {/* Secondary trailing particle */}
-                        <circle
-                          r="2.5"
-                          fill="#FFFFFF"
-                          className="pointer-events-none opacity-80"
-                        >
-                          <animateMotion
-                            path={pathD}
-                            dur={edge.isCircular ? '1.5s' : '2.0s'}
-                            begin="0.3s"
-                            repeatCount="indefinite"
-                          />
-                        </circle>
-                      </>
+                      <circle
+                        r="3.5"
+                        fill={edge.isCircular ? '#DC2626' : '#0284C7'}
+                        className="pointer-events-none"
+                      >
+                        <animateMotion
+                          path={pathD}
+                          dur={edge.isCircular ? '1.5s' : '2.0s'}
+                          repeatCount="indefinite"
+                        />
+                      </circle>
                     )}
 
-                    {/* Streamlined Floating Transaction Value Tag */}
+                    {/* White Floating Transaction Value Tag (Image 2 style) */}
                     <g
                       transform={`translate(${labelX}, ${labelY})`}
                       className="pointer-events-none select-none transition-all duration-200"
                     >
                       <rect
-                        x="-28"
+                        x="-26"
                         y="-8.5"
-                        width="56"
+                        width="52"
                         height="17"
                         rx="8.5"
-                        fill="#060C1A"
-                        stroke={edge.isCircular ? '#F43F5E' : isConnected || isStageActive ? '#0284C7' : '#334155'}
+                        fill="#FFFFFF"
+                        stroke={edge.isCircular ? '#DC2626' : isConnected || isStageActive ? '#0284C7' : '#94A3B8'}
                         strokeWidth="1.2"
-                        opacity="0.96"
+                        filter="drop-shadow(0 1px 2px rgba(0,0,0,0.06))"
                       />
                       <text
                         x="0"
                         y="3"
-                        fill={edge.isCircular ? '#FDA4AF' : isConnected || isStageActive ? '#7DD3FC' : '#94A3B8'}
+                        fill={edge.isCircular ? '#DC2626' : isConnected || isStageActive ? '#0284C7' : '#334155'}
                         fontSize="8.5"
                         fontFamily="JetBrains Mono, monospace"
                         fontWeight="800"
@@ -691,8 +570,8 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
                 );
               })}
 
-              {/* Node Stations (Glow Hubs inspired by France Train Video) */}
-              {filteredNodes.map((node) => {
+              {/* Node Stations with White Badge (Exact Match to Image 2) */}
+              {cluster.nodes.map((node) => {
                 const pos = getNodeCoordinates(node);
                 const isSelected = node.id === selectedNodeId;
                 const isAggregator = node.role === 'AGGREGATOR';
@@ -711,71 +590,75 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
                     onMouseEnter={() => setHoveredNodeId(node.id)}
                     onMouseLeave={() => setHoveredNodeId(null)}
                     className="cursor-pointer"
-                    style={{ opacity: isFocused || isStageActive ? 1 : 0.55 }}
+                    style={{ opacity: isFocused || isStageActive ? 1 : 0.65 }}
                   >
-                    {/* Big Interactive Clickable Hitbox */}
+                    {/* Interactive Clickable Hitbox */}
                     <circle cx={pos.x} cy={pos.y} r="32" fill="transparent" />
 
-                    {/* Central Aggregator Mega-Hub (Like Paris in France Video) */}
+                    {/* Central Aggregator Outer Dashed Radar Rings (Image 2 style) */}
                     {isAggregator && (
                       <g className="pointer-events-none">
-                        {/* Outer glowing halo ring */}
-                        <circle
-                          cx={pos.x}
-                          cy={pos.y}
-                          r="32"
-                          fill="none"
-                          stroke="#E11D48"
-                          strokeWidth="1.5"
-                          opacity="0.35"
-                          className="animate-pulse"
-                        />
-                        {/* Dashed outer rotation radar ring */}
                         <circle
                           cx={pos.x}
                           cy={pos.y}
                           r="28"
                           fill="none"
-                          stroke="#F43F5E"
-                          strokeWidth="1.5"
+                          stroke="#DC2626"
+                          strokeWidth="1.2"
                           strokeDasharray="4 3"
-                          opacity="0.8"
+                          opacity="0.45"
                         />
                         <circle
                           cx={pos.x}
                           cy={pos.y}
                           r="23"
                           fill="none"
-                          stroke="#FDA4AF"
+                          stroke="#F87171"
                           strokeWidth="1"
                           opacity="0.5"
                         />
                       </g>
                     )}
 
-                    {/* Selected Node Halo */}
+                    {/* Hub Exits Outer Rings (W401 & W402) */}
+                    {(node.id === 'W401' || node.id === 'W402') && (
+                      <g className="pointer-events-none">
+                        <circle
+                          cx={pos.x}
+                          cy={pos.y}
+                          r="24"
+                          fill="none"
+                          stroke="#DC2626"
+                          strokeWidth="1.2"
+                          strokeDasharray="3 3"
+                          opacity="0.4"
+                        />
+                      </g>
+                    )}
+
+                    {/* Selected Node Ring Halo */}
                     {isSelected && (
                       <circle
                         cx={pos.x}
                         cy={pos.y}
-                        r={isAggregator ? 25 : 20}
+                        r={isAggregator ? 24 : 19}
                         fill="none"
-                        stroke="#38BDF8"
+                        stroke="#0284C7"
                         strokeWidth="3"
-                        className="animate-pulse pointer-events-none"
+                        className="pointer-events-none animate-pulse"
                       />
                     )}
 
-                    {/* Node Core Body with Neon Glow Filter */}
+                    {/* Node Core Circle */}
                     <circle
                       cx={pos.x}
                       cy={pos.y}
-                      r={isAggregator ? 18 : 13}
+                      r={isAggregator ? 18 : 14}
                       fill={color.fill}
-                      stroke={isSelected ? '#FFFFFF' : isHovered ? '#38BDF8' : color.stroke}
+                      stroke={isSelected ? '#0054A6' : isHovered ? '#0284C7' : color.stroke}
                       strokeWidth={isSelected ? 2.5 : 1.8}
-                      style={{ filter: `drop-shadow(0 0 8px ${color.glow})` }}
                       className="transition-transform duration-150"
+                      filter="drop-shadow(0 2px 4px rgba(0,0,0,0.12))"
                     />
 
                     {/* Inner Glyphs */}
@@ -805,31 +688,40 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
                       </text>
                     ) : null}
 
-                    {/* Sleek Node Identifier Typography (Floating Directly Below) */}
-                    <g transform={`translate(${pos.x}, ${pos.y + (isAggregator ? 28 : 22)})`}>
+                    {/* White Rectangular Node Pill Directly Below (Exact Match to Image 2) */}
+                    <g transform={`translate(${pos.x}, ${pos.y + (isAggregator ? 21 : 17)})`}>
+                      <rect
+                        x="-31"
+                        y="0"
+                        width="62"
+                        height="24"
+                        rx="6"
+                        fill="#FFFFFF"
+                        stroke={isSelected ? '#0054A6' : color.border}
+                        strokeWidth={isSelected ? 1.8 : 1.2}
+                        filter="drop-shadow(0 1px 3px rgba(0,0,0,0.08))"
+                      />
                       <text
                         x="0"
-                        y="0"
-                        fill={isSelected ? '#38BDF8' : '#F8FAFC'}
-                        fontSize={isAggregator ? '10' : '9'}
+                        y="10.5"
+                        fill="#0F172A"
+                        fontSize="9"
                         fontFamily="JetBrains Mono, monospace"
-                        fontWeight="900"
+                        fontWeight="800"
                         textAnchor="middle"
                         className="select-none"
-                        style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))' }}
                       >
                         {node.id}
                       </text>
                       <text
                         x="0"
-                        y="10"
+                        y="19"
                         fill={color.text}
                         fontSize="7.5"
                         fontFamily="JetBrains Mono, monospace"
-                        fontWeight="700"
+                        fontWeight="800"
                         textAnchor="middle"
                         className="select-none uppercase tracking-tight"
-                        style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))' }}
                       >
                         {node.role === 'AGGREGATOR'
                           ? 'HUB'
@@ -849,25 +741,25 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
             </svg>
           </div>
 
-          {/* Video-Style Bottom Time Scrubber & Flow Controls (Like "TRAINS IN SERVICE" in video) */}
-          <div className="relative z-10 pt-3 border-t border-slate-800/80 bg-slate-950/70 backdrop-blur-md px-4 py-2.5 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xl">
+          {/* Bottom Time Scrubber & Flow Controls (White Theme) */}
+          <div className="relative z-10 pt-2 border-t border-slate-200/90 bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
             {/* Play / Pause & Stage Controls */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <button
                 type="button"
                 onClick={() => setIsPlaying(!isPlaying)}
-                className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer shadow-lg ${
+                className={`w-7 h-7 rounded-xl flex items-center justify-center transition-all cursor-pointer shadow-xs ${
                   isPlaying
-                    ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold'
-                    : 'bg-blue-600 hover:bg-blue-500 text-white font-bold'
+                    ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold'
+                    : 'bg-[#0054A6] hover:bg-blue-700 text-white font-bold'
                 }`}
                 title={isPlaying ? 'Pause Simulation' : 'Play Flow Sequence'}
               >
-                {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
+                {isPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
               </button>
 
               {/* Speed Toggles */}
-              <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-0.5 text-[10px] font-mono font-bold">
+              <div className="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 text-[10px] font-mono font-bold">
                 {[1, 2, 4].map((spd) => (
                   <button
                     key={spd}
@@ -875,7 +767,7 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
                     className={`px-2 py-0.5 rounded cursor-pointer transition-all ${
                       playbackSpeed === spd
                         ? 'bg-[#0054A6] text-white'
-                        : 'text-slate-400 hover:text-white'
+                        : 'text-slate-500 hover:text-slate-800'
                     }`}
                   >
                     {spd}x
@@ -889,10 +781,10 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
                   <button
                     key={stg.id}
                     onClick={() => setCurrentStageIdx(i)}
-                    className={`px-2 py-1 rounded-lg text-[9.5px] font-mono font-bold transition-all cursor-pointer ${
+                    className={`px-2 py-0.5 rounded-lg text-[9.5px] font-mono font-bold transition-all cursor-pointer ${
                       currentStageIdx === i
-                        ? 'bg-rose-600 text-white shadow-xs ring-1 ring-rose-400'
-                        : 'bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800'
+                        ? 'bg-rose-600 text-white shadow-xs'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-200'
                     }`}
                   >
                     Stage {stg.id}
@@ -901,46 +793,35 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
               </div>
             </div>
 
-            {/* Live Metrics Counter in Corner (Like "TRAINS IN SERVICE: 247" in user video) */}
-            <div className="flex items-center gap-4 text-xs font-mono">
-              <div className="text-right">
-                <span className="text-[9px] uppercase tracking-wider text-slate-500 block">
-                  {lang === 'BN' ? 'সক্রিয় লেনদেন ভেক্টর' : 'FLOWS IN SERVICE'}
-                </span>
-                <span className="text-sm font-black text-sky-400">
-                  12 Active
-                </span>
-              </div>
-              <div className="text-right border-l border-slate-800 pl-4">
-                <span className="text-[9px] uppercase tracking-wider text-slate-500 block">
-                  {lang === 'BN' ? 'লন্ডারিং ভলিউম' : 'BURST VELOCITY'}
-                </span>
-                <span className="text-sm font-black text-rose-400">
-                  ৳1.28M / 9.6x
-                </span>
-              </div>
+            {/* Current Stage description and Metrics */}
+            <div className="flex items-center gap-3 text-xs font-mono">
+              <span className="text-[11px] font-bold text-slate-700">
+                {lang === 'BN' ? activeStage.stageNameBn : activeStage.stageNameEn}
+              </span>
+              <span className="text-slate-300">·</span>
+              <span className="text-[11px] font-bold text-rose-600">
+                ৳{(activeStage.volumeBDT / 1000).toFixed(0)}k volume
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Entity Intelligence Dossier & Inspector Panel (4 cols) */}
-        <div className="lg:col-span-4 p-5 bg-[#090F1E] border-t lg:border-t-0 lg:border-l border-slate-800/80 flex flex-col justify-between">
+        {/* Entity Intelligence Dossier & Inspector Panel (4 cols - Exact Match to Image 2) */}
+        <div className="lg:col-span-4 p-5 bg-white border-t lg:border-t-0 lg:border-l border-slate-200 flex flex-col justify-between">
           <div className="space-y-4">
             {/* Dossier Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
-                <span className="text-xs font-mono font-black uppercase tracking-wider text-rose-400">
+                <span className="text-xs font-mono font-black uppercase tracking-wider text-rose-600">
                   ENTITY DOSSIER: #{selectedNode.id}
                 </span>
               </div>
               <span
                 className={`text-[9.5px] font-bold font-mono px-2.5 py-0.5 rounded-full border ${
                   selectedNode.status === 'FROZEN'
-                    ? 'bg-slate-800 text-slate-300 border-slate-700'
-                    : selectedNode.riskScore >= 80
-                    ? 'bg-rose-950/80 text-rose-300 border-rose-800'
-                    : 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
+                    ? 'bg-slate-100 text-slate-600 border-slate-300'
+                    : 'bg-rose-50 text-rose-700 border-rose-200'
                 }`}
               >
                 {selectedNode.status === 'FROZEN' ? 'QUARANTINED' : 'FLAGGED THREAT'}
@@ -950,19 +831,19 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
             {/* Suspect Title & Identification */}
             <div>
               <div className="flex items-baseline justify-between">
-                <h4 className="text-lg font-black text-white tracking-tight">{selectedNode.label}</h4>
-                <span className="text-xs font-mono text-slate-400 font-semibold">{selectedNode.degree} Edges</span>
+                <h4 className="text-lg font-black text-slate-900 tracking-tight">{selectedNode.label}</h4>
+                <span className="text-xs font-mono text-slate-500 font-semibold">{selectedNode.degree} Edges</span>
               </div>
               <div className="flex items-center gap-2 mt-1.5">
-                <span className="text-[10px] font-bold text-amber-300 bg-amber-950/40 px-2.5 py-0.5 rounded-md border border-amber-500/30">
+                <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-md border border-amber-300">
                   {selectedNode.role.replace(/_/g, ' ')}
                 </span>
-                <span className="text-[10px] text-slate-400 font-mono">Cluster: Net #17</span>
+                <span className="text-[10px] text-slate-500 font-mono">Cluster: Net #17</span>
               </div>
             </div>
 
             {/* Dossier Tabs */}
-            <div className="flex items-center gap-1 border-b border-slate-800 pb-1">
+            <div className="flex items-center gap-1 border-b border-slate-200 pb-1">
               {[
                 { id: 'OVERVIEW', label: 'Threat Metrics' },
                 { id: 'FLOWS', label: 'In / Outflow' },
@@ -974,7 +855,7 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     activeInspectorTab === tab.id
                       ? 'bg-[#0054A6] text-white shadow-xs'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/40'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
                   {tab.label}
@@ -986,18 +867,18 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
             {activeInspectorTab === 'OVERVIEW' && (
               <div className="space-y-3 animate-in fade-in">
                 {/* Composite Risk Gauge Card */}
-                <div className="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between">
+                <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
                   <div>
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block tracking-wider font-mono">
+                    <span className="text-[9px] uppercase font-bold text-slate-500 block tracking-wider font-mono">
                       Neural Graph Risk Score
                     </span>
                     <div className="flex items-baseline gap-1 mt-0.5">
-                      <span className="text-3xl font-black font-mono text-rose-500">
+                      <span className="text-3xl font-black font-mono text-rose-600">
                         {selectedNode.riskScore}
                       </span>
-                      <span className="text-xs text-slate-500 font-mono">/ 100</span>
+                      <span className="text-xs text-slate-400 font-mono">/ 100</span>
                     </div>
-                    <span className="text-[10px] text-rose-400 font-semibold block mt-0.5 font-mono">
+                    <span className="text-[10px] text-rose-600 font-semibold block mt-0.5 font-mono">
                       GAT Attention: {(selectedNode.riskScore / 100).toFixed(2)}
                     </span>
                   </div>
@@ -1009,7 +890,7 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
                         cx="28"
                         cy="28"
                         r="22"
-                        stroke="#1E293B"
+                        stroke="#E2E8F0"
                         strokeWidth="5"
                         fill="none"
                       />
@@ -1017,7 +898,7 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
                         cx="28"
                         cy="28"
                         r="22"
-                        stroke="#EF4444"
+                        stroke="#E11D48"
                         strokeWidth="5"
                         strokeDasharray="138"
                         strokeDashoffset={138 - (138 * selectedNode.riskScore) / 100}
@@ -1025,44 +906,44 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
                         fill="none"
                       />
                     </svg>
-                    <span className="absolute text-xs font-mono font-bold text-white">
+                    <span className="absolute text-xs font-mono font-bold text-slate-900">
                       {selectedNode.riskScore}%
                     </span>
                   </div>
                 </div>
 
-                {/* Metric Grid */}
+                {/* Metric Grid (Exact 2x2 match to Image 2) */}
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[9px] text-slate-400 block font-medium">Current Float</span>
-                    <span className="text-base font-bold font-mono text-white mt-0.5 block">
+                  <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-200 shadow-2xs">
+                    <span className="text-[9px] text-slate-500 block font-medium">Current Float</span>
+                    <span className="text-base font-black font-mono text-slate-900 mt-0.5 block">
                       ৳{selectedNode.balance.toLocaleString()}
                     </span>
-                    <span className="text-[9px] text-amber-400 font-semibold">Smurf Wallet</span>
+                    <span className="text-[9px] text-amber-700 font-semibold">Smurf Wallet</span>
                   </div>
 
-                  <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[9px] text-slate-400 block font-medium">Dispersion Velocity</span>
-                    <span className="text-base font-bold font-mono text-white mt-0.5 block">
+                  <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-200 shadow-2xs">
+                    <span className="text-[9px] text-slate-500 block font-medium">Dispersion Velocity</span>
+                    <span className="text-base font-black font-mono text-slate-900 mt-0.5 block">
                       {selectedNode.id === 'W302' ? '12 min avg' : '4-5 mins'}
                     </span>
-                    <span className="text-[9px] text-rose-400 font-semibold">Rapid Fan-Out</span>
+                    <span className="text-[9px] text-rose-600 font-semibold">High Speed Fan-out</span>
                   </div>
 
-                  <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[9px] text-slate-400 block font-medium">Network Cluster</span>
-                    <span className="text-base font-bold font-mono text-sky-400 mt-0.5 block">
+                  <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-200 shadow-2xs">
+                    <span className="text-[9px] text-slate-500 block font-medium">Network Cluster</span>
+                    <span className="text-base font-black font-mono text-[#0054A6] mt-0.5 block">
                       Net #17
                     </span>
-                    <span className="text-[9px] text-slate-400">Patuakhali Coastal</span>
+                    <span className="text-[9px] text-slate-500">Patuakhali Coastal</span>
                   </div>
 
-                  <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                    <span className="text-[9px] text-slate-400 block font-medium">Degree Centrality</span>
-                    <span className="text-base font-bold font-mono text-rose-400 mt-0.5 block">
+                  <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-200 shadow-2xs">
+                    <span className="text-[9px] text-slate-500 block font-medium">Degree Centrality</span>
+                    <span className="text-base font-black font-mono text-rose-600 mt-0.5 block">
                       {selectedNode.degree} Edges
                     </span>
-                    <span className="text-[9px] text-slate-400">
+                    <span className="text-[9px] text-slate-500">
                       {selectedNode.degree > 4 ? 'Central Hub' : 'Relay Hop'}
                     </span>
                   </div>
@@ -1074,15 +955,15 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
             {activeInspectorTab === 'FLOWS' && (
               <div className="space-y-2.5 animate-in fade-in">
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2.5 bg-emerald-950/30 border border-emerald-500/30 rounded-xl">
-                    <span className="text-[9px] text-emerald-400 block font-bold font-mono">TOTAL INFLOW</span>
-                    <span className="text-xs font-mono font-bold text-white mt-0.5 block">
+                  <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <span className="text-[9px] text-emerald-700 block font-bold font-mono">TOTAL INFLOW</span>
+                    <span className="text-xs font-mono font-bold text-slate-900 mt-0.5 block">
                       ৳{totalInflow > 0 ? totalInflow.toLocaleString() : 'N/A'}
                     </span>
                   </div>
-                  <div className="p-2.5 bg-rose-950/30 border border-rose-500/30 rounded-xl">
-                    <span className="text-[9px] text-rose-400 block font-bold font-mono">TOTAL OUTFLOW</span>
-                    <span className="text-xs font-mono font-bold text-white mt-0.5 block">
+                  <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl">
+                    <span className="text-[9px] text-rose-700 block font-bold font-mono">TOTAL OUTFLOW</span>
+                    <span className="text-xs font-mono font-bold text-slate-900 mt-0.5 block">
                       ৳{totalOutflow > 0 ? totalOutflow.toLocaleString() : 'N/A'}
                     </span>
                   </div>
@@ -1092,23 +973,23 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
                   {inEdges.map((e) => (
                     <div
                       key={e.id}
-                      className="p-2 bg-slate-900 rounded-xl border border-slate-800 text-[10px] flex justify-between items-center"
+                      className="p-2 bg-slate-50 rounded-xl border border-slate-200 text-[10px] flex justify-between items-center"
                     >
-                      <div className="text-slate-300">
-                        <span className="text-emerald-400 font-bold">IN:</span> {e.source} → {selectedNode.id}
+                      <div className="text-slate-700">
+                        <span className="text-emerald-600 font-bold">IN:</span> {e.source} → {selectedNode.id}
                       </div>
-                      <span className="font-mono font-bold text-white">৳{e.amount.toLocaleString()}</span>
+                      <span className="font-mono font-bold text-slate-900">৳{e.amount.toLocaleString()}</span>
                     </div>
                   ))}
                   {outEdges.map((e) => (
                     <div
                       key={e.id}
-                      className="p-2 bg-slate-900 rounded-xl border border-slate-800 text-[10px] flex justify-between items-center"
+                      className="p-2 bg-slate-50 rounded-xl border border-slate-200 text-[10px] flex justify-between items-center"
                     >
-                      <div className="text-slate-300">
-                        <span className="text-rose-400 font-bold">OUT:</span> {selectedNode.id} → {e.target}
+                      <div className="text-slate-700">
+                        <span className="text-rose-600 font-bold">OUT:</span> {selectedNode.id} → {e.target}
                       </div>
-                      <span className="font-mono font-bold text-white">৳{e.amount.toLocaleString()}</span>
+                      <span className="font-mono font-bold text-slate-900">৳{e.amount.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
@@ -1121,7 +1002,7 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
                 {cluster.indicators.map((ind, i) => (
                   <div
                     key={i}
-                    className="p-2.5 bg-slate-900/90 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex items-start gap-2"
+                    className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-700 flex items-start gap-2 shadow-2xs"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0 mt-1"></span>
                     <span className="leading-snug">{ind}</span>
@@ -1132,16 +1013,16 @@ export const MuleVisionGraph: React.FC<MuleVisionGraphProps> = ({
           </div>
 
           {/* Action Button at Bottom */}
-          <div className="mt-4 pt-3 border-t border-slate-800 space-y-1.5">
+          <div className="mt-4 pt-3 border-t border-slate-200 space-y-1.5">
             {selectedNode.status === 'FROZEN' ? (
-              <div className="flex items-center justify-center gap-2 p-3 bg-slate-800/80 border border-slate-700 text-slate-300 rounded-2xl text-xs font-bold">
-                <Lock className="w-4 h-4 text-emerald-400" />
+              <div className="flex items-center justify-center gap-2 p-3 bg-slate-100 border border-slate-300 text-slate-700 rounded-2xl text-xs font-bold">
+                <Lock className="w-4 h-4 text-emerald-600" />
                 <span>Wallet Flow Quarantined & Locked</span>
               </div>
             ) : (
               <button
                 onClick={() => onFreezeWallet(selectedNode.id, selectedNode.label)}
-                className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-black py-3 px-4 rounded-2xl text-xs shadow-lg hover:shadow-rose-600/30 transition-all transform active:scale-95 cursor-pointer border border-rose-500/30"
+                className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 px-4 rounded-2xl text-xs shadow-sm hover:shadow-md transition-all transform active:scale-95 cursor-pointer"
               >
                 <ShieldAlert className="w-4 h-4" />
                 <span>Freeze {selectedNode.id} & Quarantine Ring</span>

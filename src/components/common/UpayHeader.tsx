@@ -38,12 +38,14 @@ interface UpayHeaderProps {
   setLang: (lang: 'EN' | 'BN') => void;
   criticalAlertCount: number;
   currentUser?: AuthUser | null;
+  onRegister?: () => void;
   onLogout?: () => void;
   onSwitchUserRole?: (role: UserRole) => void;
   onUpdateProfile?: (profile: Pick<AuthUser, 'name' | 'email' | 'phone' | 'avatar'>) => void;
   onOpenModal?: (modalType: string) => void;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
+  darkHeader?: boolean;
 }
 
 export const UpayHeader: React.FC<UpayHeaderProps> = ({
@@ -55,12 +57,14 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
   setLang,
   criticalAlertCount,
   currentUser,
+  onRegister,
   onLogout,
   onSwitchUserRole,
   onUpdateProfile,
   onOpenModal,
   theme = 'light',
   onToggleTheme,
+  darkHeader = false,
 }) => {
   const [isServicesOpen, setIsServicesOpen] = useState<boolean>(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
@@ -123,7 +127,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full max-w-full bg-[#0054A6] text-white shadow-md border-b border-[#004080]">
+    <header className="sticky top-0 z-50 w-full max-w-full bg-[#0054A6] text-white shadow-md border-b border-[#004080]" style={activeView === 'LOGIN' || darkHeader ? { background: 'linear-gradient(118deg, #071324 0%, #0b1d37 48%, #0d2e5e 100%)', borderBottomColor: 'rgba(219,234,254,.16)' } : undefined}>
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-2 sm:gap-3">
           {/* Brand Zone: Authentic MFS Animated Logo (Smile Spring, Dot Wink & Radiant Gold Bloom) */}
@@ -474,16 +478,16 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
               </div>
             ) : (
               <button
-                onClick={() => setActiveView('LOGIN')}
+                onClick={() => activeView === 'LOGIN' ? onRegister?.() : setActiveView('LOGIN')}
                 className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeView === 'LOGIN'
                     ? 'bg-white text-[#0054A6] shadow-sm ring-2 ring-white/60'
                     : 'bg-white/15 hover:bg-white/25 text-white border border-white/20'
                 }`}
-                title="Sign in (Admin or User)"
+                title={activeView === 'LOGIN' ? 'Create a new account' : 'Sign in (Admin or User)'}
               >
-                <User className="w-3.5 h-3.5 text-white" />
-                <span>Login</span>
+                <User className={`w-3.5 h-3.5 ${activeView === 'LOGIN' ? 'text-[#0054A6]' : 'text-white'}`} />
+                <span>{activeView === 'LOGIN' ? 'Register' : 'Login'}</span>
               </button>
             )}
 
@@ -729,12 +733,13 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
             <div className="pt-2 border-t border-blue-400/20">
               <button
                 onClick={() => {
-                  setActiveView('LOGIN');
+                  if (activeView === 'LOGIN') onRegister?.();
+                  else setActiveView('LOGIN');
                   setIsMobileMenuOpen(false);
                 }}
                 className="w-full py-2.5 bg-white text-[#0054A6] rounded-xl text-xs font-bold text-center shadow-md"
               >
-                Sign In to TakaSafe
+                {activeView === 'LOGIN' ? 'Create an account' : 'Sign In to TakaSafe'}
               </button>
             </div>
           )}

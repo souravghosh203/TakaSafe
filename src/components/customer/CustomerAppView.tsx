@@ -5,7 +5,6 @@ import { QRCodeScannerModal } from './QRCodeScannerModal';
 import { TakaSafeSovereignCard } from './TakaSafeSovereignCard';
 import { AI1PipelineVisualizer } from './ML1PipelineVisualizer';
 import { AI1NotebookModal } from '../common/ML1NotebookModal';
-import { ScamShieldCard } from '../scamshield/ScamShieldCard';
 import { evaluateAI1AndDoubtCheck, AI1EvaluationResult } from '../../services/ai1ScoringEngine';
 import {
   Send,
@@ -712,11 +711,11 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                   <button
                     type="button"
                     onClick={() => handlePreFill('RISKY')}
-                    className="w-full text-left p-2.5 rounded-xl border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition-all text-xs cursor-pointer"
+                    className="w-full text-left p-2.5 rounded-xl border-2 border-rose-200 bg-rose-50/40 hover:bg-rose-50 hover:border-rose-400 transition-all text-xs cursor-pointer"
                   >
-                    <div className="font-bold text-slate-800 flex items-center justify-between">
+                    <div className="font-bold text-rose-800 flex items-center justify-between">
                       <span>2. Risky Transfer (৳ 80,000)</span>
-                      <span className="bg-slate-800 text-white text-[9px] px-1.5 py-0.5 rounded font-mono">SIMULATION</span>
+                      <span className="bg-rose-600 text-white text-[9px] px-1.5 py-0.5 rounded">TRIGGERS SHIELD</span>
                     </div>
                     <div className="text-[11px] text-slate-500">To: New nocturnal account · Mule W302 link</div>
                   </button>
@@ -805,25 +804,84 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                   <AI1PipelineVisualizer
                     evaluation={liveAI1Evaluation}
                     onOpenNotebookModal={() => setIsNotebookModalOpen(true)}
-                    lang={lang}
                   />
                 </div>
 
-                {/* Interactive Real-Time ScamShield Card (IDLE -> PAYMENT INPUT -> ANALYZING -> SAFE/MEDIUM/HIGH/CRITICAL) */}
-                <div className="mt-4">
-                  <ScamShieldCard
-                    initialAmount={amount}
-                    initialRecipient={recipient}
-                    recentAverage={observedAverage}
-                    onPaymentCompleted={(paidAmount, targetRecipient, calculatedRisk) => {
-                      recordTransfer(paidAmount, targetRecipient, calculatedRisk, 'COMPLETED');
-                      setNormalSuccess(true);
-                      setTimeout(() => setNormalSuccess(false), 4500);
-                    }}
-                    onOpenQRScanner={() => setIsQRScannerOpen(true)}
-                    lang={lang}
-                  />
-                </div>
+                <form onSubmit={handleSendPayment} className="space-y-4 mt-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-semibold text-slate-700 block">
+                        {lang === 'BN' ? 'প্রাপকের টাকা সেফ নম্বর' : 'Recipient TakaSafe Wallet / Phone'}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setIsQRScannerOpen(true)}
+                        className="text-[11px] text-[#0054A6] font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <QrCode className="w-3 h-3" />
+                        <span>Scan Recipient QR</span>
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={recipient}
+                        onChange={(e) => setRecipient(e.target.value)}
+                        placeholder="01XXXXXXXXX"
+                        required
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0054A6]"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 block mb-1">
+                      {lang === 'BN' ? 'টাকার পরিমাণ (৳)' : 'Amount (BDT ৳)'}
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-2.5 text-slate-400 font-bold">৳</span>
+                      <input
+                        type="number"
+                        value={amount}
+                        min="1"
+                        onChange={(e) => {
+                          setAmount(e.target.value);
+                          setBalanceError(null);
+                        }}
+                        placeholder="1000"
+                        required
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-8 pr-4 py-2.5 text-base font-bold font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0054A6]"
+                      />
+                    </div>
+                    <span className="text-[11px] text-slate-500 mt-1 block">
+                      Your recent 90-day transfer average is <strong>৳{Math.round(observedAverage).toLocaleString()}</strong> ({recentTransfers.length} recorded transfers).
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 block mb-1">
+                      Reference Note (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="e.g. Family support, emergency, bill"
+                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0054A6]"
+                    />
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isScoring}
+                      className="w-full bg-[#FAB915] hover:bg-[#e5a80f] text-slate-950 font-black py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-70 disabled:cursor-wait"
+                    >
+                      <Send className="w-4 h-4" />
+                      <span>{isScoring ? 'Checking recipient and behavior…' : lang === 'BN' ? 'টাকা পাঠান' : 'Proceed to Send Money'}</span>
+                    </button>
+                  </div>
+                </form>
                 </>}
               </div>
             </div>
@@ -1136,7 +1194,6 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
               evaluation={currentAI1Evaluation || liveAI1Evaluation}
               onOpenNotebookModal={() => setIsNotebookModalOpen(true)}
               compact
-              lang={lang}
             />
 
             {/* Plain Language Reasons */}
