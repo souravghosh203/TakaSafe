@@ -36,6 +36,7 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
+  const [selectedNearbyService, setSelectedNearbyService] = useState('ATM');
   const [animatedControl, setAnimatedControl] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const animationTimeout = useRef<number | null>(null);
@@ -353,6 +354,41 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
         </main>
 
         <div className="hero-bottom-fade" />
+      </section>
+
+      <section className="nearby-services-section" aria-labelledby="nearby-services-title">
+        <div className="nearby-services-card">
+          <div className="nearby-services-heading">
+            <span className="nearby-services-pin"><MapPin size={21} fill="currentColor" strokeWidth={2.5} /></span>
+            <div>
+              <h2 id="nearby-services-title">{isBn ? 'আপনার কাছের সেবা খুঁজুন' : 'Find Services Near You'}</h2>
+              <p>{isBn ? 'এটিএম, এজেন্ট, মার্চেন্ট এবং আরও অনেক কিছু।' : 'ATMs, agents, merchants and more.'}</p>
+            </div>
+          </div>
+          <div className="nearby-services-options" role="group" aria-label={isBn ? 'সেবার ধরন বেছে নিন' : 'Choose a service type'}>
+            {[
+              { id: 'ATM', en: 'ATM', bn: 'এটিএম' },
+              { id: 'Cash-out Agent', en: 'Cash-out Agent', bn: 'ক্যাশ-আউট এজেন্ট' },
+              { id: 'Cash-in Agent', en: 'Cash-in Agent', bn: 'ক্যাশ-ইন এজেন্ট' },
+              { id: 'Merchant', en: 'Merchant', bn: 'মার্চেন্ট' },
+              { id: 'Service Point', en: 'Service Point', bn: 'সেবা কেন্দ্র' },
+            ].map((service) => (
+              <button
+                type="button"
+                key={service.id}
+                className={`nearby-service-chip${selectedNearbyService === service.id ? ' is-selected' : ''}`}
+                aria-pressed={selectedNearbyService === service.id}
+                onClick={() => setSelectedNearbyService(service.id)}
+              >
+                {selectedNearbyService === service.id && <span aria-hidden="true">◎</span>}
+                {isBn ? service.bn : service.en}
+              </button>
+            ))}
+          </div>
+          <button type="button" className="nearby-services-link" onClick={() => onOpenModal('SERVICE_LOCATIONS')}>
+            {isBn ? 'নিকটস্থ সেবা কেন্দ্র খুঁজুন' : 'Find the nearest service point'} <ArrowRight size={17} />
+          </button>
+        </div>
       </section>
 
       <section className="trust-section" id="customers">
