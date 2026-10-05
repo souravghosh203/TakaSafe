@@ -5,6 +5,7 @@ import { QRCodeScannerModal } from './QRCodeScannerModal';
 import { TakaSafeSovereignCard } from './TakaSafeSovereignCard';
 import { AI1PipelineVisualizer } from './ML1PipelineVisualizer';
 import { AI1NotebookModal } from '../common/ML1NotebookModal';
+import { AnalysisTimeline } from '../scamshield/AnalysisTimeline';
 import { evaluateAI1AndDoubtCheck, AI1EvaluationResult } from '../../services/ai1ScoringEngine';
 import {
   Send,
@@ -133,6 +134,9 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
   const [riskReasons, setRiskReasons] = useState<string[]>([]);
   const [riskScore, setRiskScore] = useState<number>(0);
   const [isScoring, setIsScoring] = useState<boolean>(false);
+  const [pipelineStage, setPipelineStage] = useState<number>(1);
+  const [pipelineProgress, setPipelineProgress] = useState<number>(20);
+  const [pipelineStatus, setPipelineStatus] = useState<string>('');
   const [activeWalletService, setActiveWalletService] = useState<string | null>(null);
   const [serviceTarget, setServiceTarget] = useState<string>('');
   const [serviceAmount, setServiceAmount] = useState<string>('');
@@ -428,6 +432,26 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     setBalanceError(null);
     setIsScoring(true);
 
+    // Stage 1: Transaction
+    setPipelineStage(1);
+    setPipelineProgress(20);
+    setPipelineStatus(
+      lang === 'BN'
+        ? 'ধাপ ১/৫: লেনদেন প্যারামিটার ও টোকেন ভ্যালিডেশন...'
+        : 'Stage 1/5: Validating transaction parameters & token gateway...'
+    );
+    await new Promise((r) => setTimeout(r, 220));
+
+    // Stage 2: Context Check
+    setPipelineStage(2);
+    setPipelineProgress(40);
+    setPipelineStatus(
+      lang === 'BN'
+        ? 'ধাপ ২/৫: কনটেক্সট চেক · আচরণ, সময় ও প্রাপকের ইতিহাস বিশ্লেষণ...'
+        : 'Stage 2/5: Context check: Evaluating baseline spending & circadian hours...'
+    );
+    await new Promise((r) => setTimeout(r, 260));
+
     const normalizedRecipient = recipient.trim().replace(/\D/g, '');
     const recipientIsKnown = knownRecipients.has(normalizedRecipient);
     const isKnownMule = recipient.trim().includes('510294');
@@ -508,6 +532,16 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
       reasons.push(...recipientNetworkRisk.reasons);
     }
 
+    // Stage 3: AI Risk Engine
+    setPipelineStage(3);
+    setPipelineProgress(60);
+    setPipelineStatus(
+      lang === 'BN'
+        ? 'ধাপ ৩/৫: এআই রিস্ক ইঞ্জিন · LightGBM ক্যালিব্রেটেড ইনফারেন্স...'
+        : 'Stage 3/5: AI Risk Engine: Running calibrated model inference...'
+    );
+    await new Promise((r) => setTimeout(r, 280));
+
     // AI-1 Engine evaluation (LightGBM + Calibration + Conformal Doubt Check)
     const evalResult = evaluateAI1AndDoubtCheck({
       amount: num,
@@ -527,12 +561,33 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     // Fuse scores: incorporate calibrated AI-1 probability
     const finalScore = Math.min(100, Math.max(score, evalResult.ai1Score.calibratedScore));
 
+    // Stage 4: Evidence Check
+    setPipelineStage(4);
+    setPipelineProgress(80);
+    setPipelineStatus(
+      lang === 'BN'
+        ? 'ধাপ ৪/৫: প্রমাণ যাচাই · SHAP বিশ্লেষণ ও কনফর্মাল ডাউট বাউন্ডারি...'
+        : 'Stage 4/5: Evidence check: SHAP attribution & conformal doubt bounds...'
+    );
+    await new Promise((r) => setTimeout(r, 260));
+
     if (evalResult.doubtCheck.conformal.isDoubtFlagged) {
       reasons.push(`Model Doubt Check: Conformal prediction set {${evalResult.doubtCheck.conformal.predictionSet.join(', ')}} indicates high statistical ambiguity.`);
     }
     if (evalResult.doubtCheck.novelty.isNovel) {
       reasons.push(`Model Novelty Check: Transfer exhibits ${(evalResult.doubtCheck.novelty.noveltyScore * 100).toFixed(0)}% Out-of-Distribution deviance across Amount, Receiver & Moment.`);
     }
+
+    // Stage 5: Decision
+    setPipelineStage(5);
+    setPipelineProgress(100);
+    const isRisky = finalScore >= 40 || evalResult.scamShieldTriggered;
+    setPipelineStatus(
+      isRisky
+        ? (lang === 'BN' ? 'ধাপ ৫/৫: ঝুঁকি শনাক্ত! ScamShield সুরক্ষা চালু হচ্ছে...' : 'Stage 5/5: Elevated risk detected! Engaging ScamShield...')
+        : (lang === 'BN' ? 'ধাপ ৫/৫: নিরাপদ লেনদেন ক্লিয়ার্ড · সফল অর্থ স্থানান্তর' : 'Stage 5/5: Low risk cleared · Safe instant transfer executed')
+    );
+    await new Promise((r) => setTimeout(r, 220));
 
     setIsScoring(false);
     setRiskReasons(reasons);
@@ -554,10 +609,16 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
       setRecipient(customer.frequentRecipients[0]?.split(' ')[0] || recipient);
       setAmount(String(Math.round(observedAverage)));
       setNote('');
+      setPipelineStage(1);
+      setPipelineProgress(20);
+      setPipelineStatus(lang === 'BN' ? 'স্বাভাবিক লেনদেন দৃশ্যপট প্রস্তুত (৳১,৫০০)' : 'Normal scenario loaded (৳1,500)');
     } else {
       setRecipient('01988-510294');
       setAmount('80000');
       setNote('Lottery prize processing fee');
+      setPipelineStage(1);
+      setPipelineProgress(20);
+      setPipelineStatus(lang === 'BN' ? 'উচ্চ ঝুঁকির দৃশ্যপট লোড হয়েছে (৳৮০,০০০ মিউল)' : 'High risk scenario loaded (৳80,000 Mule ring)');
     }
   };
 
@@ -826,7 +887,12 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                       <input
                         type="text"
                         value={recipient}
-                        onChange={(e) => setRecipient(e.target.value)}
+                        onChange={(e) => {
+                          setRecipient(e.target.value);
+                          setPipelineStage(1);
+                          setPipelineProgress(20);
+                          setPipelineStatus('');
+                        }}
                         placeholder="01XXXXXXXXX"
                         required
                         className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0054A6]"
@@ -847,6 +913,9 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                         onChange={(e) => {
                           setAmount(e.target.value);
                           setBalanceError(null);
+                          setPipelineStage(1);
+                          setPipelineProgress(20);
+                          setPipelineStatus('');
                         }}
                         placeholder="1000"
                         required
@@ -880,6 +949,17 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                       <Send className="w-4 h-4" />
                       <span>{isScoring ? 'Checking recipient and behavior…' : lang === 'BN' ? 'টাকা পাঠান' : 'Proceed to Send Money'}</span>
                     </button>
+                  </div>
+
+                  {/* 5-Stage Live Trust & Fraud Pipeline Stepper (As in user reference pic) */}
+                  <div className="mt-2.5 bg-slate-50/80 dark:bg-slate-900/50 px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden">
+                    <AnalysisTimeline
+                      currentStage={pipelineStage}
+                      lang={lang}
+                      showProgressBar={true}
+                      progressPercent={pipelineProgress}
+                      isLive={isScoring}
+                    />
                   </div>
                 </form>
                 </>}
