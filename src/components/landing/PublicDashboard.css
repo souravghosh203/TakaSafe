@@ -92,6 +92,7 @@
 .public-nav-actions { display: flex; align-items: center; justify-content: end; gap: 10px; }
 .desktop-nav-tools { display: contents; }
 .mobile-nav-tools { display: none; }
+.public-nav :is(.services-trigger,.nav-icon-button,.sign-in-button,.nav-cta,.nav-menu-toggle) { box-sizing: border-box; height: 40px; min-height: 40px; border-radius: 11px; }
 .nav-icon-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 37px; padding: 0 10px; border: 1px solid rgba(215,232,255,.23); border-radius: 9px; background: rgba(255,255,255,.025); color: rgba(226,238,253,.82); font-size: 10px; font-weight: 590; white-space: nowrap; transition: color .18s ease,border-color .2s ease,background .2s ease; }
 .nav-icon-button:hover { border-color: rgba(215,232,255,.62); background: rgba(255,255,255,.07); color: #fff; }
 .nav-icon-button svg { color: rgba(214,233,255,.9); }
@@ -104,6 +105,8 @@
 .nav-control-label { display: inline-block; transform-origin: left center; }
 .interactive-control.is-animating .nav-control-label { animation: control-label-in .48s cubic-bezier(.2,.75,.25,1); }
 .interactive-control:active { transform: scale(.97); }
+.public-nav :is(.services-trigger,.nav-icon-button,.sign-in-button,.nav-cta,.nav-menu-toggle):active { animation: public-header-press .34s cubic-bezier(.2,.75,.25,1); }
+@keyframes public-header-press { 0% { transform: scale(1); } 45% { transform: scale(.94); } 100% { transform: scale(1); } }
 .sign-in-button, .nav-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 39px; padding: 0 16px; border-radius: 9px; font-size: 12px; font-weight: 670; transition: transform .2s ease, background .2s ease, border-color .2s ease; }
 .sign-in-button { color: #f4f8ff; border: 1px solid rgba(215,232,255,.3); background: rgba(7,19,36,.15); }
 .sign-in-button:hover { border-color: rgba(215,232,255,.7); background: rgba(255,255,255,.08); }
@@ -311,7 +314,7 @@
   .public-nav { height: 70px; padding-inline: 18px; }
   .public-brand { font-size: 19px; }
   .brand-taka { font-size: 19px; }.brand-safe { font-size: 21px; }
-  .nav-menu-toggle { display: grid; place-items: center; width: 36px; height: 36px; margin-right: 10px; border: 1px solid rgba(218,235,255,.23); border-radius: 9px; background: rgba(255,255,255,.05); color: #fff; }
+  .nav-menu-toggle { display: grid; place-items: center; width: 40px; height: 40px; margin-right: 10px; border: 1px solid rgba(218,235,255,.23); border-radius: 11px; background: rgba(255,255,255,.05); color: #fff; }
   .public-nav-actions { gap: 7px; }
   .sign-in-button, .nav-cta { height: 35px; padding: 0 11px; font-size: 10px; }
   .public-nav-links { position: absolute; top: 61px; right: 0; left: 0; display: none; align-items: stretch; gap: 0; margin: 0; padding: 8px; border: 1px solid rgba(218,235,255,.16); border-radius: 13px; background: rgba(7,19,36,.96); box-shadow: 0 16px 36px rgba(0,0,0,.28); backdrop-filter: blur(18px); }

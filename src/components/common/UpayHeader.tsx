@@ -203,9 +203,9 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
                   key={mod.id}
                   onClick={() => handleModuleClick(mod.id)}
                   aria-current={isSelected ? 'page' : undefined}
-                  className={`operator-module-link relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                  className={`operator-module-link header-feature relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
                     isSelected
-                      ? 'bg-white text-[#0054A6] shadow-md border-b-2 border-amber-400'
+                      ? 'bg-white text-[#0054A6] shadow-md border-b-2 border-teal-400'
                       : 'text-blue-100 hover:text-white hover:bg-white/10'
                   }`}
                   title={isUserRole ? `${mod.label} (Admin Clearance Required)` : mod.label}
@@ -233,7 +233,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
             <div className="relative hidden md:block" ref={dropdownRef}>
               <button
                 onClick={() => setIsServicesOpen(!isServicesOpen)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+                className={`header-feature flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
                   isServicesOpen
                     ? 'bg-white text-[#0054A6] border-white shadow-sm'
                     : 'bg-white/10 hover:bg-white/20 text-blue-50 border-white/15'
@@ -315,9 +315,9 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
             {/* Customer App Switcher Pill (Tablet & Desktop) */}
             {currentUser?.role === 'ADMIN' && <button
               onClick={() => setActiveView(activeView === 'CUSTOMER' ? 'OPERATOR' : 'CUSTOMER')}
-              className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`header-feature hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 activeView === 'CUSTOMER'
-                  ? 'bg-[#FAB915] text-slate-950 shadow-md ring-2 ring-white/50'
+                  ? 'bg-[#48D1C3] text-[#083344] shadow-md ring-2 ring-white/50'
                   : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
               }`}
               title="Toggle Customer App Simulator"
@@ -330,7 +330,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
 
             <button
               onClick={() => onOpenModal?.('SEARCH')}
-              className="hidden md:flex p-2 rounded-xl text-blue-100 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              className="header-feature header-feature-icon hidden md:flex p-2 rounded-xl text-blue-100 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               title="Search Directory"
             >
               <Search className="w-4 h-4" />
@@ -338,7 +338,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
 
             <button
               onClick={() => setLang(lang === 'EN' ? 'BN' : 'EN')}
-              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10 cursor-pointer"
+              className="header-feature flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10 cursor-pointer"
               title="Toggle Language"
             >
               <Globe className="w-3.5 h-3.5" />
@@ -348,7 +348,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
             {/* Theme Toggle (Light / Dark Mode) */}
             <button
               onClick={onToggleTheme}
-              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10 cursor-pointer shadow-2xs"
+              className="header-feature flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10 cursor-pointer shadow-2xs"
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               aria-label="Toggle Theme Mode"
             >
@@ -370,7 +370,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
               <div className="relative hidden sm:block" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white text-[#0054A6] shadow-sm hover:bg-blue-50 transition-all cursor-pointer border border-white"
+                  className="header-feature flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white text-[#0054A6] shadow-sm hover:bg-blue-50 transition-all cursor-pointer border border-white"
                   title="Account Details"
                 >
                   <div className="w-5 h-5 rounded-full bg-[#0054A6] text-white flex items-center justify-center text-[10px] font-bold overflow-hidden">
@@ -486,7 +486,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
             ) : (
               <button
                 onClick={() => activeView === 'LOGIN' ? onRegister?.() : setActiveView('LOGIN')}
-                className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`header-feature hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeView === 'LOGIN'
                     ? 'bg-white text-[#0054A6] shadow-sm ring-2 ring-white/60'
                     : 'bg-white/15 hover:bg-white/25 text-white border border-white/20'
@@ -534,7 +534,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
             {/* Mobile Hamburger Menu Toggle Button (Visible on < XL screens) */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="flex xl:hidden p-2 rounded-xl text-white hover:bg-white/15 transition-colors cursor-pointer"
+              className="header-feature header-feature-icon flex xl:hidden p-2 rounded-xl text-white hover:bg-white/15 transition-colors cursor-pointer"
               title="Toggle Navigation Menu"
               aria-label="Toggle Navigation Menu"
             >

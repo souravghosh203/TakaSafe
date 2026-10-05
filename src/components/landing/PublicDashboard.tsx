@@ -136,11 +136,14 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
           </a>
 
           <button
-            className="nav-menu-toggle"
+            className={controlClass('nav-menu-toggle', 'menu')}
             type="button"
             aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
             aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((open) => !open)}
+            onClick={() => {
+              animateControl('menu');
+              setMenuOpen((open) => !open);
+            }}
           >
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
