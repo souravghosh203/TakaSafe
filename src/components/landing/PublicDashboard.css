@@ -140,6 +140,17 @@
 .hero-secondary > a:hover { color: var(--aqua); }
 .hero-secondary > span { display: inline-flex; align-items: center; gap: 6px; color: rgba(220,235,252,.55); font-size: 10px; }
 .hero-secondary > span svg { color: #73e5da; }
+.ai-launch-event { display: flex; align-items: center; gap: 12px; width: min(100%, 540px); margin-top: 19px; padding: 12px 13px; border: 1px solid rgba(135,220,229,.24); border-radius: 16px; background: linear-gradient(110deg,rgba(255,255,255,.105),rgba(105,206,225,.075)); box-shadow: inset 0 1px 0 rgba(255,255,255,.08),0 10px 28px rgba(0,0,0,.12); backdrop-filter: blur(14px); }
+.ai-launch-icon { display: grid; flex: 0 0 39px; width: 39px; height: 39px; place-items: center; border: 1px solid rgba(123,231,221,.35); border-radius: 12px; background: linear-gradient(145deg,rgba(72,209,195,.24),rgba(49,147,213,.22)); color: #82ece1; box-shadow: 0 5px 15px rgba(15,129,166,.14); }
+.ai-launch-copy { flex: 1; min-width: 0; }
+.ai-launch-kicker { display: flex; align-items: center; gap: 6px; color: #83e9df; font-size: 8px; font-weight: 800; letter-spacing: .11em; }
+.ai-launch-kicker i { width: 6px; height: 6px; border-radius: 50%; background: #48d1c3; box-shadow: 0 0 9px rgba(72,209,195,.9); animation: booth-pulse 1.9s infinite; }
+.ai-launch-copy h2 { margin: 3px 0 0; color: #f7fbff; font-size: 13px; font-weight: 760; letter-spacing: -.025em; }
+.ai-launch-copy p { margin: 2px 0 0; color: rgba(222,234,251,.68); font-size: 10px; line-height: 1.4; }
+.ai-launch-event > button { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 6px; min-height: 34px; padding: 0 12px; border: 1px solid rgba(161,243,233,.68); border-radius: 999px; background: #48d1c3; color: #083344; font-size: 10px; font-weight: 760; box-shadow: 0 5px 14px rgba(4,23,42,.17); transition: transform .2s ease,background .2s ease,box-shadow .2s ease; cursor: pointer; }
+.ai-launch-event > button:hover { transform: translateY(-2px); background: #73e5da; box-shadow: 0 8px 18px rgba(4,23,42,.22); }
+.ai-launch-event > button:active { transform: scale(.96); }
+.ai-launch-event > button:focus-visible { outline: 2px solid #a5f3eb; outline-offset: 3px; }
 .hero-micro-proof { display: flex; align-items: center; gap: 11px; margin-top: 34px; }
 .avatar-stack { display: flex; padding-left: 2px; }
 .avatar-stack i { display: grid; place-items: center; width: 25px; height: 25px; margin-left: -3px; border: 2px solid #102545; border-radius: 50%; background: linear-gradient(145deg, #ffd6a1, #c77954); color: #512f21; font-size: 7px; font-style: normal; font-weight: 800; }
@@ -334,6 +345,8 @@
   .hero-description { margin-top: 18px; font-size: 13px; }
   .signup-cta { margin-top: 20px; }
   .hero-secondary { flex-wrap: wrap; row-gap: 9px; }
+  .ai-launch-event { margin-top: 17px; padding: 11px; gap: 9px; }
+  .ai-launch-event > button { padding: 0 10px; }
   .hero-micro-proof { margin-top: 24px; }
   .booth-scene { width: min(100%, 560px); height: 430px; align-self: center; margin: 10px auto -13px; scale: .83; transform-origin: top center; }
   .atm-booth { top: 44px; }

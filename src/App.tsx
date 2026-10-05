@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { UpayHeader } from './components/common/UpayHeader';
 import { UpayHeroServices } from './components/common/UpayHeroServices';
 import { UpayFooter } from './components/common/UpayFooter';
+import { DashboardAssistant } from './components/common/DashboardAssistant';
 import { OperatorDashboard } from './components/operator/OperatorDashboard';
 import { CustomerAppView } from './components/customer/CustomerAppView';
 import { StorylineRunner } from './components/storyline/StorylineRunner';
@@ -219,6 +220,7 @@ export default function App() {
     }).catch(() => undefined);
   };
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [assistantQuestion, setAssistantQuestion] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -578,6 +580,10 @@ export default function App() {
           }}
           onSignIn={() => setActiveView('LOGIN')}
           onOpenModal={(modal) => setActiveModal(modal)}
+          onOpenAssistant={(question) => {
+            setAssistantQuestion(question);
+            setActiveModal('LIVE_CHAT');
+          }}
           lang={lang}
           onToggleLanguage={() => setLang((current) => current === 'EN' ? 'BN' : 'EN')}
           theme={theme}
@@ -585,11 +591,13 @@ export default function App() {
         />
         <UpayInfoModal
           modalType={activeModal}
-          onClose={() => setActiveModal(null)}
+          initialQuestion={assistantQuestion}
+          onClose={() => { setActiveModal(null); setAssistantQuestion(''); }}
           lang={lang}
           onNavigateView={(view) => {
             navigateToView(view);
             setActiveModal(null);
+            setAssistantQuestion('');
           }}
         />
       </>
@@ -806,13 +814,20 @@ export default function App() {
       {/* Upay Info & Feature Modals */}
       <UpayInfoModal
         modalType={activeModal}
-        onClose={() => setActiveModal(null)}
+        initialQuestion={assistantQuestion}
+        onClose={() => { setActiveModal(null); setAssistantQuestion(''); }}
         lang={lang}
         onNavigateView={(v) => {
           navigateToView(v);
           setActiveModal(null);
+          setAssistantQuestion('');
         }}
       />
+
+      {(activeView === 'OPERATOR' || activeView === 'CUSTOMER') && <DashboardAssistant lang={lang} onAsk={(question) => {
+        setAssistantQuestion(question);
+        setActiveModal('LIVE_CHAT');
+      }} />}
 
       {/* Upay Official Footer (Matching user wireframe photo 5) */}
       <UpayFooter

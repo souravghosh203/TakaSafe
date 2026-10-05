@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ArrowDownLeft, ArrowRight, ArrowUpRight, Check, ChevronDown, CreditCard, Globe, Info, MapPin, Menu, Moon, Newspaper, Phone, Search, ShieldCheck, Sparkles, Star, Sun, X } from 'lucide-react';
 import './PublicDashboard.css';
+import { DashboardAssistant } from '../common/DashboardAssistant';
 
 interface PublicDashboardProps {
   onGetStarted: (email?: string) => void;
   onSignIn: () => void;
   onOpenModal: (modal: string) => void;
+  onOpenAssistant: (question: string) => void;
   lang: 'EN' | 'BN';
   onToggleLanguage: () => void;
   theme: 'light' | 'dark';
@@ -26,6 +28,7 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
   onGetStarted,
   onSignIn,
   onOpenModal,
+  onOpenAssistant,
   lang,
   onToggleLanguage,
   theme,
@@ -248,6 +251,18 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
               <span><ShieldCheck size={14} /> {copy.secureMovement}</span>
             </div>
 
+            <article className="ai-launch-event motion-reveal" style={{ animationDelay: '0.43s' }}>
+              <div className="ai-launch-icon" aria-hidden="true"><Sparkles size={19} /></div>
+              <div className="ai-launch-copy">
+                <span className="ai-launch-kicker"><i /> {isBn ? 'নতুন ফিচার • টাকা সেফ AI' : 'NEW FEATURE • TAKASAFE AI'}</span>
+                <h2>{isBn ? 'পরিচিত হোন টাকা সেফ AI-এর সঙ্গে' : 'Meet TakaSafe AI'}</h2>
+                <p>{isBn ? 'লেনদেন, খরচ ও সঞ্চয় নিয়ে দ্রুত সহায়তা নিন।' : 'Quick guidance for transactions, spending, and saving.'}</p>
+              </div>
+              <button type="button" onClick={() => onOpenAssistant('What can TakaSafe AI help me with?')}>
+                {isBn ? 'চেষ্টা করুন' : 'Try it'} <ArrowRight size={14} />
+              </button>
+            </article>
+
             <div className="hero-micro-proof motion-reveal" style={{ animationDelay: '0.44s' }}>
               <div className="avatar-stack" aria-hidden="true"><i>SA</i><i>NR</i><i>MK</i><i>+</i></div>
               <p><strong>{isBn ? '৫০,০০০+' : '50,000+'}</strong> {copy.businesses}</p>
@@ -333,6 +348,7 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
         <button type="button" onClick={() => onGetStarted()}>{copy.openDashboard} <ArrowRight size={16} /></button>
         <span className="sr-only" id="resources">Resources</span><span className="sr-only" id="pricing">Pricing</span><span className="sr-only" id="careers">Careers</span>
       </section>
+      <DashboardAssistant lang={lang} onAsk={onOpenAssistant} />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { matchAssistantQuery } from '../../data/assistantKnowledge';
 import {
   TAKASAFE_PROJECT_ABSTRACT_BASE,
@@ -40,6 +40,7 @@ import {
 
 interface UpayInfoModalProps {
   modalType: string | null;
+  initialQuestion?: string;
   onClose: () => void;
   lang: 'EN' | 'BN';
   onNavigateView?: (view: 'OPERATOR' | 'CUSTOMER' | 'STORYLINE') => void;
@@ -58,6 +59,7 @@ interface ChatMessage {
 
 export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   modalType,
+  initialQuestion = '',
   onClose,
   lang,
   onNavigateView,
@@ -81,6 +83,29 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
     },
   ]);
   const [inputMsg, setInputMsg] = useState('');
+  const processedInitialQuestion = useRef('');
+
+  useEffect(() => {
+    if (modalType !== 'LIVE_CHAT') {
+      processedInitialQuestion.current = '';
+      return;
+    }
+    const query = initialQuestion.trim();
+    if (!query || processedInitialQuestion.current === query) return;
+    processedInitialQuestion.current = query;
+    const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setChatMessages((prev) => [...prev, { sender: 'user', text: query, time: timeNow }]);
+    window.setTimeout(() => {
+      const matchResult = matchAssistantQuery(query, lang);
+      setChatMessages((prev) => [...prev, {
+        sender: 'bot',
+        text: matchResult.answer,
+        time: 'Just now',
+        suggestedAction: matchResult.item?.suggestedAction,
+        relatedTopics: matchResult.relatedTopics,
+      }]);
+    }, 400);
+  }, [modalType, initialQuestion, lang]);
 
   if (!modalType) return null;
 
