@@ -330,10 +330,12 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
 
             <button
               onClick={() => onOpenModal?.('SEARCH')}
-              className="header-feature header-feature-icon hidden md:flex p-2 rounded-xl text-blue-100 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              title="Search Directory"
+              className="header-feature header-search-control hidden md:flex items-center justify-center gap-1.5 px-2.5 lg:px-3 text-white/85 cursor-pointer"
+              title={lang === 'BN' ? 'সার্চ ডিরেক্টরি' : 'Search Directory'}
+              aria-label={lang === 'BN' ? 'সার্চ ডিরেক্টরি খুলুন' : 'Open Search Directory'}
             >
               <Search className="w-4 h-4" />
+              <span className="hidden lg:inline">{lang === 'BN' ? 'খুঁজুন' : 'Search'}</span>
             </button>
 
             <button
@@ -675,9 +677,11 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
                   onOpenModal?.('SEARCH');
                   setIsMobileMenuOpen(false);
                 }}
-                className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-left font-medium"
+                className="header-search-mobile flex w-full items-center gap-2 px-3 rounded-xl text-left font-semibold cursor-pointer"
+                aria-label={lang === 'BN' ? 'সার্চ ডিরেক্টরি খুলুন' : 'Open Search Directory'}
               >
-                🔍 Search Directory
+                <Search className="w-4 h-4" />
+                <span>{lang === 'BN' ? 'খুঁজুন' : 'Search'}</span>
               </button>
               <a
                 href="tel:16268"

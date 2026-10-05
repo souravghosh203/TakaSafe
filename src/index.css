@@ -33,6 +33,34 @@
 .app-sticky-header .header-feature:active { animation: header-control-press .34s cubic-bezier(.2,.75,.25,1); }
 .app-sticky-header .header-feature:focus-visible { outline: 2px solid #73e5da; outline-offset: 2px; }
 .app-sticky-header .header-feature-icon { width: 40px; min-width: 40px; padding-right: 0; padding-left: 0; }
+.app-sticky-header .header-search-control {
+  border: 1px solid rgba(215, 232, 255, .23);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .025);
+  color: rgba(226, 238, 253, .86);
+  font-size: 10px;
+  font-weight: 590;
+  white-space: nowrap;
+  transition: color .18s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.app-sticky-header .header-feature.header-search-control:hover {
+  border-color: rgba(215, 232, 255, .62);
+  background: rgba(255, 255, 255, .07);
+  color: #fff;
+}
+.app-sticky-header .header-search-mobile {
+  border: 1px solid rgba(215, 232, 255, .23);
+  background: rgba(255, 255, 255, .025);
+  color: rgba(226, 238, 253, .9);
+  font-size: 0;
+  transition: color .18s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.app-sticky-header .header-search-mobile > span { font-size: 11px; }
+.app-sticky-header .header-search-mobile:hover {
+  border-color: rgba(215, 232, 255, .62);
+  background: rgba(255, 255, 255, .07);
+  color: #fff;
+}
 @keyframes header-control-press {
   0% { transform: scale(1); }
   45% { transform: scale(.94); }
