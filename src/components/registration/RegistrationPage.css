@@ -1,7 +1,7 @@
 .registration-page {
   --reg-blue: #0054a6;
   --reg-navy: #08172b;
-  --reg-lime: #c5ff69;
+  --reg-aqua: #48d1c3;
   --reg-amber: #fab915;
   min-height: 100vh;
   color: #172336;
@@ -25,13 +25,13 @@
 .brand-smile::after { position: absolute; top: 3px; left: 4px; width: 9px; height: 7px; border: 2px solid #0054a6; border-top: 0; border-radius: 0 0 9px 9px; content: ''; }
 .brand-dot { position: absolute; top: 7px; left: 16px; width: 6px; height: 6px; border-radius: 50%; background: #e11d48; }
 .registration-top-actions { display: flex; align-items: center; gap: 13px; color: #d2e2f6; font-size: 12px; }
-.preview-tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; border: 1px solid rgba(197,255,105,.3); border-radius: 99px; background: rgba(197,255,105,.09); color: #d6ffad; font-size: 10px; font-weight: 750; }
+.preview-tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; border: 1px solid rgba(72,209,195,.3); border-radius: 99px; background: rgba(72,209,195,.09); color: #baf3ea; font-size: 10px; font-weight: 750; }
 .registration-login-link { padding: 8px 12px; border: 1px solid rgba(217,232,252,.4); border-radius: 8px; background: rgba(255,255,255,.04); color: #fff; font-size: 12px; font-weight: 750; transition: border-color .2s,background .2s; }
 .registration-login-link:hover { border-color: rgba(217,232,252,.8); background: rgba(255,255,255,.12); }
 .registration-main { width: min(790px,calc(100% - 36px)); margin: 0 auto; padding: 37px 0 45px; }
 .registration-heading { margin: 0 auto 21px; color: #10243d; text-align: center; }
 .registration-kicker { display: inline-flex; align-items: center; gap: 6px; color: #245982; font-size: 11px; font-weight: 720; letter-spacing: .04em; }
-.registration-kicker svg { color: var(--reg-lime); }
+.registration-kicker svg { color: var(--reg-aqua); }
 .registration-heading h1 { margin: 9px 0 5px; font-size: clamp(24px,4vw,33px); font-weight: 740; letter-spacing: -.045em; line-height: 1.2; }
 .registration-heading p { margin: 0; color: #506177; font-size: 13px; line-height: 1.6; }
 .registration-card { overflow: hidden; border: 1px solid rgba(187,207,231,.8); border-radius: 20px; background: #fff; box-shadow: 0 22px 60px rgba(29,83,145,.12),0 2px 8px rgba(16,36,61,.05); }
@@ -135,8 +135,8 @@
 .registration-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 23px; padding-top: 15px; border-top: 1px solid #e7ecf2; }
 .back-button { display: inline-flex; align-items: center; gap: 6px; min-height: 39px; padding: 0 11px; border: 1px solid #d7e0ea; border-radius: 8px; background: #fff; color: #4c5e75; font-size: 10px; font-weight: 680; }
 .back-button:hover { border-color: #9eb5ce; background: #f8fafc; }
-.primary-submit-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 41px; padding: 0 16px; border: 1px solid #b2ec67; border-radius: 9px; background: #c5ff69; color: #10220b; font-size: 10px; font-weight: 780; box-shadow: 0 4px 10px rgba(108,169,43,.12); transition: transform .18s,background .18s,box-shadow .18s; }
-.primary-submit-button:hover:not(:disabled) { transform: translateY(-1px); background: #d4ff98; box-shadow: 0 7px 16px rgba(108,169,43,.2); }
+.primary-submit-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 41px; padding: 0 16px; border: 1px solid #2bbcaf; border-radius: 9px; background: #48d1c3; color: #083344; font-size: 10px; font-weight: 780; box-shadow: 0 4px 10px rgba(43,188,175,.16); transition: transform .18s,background .18s,box-shadow .18s; }
+.primary-submit-button:hover:not(:disabled) { transform: translateY(-1px); background: #73e5da; box-shadow: 0 7px 16px rgba(43,188,175,.24); }
 .primary-submit-button:disabled { cursor: not-allowed; border-color: #d9e1e9; background: #e8edf2; color: #91a0b1; box-shadow: none; }
 .action-helper { margin-left: auto; color: #8c762f; font-size: 8px; }
 .registration-security-foot { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 14px auto 0; color: #a9bad0; font-size: 9px; text-align: center; }

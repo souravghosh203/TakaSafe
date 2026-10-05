@@ -34,6 +34,7 @@
 }
 .hero-showcase-center { z-index: 5; opacity: 1; filter: saturate(1); transform: translateX(-50%) scale(1); box-shadow: 0 28px 72px rgba(15,23,42,.28),0 5px 18px rgba(15,23,42,.12); }
 .hero-showcase-center::after { opacity: .5; }
+.hero-showcase-hidden { z-index: 1; opacity: 0; pointer-events: none; transform: translateX(-50%) scale(.62); }
 .hero-showcase-left,.hero-showcase-right { z-index: 3; opacity: .68; filter: saturate(.78) brightness(.75); }
 .hero-showcase-left { transform: translateX(calc(-50% - 76%)) scale(.78); }
 .hero-showcase-right { transform: translateX(calc(-50% + 76%)) scale(.78); }
@@ -82,12 +83,19 @@
     radial-gradient(ellipse at 80% 21%, rgba(78, 190, 234, .32), transparent 35%),
     linear-gradient(118deg, #0b2541 0%, #064a83 52%, #176ca7 100%) !important;
 }
+.hero-showcase-slide.hero-showcase-geospatial {
+  background:
+    radial-gradient(ellipse at 80% 48%, rgba(72, 209, 195, .32), transparent 38%),
+    linear-gradient(118deg, #071c32 0%, #0e4960 53%, #087c84 100%) !important;
+}
 .hero-showcase-slide.hero-showcase-campaign::after,
 .hero-showcase-slide.hero-showcase-cashout::after,
-.hero-showcase-slide.hero-showcase-scamshield::after { opacity: .34; }
+.hero-showcase-slide.hero-showcase-scamshield::after,
+.hero-showcase-slide.hero-showcase-geospatial::after { opacity: .34; }
 .hero-showcase-campaign .hero-showcase-info-panel,
 .hero-showcase-cashout .hero-showcase-info-panel,
-.hero-showcase-scamshield .hero-showcase-info-panel {
+.hero-showcase-scamshield .hero-showcase-info-panel,
+.hero-showcase-geospatial .hero-showcase-info-panel {
   border-color: rgba(207, 231, 245, .32);
   background: rgba(7, 23, 41, .76);
   box-shadow: 0 20px 48px rgba(4, 16, 31, .25), inset 0 1px 0 rgba(255,255,255,.12);
@@ -98,10 +106,42 @@
   box-shadow: 0 22px 46px rgba(5, 24, 43, .26), inset 0 1px 0 #fff;
 }
 .hero-showcase-campaign .hero-showcase-info-panel > div:first-child {
-  background: #f5c95c;
-  border-color: #e7ad29;
-  color: #23364a;
+  background: #baf3ea;
+  border-color: #66cfc2;
+  color: #0b3b48;
 }
+.hero-showcase-geospatial .hero-showcase-info-panel h2 { color: #fff; }
+.geo-campaign-visual {
+  isolation: isolate;
+  background: linear-gradient(145deg, rgba(9, 38, 57, .9), rgba(9, 87, 99, .78));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 22px 48px rgba(2,13,25,.32);
+  backdrop-filter: blur(16px);
+}
+.geo-radar-rings { overflow: hidden; }
+.geo-radar-ring {
+  position: absolute;
+  aspect-ratio: 1;
+  border: 1px solid rgba(167, 243, 232, .26);
+  border-radius: 50%;
+}
+.geo-radar-ring-outer { width: 190px; }
+.geo-radar-ring-middle { width: 132px; border-color: rgba(167, 243, 232, .34); }
+.geo-radar-ring-inner { width: 74px; border-color: rgba(167, 243, 232, .45); }
+.geo-radar-sweep {
+  position: absolute;
+  width: 190px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: conic-gradient(from 10deg, transparent 0 78%, rgba(72,209,195,.25) 94%, transparent 100%);
+  animation: geo-radar-spin 8s linear infinite;
+}
+.geo-radar-pin { position: absolute; z-index: 2; width: 18px; height: 18px; color: #8df0df; fill: rgba(72,209,195,.25); filter: drop-shadow(0 0 8px rgba(72,209,195,.8)); }
+.geo-radar-pin-one { top: 27%; left: 36%; animation: geo-pin-pulse 2.4s ease-in-out infinite; }
+.geo-radar-pin-two { top: 53%; left: 59%; animation: geo-pin-pulse 2.4s .5s ease-in-out infinite; }
+.geo-radar-pin-three { top: 64%; left: 39%; animation: geo-pin-pulse 2.4s 1s ease-in-out infinite; }
+.geo-radar-activity { position: absolute; z-index: 2; top: 38%; left: 48%; width: 28px; height: 28px; color: #d6fff8; filter: drop-shadow(0 0 7px rgba(72,209,195,.7)); }
+@keyframes geo-radar-spin { to { transform: rotate(360deg); } }
+@keyframes geo-pin-pulse { 0%,100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.22); opacity: 1; } }
 .hero-showcase-side-select { position: absolute; z-index: 4; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; cursor: pointer; }
 .hero-showcase-side-select:focus-visible { outline: 3px solid #93c5fd; outline-offset: -6px; border-radius: 29px; }
 .hero-showcase-arrow,.hero-showcase-pause {
@@ -136,6 +176,9 @@
   .hero-showcase-slide { width: 88%; padding: 24px 20px 38px; }
   .hero-showcase-content { flex-direction: column; gap: 12px; }
   .hero-showcase-info-panel { max-width: 100%; padding: 15px 17px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .geo-radar-sweep,.geo-radar-pin { animation: none !important; }
 }
 @media (max-width: 767px) {
   .hero-showcase { padding-top: 16px; }

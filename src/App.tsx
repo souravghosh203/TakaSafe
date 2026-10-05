@@ -657,6 +657,15 @@ export default function App() {
             navigateToView('CUSTOMER');
           }}
           onOpenModal={(modal) => setActiveModal(modal)}
+          onExploreGeospatial={() => {
+            if (currentUser?.role === 'ADMIN') {
+              setActiveView('OPERATOR');
+              setOperatorTab('GEOSPATIAL');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+              setActiveModal('ABSTRACT');
+            }
+          }}
           showCashIn={currentUser?.role !== 'USER'}
           lang={lang}
         />

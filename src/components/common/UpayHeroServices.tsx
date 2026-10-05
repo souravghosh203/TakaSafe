@@ -11,6 +11,8 @@ import {
   ChevronRight,
   ShieldCheck,
   Sparkles,
+  MapPin,
+  Activity,
   Smartphone,
   Globe,
   PiggyBank,
@@ -29,16 +31,17 @@ interface UpayHeroServicesProps {
   onOpenModal?: (modalType: string) => void;
   showCashIn?: boolean;
   lang: 'EN' | 'BN';
+  onExploreGeospatial?: () => void;
 }
 
-export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSelect, onOpenModal, showCashIn = true, lang }) => {
+export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSelect, onOpenModal, showCashIn = true, lang, onExploreGeospatial }) => {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [showAllServices, setShowAllServices] = useState<boolean>(false);
   const touchStartX = useRef<number | null>(null);
 
-  const totalSlides = 3;
+  const totalSlides = 4;
 
   // Auto transition every 5 seconds (matching the 23-25s carousel transition in video)
   useEffect(() => {
@@ -51,7 +54,8 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
 
   const slidePosition = (index: number) => index === currentSlide
     ? 'center'
-    : index === (currentSlide + 1) % totalSlides ? 'right' : 'left';
+    : index === (currentSlide + 1) % totalSlides ? 'right'
+    : index === (currentSlide - 1 + totalSlides) % totalSlides ? 'left' : 'hidden';
 
   const handlePrev = () => {
     setIsPaused(true);
@@ -85,13 +89,13 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
           onTouchCancel={() => { touchStartX.current = null; }}
         >
           {/* SLIDE 1: ৳200 Bonus Campaign (From 0:00 - 0:23 in video) */}
-          <div className={`hero-showcase-slide hero-showcase-campaign hero-showcase-${slidePosition(0)} relative bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 py-10 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[440px] flex items-center`}>
+          <div className={`hero-showcase-slide hero-showcase-campaign hero-showcase-${slidePosition(0)} relative bg-gradient-to-r from-teal-100 via-cyan-50 to-teal-100 py-10 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[440px] flex items-center`}>
             {/* Festive Confetti & Dot Accents */}
             <div className="absolute inset-0 pointer-events-none opacity-40">
               <div className="absolute top-4 left-10 w-3 h-3 rounded-full bg-blue-600" />
-              <div className="absolute top-8 left-24 w-2 h-2 rounded-full bg-amber-500" />
+              <div className="absolute top-8 left-24 w-2 h-2 rounded-full bg-teal-500" />
               <div className="absolute bottom-6 left-16 w-3 h-3 rounded-full bg-blue-500" />
-              <div className="absolute top-6 right-20 w-4 h-4 rounded-full bg-amber-400" />
+              <div className="absolute top-6 right-20 w-4 h-4 rounded-full bg-cyan-400" />
               <div className="absolute bottom-10 right-40 w-3 h-3 rounded-full bg-blue-700" />
               <div className="absolute top-12 right-64 w-2 h-2 rounded-full bg-rose-500" />
             </div>
@@ -99,7 +103,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
             <div className="hero-showcase-content max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
               {/* Left Headline */}
               <div className="hero-showcase-info-panel flex-1 text-center md:text-left">
-                <div className="inline-block bg-amber-300/60 text-blue-950 font-bold px-3 py-1 rounded-full text-xs mb-3 border border-amber-400/50">
+                <div className="inline-block bg-teal-200/80 text-teal-950 font-bold px-3 py-1 rounded-full text-xs mb-3 border border-teal-300/70">
                   {lang === 'BN' ? 'টাকা সেফ বিশেষ অফার' : 'TakaSafe Special Campaign'}
                 </div>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
@@ -107,7 +111,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
                 </h1>
                 <div className="mt-2 flex items-baseline justify-center md:justify-start gap-3">
                   <span className="hero-showcase-amount text-4xl sm:text-5xl lg:text-6xl font-black text-[#0054A6]">৳ ২০০</span>
-                  <span className="text-2xl sm:text-3xl font-bold text-amber-500">{lang === 'BN' ? 'বোনাস*' : 'Bonus*'}</span>
+                  <span className="text-2xl sm:text-3xl font-bold text-teal-700">{lang === 'BN' ? 'বোনাস*' : 'Bonus*'}</span>
                 </div>
                 <p className="hero-showcase-description mt-2 text-xs sm:text-sm text-slate-600 max-w-lg">
                   {lang === 'BN'
@@ -118,7 +122,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
                 <div className="mt-5 flex items-center justify-center md:justify-start gap-4">
                   <button
                     onClick={() => onOpenModal?.('ABOUT_US')}
-                    className="flex items-center gap-2 bg-[#FAB915] hover:bg-[#e5a80f] text-slate-950 px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                    className="flex items-center gap-2 bg-[#48D1C3] hover:bg-[#2BBCAF] text-[#083344] px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                   >
                     <span>{lang === 'BN' ? 'বিস্তারিত দেখুন' : 'Read More'}</span>
                     <ArrowRight className="w-4 h-4" />
@@ -130,7 +134,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
               {/* Right Visual Card */}
               <div
                 onClick={() => onOpenModal?.('ABOUT_US')}
-                className="interactive-lift w-full max-w-[270px] h-48 sm:max-w-xs sm:h-56 bg-white/70 backdrop-blur-sm rounded-3xl p-5 border-2 border-amber-300 shadow-xl flex flex-col justify-between relative overflow-hidden cursor-pointer hover:border-amber-400 transition-colors"
+                className="interactive-lift w-full max-w-[270px] h-48 sm:max-w-xs sm:h-56 bg-white/70 backdrop-blur-sm rounded-3xl p-5 border-2 border-teal-300 shadow-xl flex flex-col justify-between relative overflow-hidden cursor-pointer hover:border-teal-400 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-[#0054A6]">TakaSafe Digital Trust</span>
@@ -141,9 +145,9 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
                 <div className="flex items-center justify-center py-2">
                   <div className="relative flex items-center justify-center">
                     <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#0054A6] to-[#003B75] flex items-center justify-center text-white shadow-lg">
-                      <span className="text-3xl font-black text-amber-300">৳</span>
+                      <span className="text-3xl font-black text-teal-500">৳</span>
                     </div>
-                    <div className="absolute -top-1 -right-1 bg-amber-400 text-blue-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow">
+                    <div className="absolute -top-1 -right-1 bg-teal-300 text-teal-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow">
                       FAST
                     </div>
                   </div>
@@ -157,16 +161,16 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
           </div>
 
           {/* SLIDE 2: চার্জ 0 টাকা / Zero Charge Cash Out (Sleek Modern Digital Banking Visual) */}
-          <div className={`hero-showcase-slide hero-showcase-cashout hero-showcase-${slidePosition(1)} relative bg-gradient-to-r from-amber-50/90 via-sky-50/70 to-blue-50/80 py-10 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[440px] flex items-center`}>
+          <div className={`hero-showcase-slide hero-showcase-cashout hero-showcase-${slidePosition(1)} relative bg-gradient-to-r from-teal-50/90 via-cyan-50/70 to-blue-50/80 py-10 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[440px] flex items-center`}>
             {/* Ambient Radiant Glow Accents */}
-            <div className="absolute -top-10 right-1/3 w-80 h-80 bg-amber-300/25 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -top-10 right-1/3 w-80 h-80 bg-teal-300/25 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-10 right-10 w-96 h-96 bg-[#0054A6]/10 rounded-full blur-3xl pointer-events-none" />
 
             <div className="hero-showcase-content max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
               {/* Left Headline & Features */}
               <div className="hero-showcase-info-panel flex-1 text-center md:text-left">
                 <div className="inline-flex items-center gap-1.5 bg-[#0054A6] text-white font-bold px-3.5 py-1 rounded-full text-xs mb-3 shadow-sm">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <Sparkles className="w-3.5 h-3.5 text-teal-300" />
                   <span>{lang === 'BN' ? 'জিরো ক্যাশ-আউট চার্জ' : 'Zero Cash-Out Charge'}</span>
                 </div>
 
@@ -174,7 +178,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
                   <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#0054A6] tracking-tight">
                     {lang === 'BN' ? 'চার্জ' : 'Charge'}
                   </h2>
-                  <span className="text-5xl sm:text-6xl lg:text-7xl font-black text-[#FAB915] drop-shadow-sm">
+                  <span className="text-5xl sm:text-6xl lg:text-7xl font-black text-teal-300 drop-shadow-sm">
                     ০
                   </span>
                   <span className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#0054A6]">
@@ -205,7 +209,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
                 <div className="mt-5 flex items-center justify-center md:justify-start gap-4">
                   <button
                     onClick={() => onServiceSelect?.('Cash Out')}
-                    className="flex items-center gap-2 bg-[#FAB915] hover:bg-[#e5a80f] text-slate-950 px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                    className="flex items-center gap-2 bg-[#48D1C3] hover:bg-[#2BBCAF] text-[#083344] px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                   >
                     <span>{lang === 'BN' ? 'বিস্তারিত দেখুন' : 'Read More'}</span>
                     <ArrowRight className="w-4 h-4" />
@@ -217,7 +221,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
               {/* Right Graphic: Sleek Modern Smartphone & Floating 3D Financial Badges */}
               <div className="w-full max-w-[270px] h-64 sm:max-w-xs sm:h-72 relative flex items-center justify-center select-none">
                 {/* Floating Background Glass Glow */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-amber-200/30 via-sky-100/40 to-blue-200/30 rounded-full blur-2xl pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-teal-200/30 via-sky-100/40 to-blue-200/30 rounded-full blur-2xl pointer-events-none" />
 
                 {/* Modern Smartphone Mockup */}
                 <div className="w-52 sm:w-56 h-64 bg-slate-950 rounded-[32px] p-2.5 shadow-2xl border-4 border-slate-700/80 relative z-10 flex flex-col justify-between overflow-hidden">
@@ -234,7 +238,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                         <span>ATM Cash-Out</span>
                       </span>
-                      <span className="bg-amber-400 text-blue-950 font-black px-1.5 py-0.2 rounded text-[8px]">
+                      <span className="bg-teal-300 text-teal-950 font-black px-1.5 py-0.2 rounded text-[8px]">
                         0% CHARGE
                       </span>
                     </div>
@@ -259,7 +263,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
                     {/* Instant QR Scanner Frame */}
                     <div className="bg-black/30 rounded-lg p-2 border border-white/10 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded bg-amber-400 flex items-center justify-center text-blue-950 font-black text-xs">
+                        <div className="w-6 h-6 rounded bg-teal-300 flex items-center justify-center text-teal-950 font-black text-xs">
                           QR
                         </div>
                         <div className="leading-tight">
@@ -285,12 +289,12 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
 
                 {/* Floating Glass Pill 2: Bottom Left */}
                 <div className="absolute -bottom-2 -left-2 sm:left-2 z-20 bg-[#0054A6] text-white px-3 py-2 rounded-2xl shadow-xl border border-blue-400/40 flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-xl bg-amber-400 text-blue-950 flex items-center justify-center font-black text-xs">
+                  <div className="w-6 h-6 rounded-xl bg-teal-300 text-teal-950 flex items-center justify-center font-black text-xs">
                     🏧
                   </div>
                   <div className="leading-tight">
                     <span className="text-[10px] font-bold text-white block">15,000+ ATMs</span>
-                    <span className="text-[8px] text-amber-300 font-medium">Nationwide Network</span>
+                    <span className="text-[8px] text-teal-300 font-medium">Nationwide Network</span>
                   </div>
                 </div>
               </div>
@@ -301,7 +305,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
           {/* SLIDE 3: ScamShield AI Pre-Payment Protection (Vibrant Upay Royal Blue & Gold Palette) */}
           <div className={`hero-showcase-slide hero-showcase-scamshield hero-showcase-${slidePosition(2)} relative bg-gradient-to-r from-[#002E66] via-[#0054A6] to-[#007AE6] text-white py-10 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[440px] flex items-center`}>
             {/* Radiant Ambient Light Orbs */}
-            <div className="absolute -top-16 -right-16 w-80 h-80 rounded-full bg-amber-400/20 blur-3xl pointer-events-none" />
+            <div className="absolute -top-16 -right-16 w-80 h-80 rounded-full bg-teal-400/20 blur-3xl pointer-events-none" />
             <div className="absolute -bottom-16 -left-16 w-80 h-80 rounded-full bg-sky-300/25 blur-3xl pointer-events-none" />
 
             {/* Subtle Tech Security Matrix Grid Pattern */}
@@ -315,7 +319,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
 
             <div className="hero-showcase-content max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
               <div className="hero-showcase-info-panel flex-1 text-center md:text-left">
-                <div className="inline-flex items-center gap-1.5 bg-[#FAB915] text-[#003B75] font-black px-3.5 py-1.5 rounded-full text-xs mb-3 shadow-md border border-amber-300">
+                <div className="inline-flex items-center gap-1.5 bg-teal-200 text-teal-950 font-black px-3.5 py-1.5 rounded-full text-xs mb-3 shadow-md border border-teal-300">
                   <ShieldCheck className="w-4 h-4 text-[#003B75]" />
                   <span>24/7 AI Trust & ScamShield</span>
                 </div>
@@ -323,7 +327,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
                   {lang === 'BN' ? 'ScamShield এআই সুরক্ষা' : 'ScamShield AI Protection'}
                 </h2>
                 <div className="mt-2 flex items-baseline justify-center md:justify-start gap-3">
-                  <span className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#FAB915] drop-shadow-sm">
+                  <span className="text-3xl sm:text-4xl lg:text-5xl font-black text-teal-300 drop-shadow-sm">
                     {lang === 'BN' ? 'নিরাপদ লেনদেন' : 'Safe Payments'}
                   </span>
                   <span className="text-xl sm:text-2xl font-bold text-sky-100">
@@ -339,7 +343,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
                 <div className="mt-6 flex items-center justify-center md:justify-start gap-4">
                   <button
                     onClick={() => onServiceSelect?.('Send Money')}
-                    className="flex items-center gap-2 bg-[#FAB915] hover:bg-[#e5a80f] text-slate-950 px-6 py-2.5 rounded-full font-bold text-sm shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 border border-amber-300"
+                    className="flex items-center gap-2 bg-[#48D1C3] hover:bg-[#2BBCAF] text-[#083344] px-6 py-2.5 rounded-full font-bold text-sm shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 border border-teal-300"
                   >
                     <span>{lang === 'BN' ? 'সুরক্ষা যাচাই করুন' : 'Test ScamShield'}</span>
                     <ArrowRight className="w-4 h-4" />
@@ -358,8 +362,8 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
                 <div className="flex flex-col items-center justify-center relative z-10">
                   {/* Concentric Pulse Rings */}
                   <div className="relative flex items-center justify-center">
-                    <div className="absolute w-28 h-28 rounded-full bg-[#FAB915]/20 animate-pulse pointer-events-none" />
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-[#FAB915] via-amber-300 to-amber-200 flex items-center justify-center shadow-xl text-[#003B75] border-2 border-white/60">
+                    <div className="absolute w-28 h-28 rounded-full bg-teal-300/20 animate-pulse pointer-events-none" />
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-teal-500 via-teal-300 to-cyan-200 flex items-center justify-center shadow-xl text-[#083344] border-2 border-white/60">
                       <ShieldCheck className="w-12 h-12 text-[#003B75]" />
                     </div>
                   </div>
@@ -374,6 +378,61 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
               </div>
             </div>
             {slidePosition(2) !== 'center' && <button type="button" className="hero-showcase-side-select" onClick={() => { setCurrentSlide(2); setIsPaused(true); }} aria-label="Show ScamShield protection" />}
+          </div>
+
+          {/* SLIDE 4: Geospatial Intelligence Campaign News */}
+          <div className={`hero-showcase-slide hero-showcase-geospatial hero-showcase-${slidePosition(3)} relative text-white py-10 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[440px] flex items-center`}>
+            <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px)', backgroundSize: '38px 38px' }} />
+            <div className="absolute -top-16 -right-16 w-80 h-80 rounded-full bg-teal-300/20 blur-3xl pointer-events-none" />
+            <div className="hero-showcase-content max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+              <div className="hero-showcase-info-panel flex-1 text-center md:text-left">
+                <div className="inline-flex items-center gap-1.5 bg-teal-200 text-teal-950 font-black px-3.5 py-1.5 rounded-full text-xs mb-3 shadow-md border border-teal-300">
+                  <MapPin className="w-4 h-4" />
+                  <span>{lang === 'BN' ? 'নতুন • জিওস্পেশাল ইন্টেলিজেন্স' : 'NEW • GEOSPATIAL INTELLIGENCE'}</span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+                  {lang === 'BN' ? 'ঝুঁকির সংকেত দেখুন মানচিত্রে' : 'See the signals behind the map'}
+                </h2>
+                <p className="mt-3 text-sm sm:text-base text-cyan-50 max-w-xl leading-relaxed">
+                  {lang === 'BN'
+                    ? 'আঞ্চলিক কার্যক্রম, সম্ভাব্য জালিয়াতির ক্লাস্টার এবং সেবা কভারেজ—সবকিছুর একটি পরিষ্কার দৃশ্য। নতুন জিওস্পেশাল ইন্টেলিজেন্স অভিজ্ঞতা দেখুন।'
+                    : 'Regional activity, emerging fraud clusters, and service coverage—brought together in one clear view. Discover TakaSafe’s geospatial intelligence experience.'}
+                </p>
+                <div className="mt-6 flex items-center justify-center md:justify-start gap-4 flex-wrap">
+                  <button
+                    onClick={() => onExploreGeospatial ? onExploreGeospatial() : onOpenModal?.('ABSTRACT')}
+                    className="flex items-center gap-2 bg-[#48D1C3] hover:bg-[#2BBCAF] text-[#083344] px-6 py-2.5 rounded-full font-bold text-sm shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 border border-teal-200"
+                  >
+                    <span>{lang === 'BN' ? 'ইন্টেলিজেন্স দেখুন' : 'Explore the intelligence'}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                  <span className="text-xs text-cyan-100 font-semibold bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
+                    {lang === 'BN' ? 'বাংলাদেশ জুড়ে আঞ্চলিক অন্তর্দৃষ্টি' : 'Regional insights across Bangladesh'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="geo-campaign-visual w-full max-w-[320px] sm:max-w-sm h-64 rounded-3xl border border-white/25 p-5 relative overflow-hidden shadow-2xl">
+                <div className="flex items-center justify-between text-[10px] font-bold tracking-[.14em] text-cyan-100">
+                  <span>REGIONAL SIGNALS</span><span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-teal-300 animate-pulse" />SIGNAL RADAR</span>
+                </div>
+                <div className="geo-radar-rings absolute inset-x-0 top-12 bottom-5 grid place-items-center" aria-hidden="true">
+                  <div className="geo-radar-ring geo-radar-ring-outer" />
+                  <div className="geo-radar-ring geo-radar-ring-middle" />
+                  <div className="geo-radar-ring geo-radar-ring-inner" />
+                  <div className="geo-radar-sweep" />
+                  <MapPin className="geo-radar-pin geo-radar-pin-one" />
+                  <MapPin className="geo-radar-pin geo-radar-pin-two" />
+                  <MapPin className="geo-radar-pin geo-radar-pin-three" />
+                  <Activity className="geo-radar-activity" />
+                </div>
+                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-xl border border-white/15 bg-[#071c32]/70 px-3 py-2 backdrop-blur-md">
+                  <span className="text-[10px] font-semibold text-cyan-50">{lang === 'BN' ? 'আঞ্চলিক ঝুঁকি পর্যবেক্ষণ' : 'Regional risk monitoring'}</span>
+                  <span className="text-[9px] font-bold text-teal-200">GEOSPATIAL</span>
+                </div>
+              </div>
+            </div>
+            {slidePosition(3) !== 'center' && <button type="button" className="hero-showcase-side-select" onClick={() => { setCurrentSlide(3); setIsPaused(true); }} aria-label="Show geospatial intelligence campaign" />}
           </div>
 
         {/* Carousel Arrow Controls */}
@@ -397,7 +456,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
 
         {/* Indicator Pagination Dots */}
         <div className="hero-showcase-pagination">
-          {[0, 1, 2].map((idx) => (
+          {[0, 1, 2, 3].map((idx) => (
             <button
               key={idx}
               onClick={() => { setCurrentSlide(idx); setIsPaused(true); }}
@@ -434,9 +493,9 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
           {/* 1. Cash In */}
           {showCashIn && <div
             onClick={() => onServiceSelect?.('Cash In')}
-            className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center card-hover-lift"
+            className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-teal-400 hover:shadow-lg transition-all cursor-pointer text-center card-hover-lift"
           >
-            <div className="w-16 h-16 rounded-2xl bg-blue-50 group-hover:bg-amber-50 flex items-center justify-center mb-3 transition-colors text-[#0054A6] group-hover:text-amber-600">
+            <div className="w-16 h-16 rounded-2xl bg-blue-50 group-hover:bg-teal-50 flex items-center justify-center mb-3 transition-colors text-[#0054A6] group-hover:text-teal-700">
               <ArrowDownLeft className="w-8 h-8" />
             </div>
             <span className="text-sm font-bold text-slate-800 group-hover:text-[#0054A6]">
@@ -448,9 +507,9 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
           {/* 2. Cash Out */}
           <div
             onClick={() => onServiceSelect?.('Cash Out')}
-            className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center card-hover-lift"
+            className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-teal-400 hover:shadow-lg transition-all cursor-pointer text-center card-hover-lift"
           >
-            <div className="w-16 h-16 rounded-2xl bg-amber-50 group-hover:bg-amber-100 flex items-center justify-center mb-3 transition-colors text-amber-600">
+            <div className="w-16 h-16 rounded-2xl bg-teal-50 group-hover:bg-teal-100 flex items-center justify-center mb-3 transition-colors text-teal-700">
               <ArrowUpRight className="w-8 h-8" />
             </div>
             <span className="text-sm font-bold text-slate-800 group-hover:text-[#0054A6]">
@@ -462,7 +521,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
           {/* 3. Send Money */}
           <div
             onClick={() => onServiceSelect?.('Send Money')}
-            className="group flex flex-col items-center p-4 rounded-2xl bg-white border-2 border-amber-300 shadow-sm hover:border-[#0054A6] hover:shadow-lg transition-all cursor-pointer text-center relative overflow-hidden card-hover-lift"
+            className="group flex flex-col items-center p-4 rounded-2xl bg-white border-2 border-teal-300 shadow-sm hover:border-[#0054A6] hover:shadow-lg transition-all cursor-pointer text-center relative overflow-hidden card-hover-lift"
           >
             <div className="absolute top-0 right-0 bg-[#0054A6] text-white text-[9px] font-bold px-2 py-0.5 rounded-bl">
               SHIELD
@@ -479,7 +538,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
           {/* 4. Make Payment */}
           <div
             onClick={() => onServiceSelect?.('Make Payment')}
-            className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center card-hover-lift"
+            className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-teal-400 hover:shadow-lg transition-all cursor-pointer text-center card-hover-lift"
           >
             <div className="w-16 h-16 rounded-2xl bg-indigo-50 group-hover:bg-indigo-100 flex items-center justify-center mb-3 transition-colors text-indigo-600">
               <QrCode className="w-8 h-8" />
@@ -493,7 +552,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
           {/* 5. Add Money */}
           <div
             onClick={() => onServiceSelect?.('Add Money')}
-            className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center card-hover-lift"
+            className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-teal-400 hover:shadow-lg transition-all cursor-pointer text-center card-hover-lift"
           >
             <div className="w-16 h-16 rounded-2xl bg-emerald-50 group-hover:bg-emerald-100 flex items-center justify-center mb-3 transition-colors text-emerald-600">
               <PlusCircle className="w-8 h-8" />
@@ -507,7 +566,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
           {/* 6. Pay Bill */}
           <div
             onClick={() => onServiceSelect?.('Pay Bill')}
-            className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center card-hover-lift"
+            className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-teal-400 hover:shadow-lg transition-all cursor-pointer text-center card-hover-lift"
           >
             <div className="w-16 h-16 rounded-2xl bg-purple-50 group-hover:bg-purple-100 flex items-center justify-center mb-3 transition-colors text-purple-600">
               <ReceiptText className="w-8 h-8" />
@@ -523,7 +582,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
             {/* 7. Mobile Recharge */}
             <div
               onClick={() => onServiceSelect?.('Mobile Recharge')}
-              className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center"
+              className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-teal-400 hover:shadow-lg transition-all cursor-pointer text-center"
             >
               <div className="w-16 h-16 rounded-2xl bg-teal-50 group-hover:bg-teal-100 flex items-center justify-center mb-3 transition-colors text-teal-600">
                 <Smartphone className="w-8 h-8" />
@@ -537,7 +596,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
             {/* 8. Remittance */}
             <div
               onClick={() => onServiceSelect?.('Remittance')}
-              className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center"
+              className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-teal-400 hover:shadow-lg transition-all cursor-pointer text-center"
             >
               <div className="w-16 h-16 rounded-2xl bg-cyan-50 group-hover:bg-cyan-100 flex items-center justify-center mb-3 transition-colors text-cyan-600">
                 <Globe className="w-8 h-8" />
@@ -551,7 +610,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
             {/* 9. Micro-Savings */}
             <div
               onClick={() => onServiceSelect?.('Savings')}
-              className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center"
+              className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-teal-400 hover:shadow-lg transition-all cursor-pointer text-center"
             >
               <div className="w-16 h-16 rounded-2xl bg-rose-50 group-hover:bg-rose-100 flex items-center justify-center mb-3 transition-colors text-rose-600">
                 <PiggyBank className="w-8 h-8" />
@@ -565,9 +624,9 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
             {/* 10. Education Fees */}
             <div
               onClick={() => onServiceSelect?.('Education')}
-              className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center"
+              className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-teal-400 hover:shadow-lg transition-all cursor-pointer text-center"
             >
-              <div className="w-16 h-16 rounded-2xl bg-amber-50 group-hover:bg-amber-100 flex items-center justify-center mb-3 transition-colors text-amber-600">
+              <div className="w-16 h-16 rounded-2xl bg-teal-50 group-hover:bg-teal-100 flex items-center justify-center mb-3 transition-colors text-teal-700">
                 <GraduationCap className="w-8 h-8" />
               </div>
               <span className="text-sm font-bold text-slate-800 group-hover:text-[#0054A6]">
@@ -579,7 +638,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
             {/* 11. Insurance / Takaful */}
             <div
               onClick={() => onServiceSelect?.('Insurance')}
-              className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center"
+              className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-teal-400 hover:shadow-lg transition-all cursor-pointer text-center"
             >
               <div className="w-16 h-16 rounded-2xl bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center mb-3 transition-colors text-blue-600">
                 <Shield className="w-8 h-8" />
@@ -593,7 +652,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
             {/* 12. Business Settlement */}
             <div
               onClick={() => onServiceSelect?.('Business')}
-              className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-amber-400 hover:shadow-lg transition-all cursor-pointer text-center"
+              className="group flex flex-col items-center p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-teal-400 hover:shadow-lg transition-all cursor-pointer text-center"
             >
               <div className="w-16 h-16 rounded-2xl bg-slate-100 group-hover:bg-slate-200 flex items-center justify-center mb-3 transition-colors text-slate-700">
                 <Building2 className="w-8 h-8" />
@@ -611,7 +670,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
         <div className="mt-8 text-center">
           <button
             onClick={() => setShowAllServices(!showAllServices)}
-            className="inline-flex items-center gap-2 bg-[#FAB915] hover:bg-[#e5a80f] text-slate-950 font-bold px-8 py-2.5 rounded-full text-xs tracking-wide shadow-md transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+            className="inline-flex items-center gap-2 bg-[#48D1C3] hover:bg-[#2BBCAF] text-[#083344] font-bold px-8 py-2.5 rounded-full text-xs tracking-wide shadow-md transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
           >
             <span>
               {showAllServices
@@ -627,12 +686,12 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
         </div>
       </div>
 
-      {/* Yellow Wavy Transition Curve (Matching Image 4 bottom wave) */}
+      {/* Aqua Wavy Transition Curve */}
       <div className="w-full overflow-hidden leading-none">
         <svg
           viewBox="0 0 1200 120"
           preserveAspectRatio="none"
-          className="relative block w-full h-12 text-[#FAB915] fill-current"
+          className="relative block w-full h-12 text-[#48D1C3] fill-current"
         >
           <path d="M0,0 C150,90 350,-40 500,40 C650,120 900,10 1200,60 L1200,120 L0,120 Z" />
         </svg>
