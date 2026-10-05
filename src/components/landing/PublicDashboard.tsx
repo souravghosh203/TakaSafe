@@ -51,7 +51,7 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
     liveFlow: 'লাইভ অর্থপ্রবাহ', secure: 'নিরাপদ', totalVolume: 'মোট ব্যবসায়িক লেনদেন', allSecure: 'সব ব্যবস্থা সুরক্ষিত',
     active: 'সচল', cashFlow: 'নগদ প্রবাহ', payments: 'পেমেন্ট', savings: 'সঞ্চয়', revenue: 'আয়',
     secureTransfer: 'নিরাপদ অর্থ স্থানান্তর', inflow: 'জমা', outflow: 'উত্তোলন', trustEyebrow: 'আপনার মতোই পরিশ্রমী অর্থব্যবস্থা',
-    trustHeadline: '৫০,০০০+ ব্যবসা আরও বুদ্ধিমত্তার সঙ্গে অর্থ পরিচালনায় আমাদের ওপর আস্থা রাখে।',
+    trustHeadline: 'বিশ্বস্ত ডিজিটাল ফাইন্যান্স',
     bankProtection: 'ব্যাংক-সমমানের সুরক্ষা', uptime: '৯৯.৯% প্ল্যাটফর্ম সচলতা', fastPayments: 'দ্রুত ও নির্ভরযোগ্য পেমেন্ট', growingTeams: 'বর্ধনশীল ব্যবসার জন্য তৈরি',
     oneView: 'সবকিছু এক নজরে', moneyMotion: 'আপনার অর্থ, সচল রাখুন।',
     productDescription: 'পেমেন্ট, নগদ প্রবাহ, সঞ্চয় ও ঝুঁকির সংকেত—সবকিছু এক নিরাপদ আর্থিক কর্মক্ষেত্রে।',
@@ -67,7 +67,7 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
     liveFlow: 'LIVE MONEY FLOW', secure: 'SECURE', totalVolume: 'TOTAL BUSINESS VOLUME', allSecure: 'All systems secure',
     active: 'ACTIVE', cashFlow: 'Cash flow', payments: 'Payments', savings: 'Savings', revenue: 'Revenue',
     secureTransfer: 'SECURE TRANSFER', inflow: 'IN', outflow: 'OUT', trustEyebrow: 'MONEY THAT WORKS AS HARD AS YOU DO',
-    trustHeadline: '50,000+ businesses trust us to move money smarter.',
+    trustHeadline: 'Trusted Digital Finance',
     bankProtection: 'Bank-grade protection', uptime: '99.9% platform uptime', fastPayments: 'Payments that keep pace', growingTeams: 'Built for growing teams',
     oneView: 'ONE CLEAR VIEW', moneyMotion: 'Your money, in motion.',
     productDescription: 'Payments, cash flow, savings, and risk signals come together in one secure financial workspace.',
@@ -356,13 +356,52 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
       </section>
 
       <section className="trust-section" id="customers">
-        <p className="trust-eyebrow">{copy.trustEyebrow}</p>
-        <h2>{copy.trustHeadline}</h2>
-        <div className="trust-logos" aria-label={copy.trustAria}>
-          <span><ShieldCheck size={15} /> {copy.bankProtection}</span>
-          <span><Check size={15} /> {copy.uptime}</span>
-          <span><ArrowRight size={15} /> {copy.fastPayments}</span>
-          <span><Star size={15} /> {copy.growingTeams}</span>
+        <div className="trust-banner">
+          <div className="trust-monument" role="img" aria-label={isBn ? 'বাংলাদেশের জাতীয় স্মৃতিসৌধের চিত্র' : 'Illustration of Bangladesh’s National Martyrs’ Memorial'}>
+            <span className="trust-cloud trust-cloud-one" /><span className="trust-cloud trust-cloud-two" />
+            <svg viewBox="0 0 300 190" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <defs>
+                <linearGradient id="trustSky" x1="150" y1="0" x2="150" y2="190" gradientUnits="userSpaceOnUse"><stop stopColor="#D9F0FF" /><stop offset="1" stopColor="#F3FAFF" /></linearGradient>
+                <linearGradient id="trustStone" x1="82" y1="49" x2="173" y2="162" gradientUnits="userSpaceOnUse"><stop stopColor="#FFFFFF" /><stop offset=".48" stopColor="#BDD8E9" /><stop offset="1" stopColor="#7599B4" /></linearGradient>
+                <linearGradient id="trustStoneShade" x1="143" y1="35" x2="181" y2="157" gradientUnits="userSpaceOnUse"><stop stopColor="#AFC8DA" /><stop offset="1" stopColor="#547998" /></linearGradient>
+              </defs>
+              <rect width="300" height="190" fill="url(#trustSky)" />
+              <circle cx="247" cy="43" r="18" fill="#fff" fillOpacity=".38" />
+              <path d="M0 127c33-29 52-24 77-8 18-21 41-27 71-7 25-17 54-15 80 5 27-15 47-12 72 3v70H0z" fill="#9BCBAF" />
+              <path d="M0 144c33-17 62-9 88 2 27-19 53-21 82-4 37-16 73-16 130 5v43H0z" fill="#5EAA82" />
+              <path d="M38 166h235l27 24H0z" fill="#A6D5C4" />
+              <path d="M127 19 142 151h-29z" fill="url(#trustStone)" />
+              <path d="M130 31 124 151H91z" fill="url(#trustStone)" />
+              <path d="M135 43 159 151h-40z" fill="url(#trustStoneShade)" />
+              <path d="M124 57 108 151H76z" fill="url(#trustStone)" />
+              <path d="M139 70 175 151h-38z" fill="url(#trustStoneShade)" />
+              <path d="M115 83 94 151H61z" fill="#D4E5EF" />
+              <path d="M146 91 190 151h-39z" fill="#819FB5" />
+              <path d="M58 151h140l20 11H43z" fill="#728FA4" />
+              <path d="M45 162h173v6H45z" fill="#D3E4EE" />
+              <path d="M0 169c29-7 49-4 72 4 21-8 47-8 68 0 28-10 64-8 92 1 23-8 43-8 68-1v17H0z" fill="#3D9871" />
+              <path d="M14 153c8-17 14-22 21-22 8 0 14 7 19 20m210 4c6-15 12-21 18-21 7 0 13 8 18 22" stroke="#3F8969" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+            <span className="trust-landmark-glow" />
+          </div>
+
+          <div className="trust-banner-content">
+            <p className="trust-eyebrow">{copy.trustEyebrow}</p>
+            <h2>{isBn ? 'বিশ্বস্ত ডিজিটাল ফাইন্যান্স' : 'Trusted Digital Finance'}</h2>
+            <div className="trust-stats" aria-label={copy.trustAria}>
+              {[
+                { value: '10M+', en: 'Protected Transactions', bn: 'সুরক্ষিত লেনদেন' },
+                { value: '99.9%', en: 'Secure Transactions', bn: 'নিরাপদ লেনদেন' },
+                { value: '24/7', en: 'AI Monitoring', bn: 'এআই পর্যবেক্ষণ' },
+                { value: '500K+', en: 'Active Users', bn: 'সক্রিয় ব্যবহারকারী' },
+              ].map((stat, index) => (
+                <div className="trust-stat motion-reveal" key={stat.value} style={{ animationDelay: `${0.08 + index * 0.1}s` }}>
+                  <strong>{stat.value}</strong>
+                  <span>{isBn ? stat.bn : stat.en}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
