@@ -87,8 +87,6 @@
 .hero-showcase-prev { left: max(18px, calc((100% - 1500px) / 2)); }
 .hero-showcase-next { right: max(18px, calc((100% - 1500px) / 2)); }
 .hero-showcase-arrow:hover { transform: translateY(-50%) scale(1.1); background: #fff; color: #0054a6; box-shadow: 0 12px 30px rgba(15,23,42,.26); }
-html:not(.dark) .hero-showcase-arrow:hover { color: #173a5e; }
-html:not(.dark) .hero-showcase-scamshield { background: linear-gradient(110deg,#102b47 0%,#173a5e 52%,#234d73 100%) !important; }
 .hero-showcase-pause { top: 26px; right: 13.5%; width: 38px; height: 38px; border-color: rgba(255,255,255,.25); background: rgba(2,8,23,.52); color: #fff; box-shadow: 0 8px 24px rgba(0,0,0,.2); }
 .hero-showcase-pause:hover { transform: scale(1.09); background: rgba(2,8,23,.82); }
 .hero-showcase-pagination { position: absolute; z-index: 12; right: 0; bottom: 1px; left: 0; display: flex; align-items: center; justify-content: center; gap: 8px; }
