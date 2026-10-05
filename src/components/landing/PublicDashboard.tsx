@@ -252,14 +252,38 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
             </div>
 
             <article className="ai-launch-event motion-reveal" style={{ animationDelay: '0.43s' }}>
-              <div className="ai-launch-icon" aria-hidden="true"><Sparkles size={19} /></div>
+              <div className="ai-launch-robot-scene" aria-hidden="true">
+                <span className="ai-launch-orbit ai-launch-orbit-outer" />
+                <span className="ai-launch-orbit ai-launch-orbit-inner" />
+                <svg className="ai-launch-robot" viewBox="0 0 120 140" fill="none">
+                  <defs>
+                    <linearGradient id="aiRobotShell" x1="24" y1="26" x2="95" y2="103" gradientUnits="userSpaceOnUse"><stop stopColor="#D9F7FF" /><stop offset=".55" stopColor="#79C9F4" /><stop offset="1" stopColor="#378FD0" /></linearGradient>
+                    <linearGradient id="aiRobotBody" x1="40" y1="89" x2="81" y2="128" gradientUnits="userSpaceOnUse"><stop stopColor="#FFFFFF" /><stop offset="1" stopColor="#91D7F7" /></linearGradient>
+                    <linearGradient id="aiRobotFace" x1="43" y1="40" x2="83" y2="83" gradientUnits="userSpaceOnUse"><stop stopColor="#0B2949" /><stop offset="1" stopColor="#0C5478" /></linearGradient>
+                  </defs>
+                  <path d="M60 18v13" stroke="#B9E8FF" strokeWidth="6" strokeLinecap="round" />
+                  <circle cx="60" cy="15" r="7" fill="#76C8F5" stroke="#DDF7FF" strokeWidth="3" />
+                  <rect x="12" y="53" width="17" height="31" rx="8.5" fill="#368FCB" stroke="#A7E1FF" strokeWidth="4" />
+                  <rect x="91" y="53" width="17" height="31" rx="8.5" fill="#368FCB" stroke="#A7E1FF" strokeWidth="4" />
+                  <path d="M44 86 35 102m41-16 10 16" stroke="#80C8F0" strokeWidth="10" strokeLinecap="round" />
+                  <rect x="39" y="87" width="42" height="42" rx="17" fill="url(#aiRobotBody)" stroke="#BCEBFF" strokeWidth="4" />
+                  <circle cx="60" cy="108" r="9" fill="#54BDEB" stroke="#D7F6FF" strokeWidth="3" />
+                  <path d="M42 116 36 127m42-11 6 11" stroke="#A4DFFD" strokeWidth="8" strokeLinecap="round" />
+                  <rect x="20" y="28" width="80" height="67" rx="25" fill="url(#aiRobotShell)" stroke="#D4F4FF" strokeWidth="4" />
+                  <rect x="28" y="37" width="64" height="49" rx="19" fill="url(#aiRobotFace)" stroke="#56D9F4" strokeOpacity=".65" strokeWidth="2" />
+                  <circle cx="47" cy="60" r="5.5" fill="#34E0FF" />
+                  <circle cx="73" cy="60" r="5.5" fill="#34E0FF" />
+                  <path d="M54 73c3 3 9 3 12 0" stroke="#68E4F4" strokeWidth="2.5" strokeLinecap="round" />
+                </svg>
+                <span className="ai-launch-spark"><Sparkles size={14} /></span>
+              </div>
               <div className="ai-launch-copy">
                 <span className="ai-launch-kicker"><i /> {isBn ? 'নতুন ফিচার • টাকা সেফ AI' : 'NEW FEATURE • TAKASAFE AI'}</span>
                 <h2>{isBn ? 'পরিচিত হোন টাকা সেফ AI-এর সঙ্গে' : 'Meet TakaSafe AI'}</h2>
-                <p>{isBn ? 'লেনদেন, খরচ ও সঞ্চয় নিয়ে দ্রুত সহায়তা নিন।' : 'Quick guidance for transactions, spending, and saving.'}</p>
+                <p>{isBn ? 'লেনদেন বুঝুন, খরচের উত্তর পান, আরও নিরাপদ সিদ্ধান্ত নিন।' : 'Ask about transactions, spending, and safer money decisions.'}</p>
               </div>
               <button type="button" onClick={() => onOpenAssistant('What can TakaSafe AI help me with?')}>
-                {isBn ? 'চেষ্টা করুন' : 'Try it'} <ArrowRight size={14} />
+                {isBn ? 'AI-কে জিজ্ঞাসা করুন' : 'Ask AI'} <ArrowRight size={14} />
               </button>
             </article>
 
