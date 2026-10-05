@@ -47,16 +47,21 @@
   box-shadow: 0 0 0 70px rgba(210,235,255,.025), 0 0 0 140px rgba(210,235,255,.02);
 }
 .public-nav {
-  position: relative;
-  z-index: 20;
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: min(1240px, calc(100% - 72px));
+  width: 100%;
   height: 86px;
-  margin: 0 auto;
+  margin: 0;
+  padding: 0 max(36px, calc((100vw - 1240px) / 2));
+  background: linear-gradient(118deg, #071324 0%, #0b1d37 48%, #0d2e5e 100%);
   border-bottom: 1px solid rgba(219,234,254,.13);
+  transition: background .28s ease, box-shadow .28s ease, border-color .28s ease;
 }
+.public-nav.is-scrolled { background: rgba(7,19,36,.92); border-color: rgba(219,234,254,.2); box-shadow: 0 12px 32px rgba(0,0,0,.2); backdrop-filter: blur(18px); animation: public-nav-arrive .38s cubic-bezier(.2,.75,.25,1) both; }
 .public-brand { display: inline-flex; align-items: center; gap: 10px; width: fit-content; color: #fff; font-size: 21px; font-weight: 760; letter-spacing: -.9px; text-decoration: none; }
 .public-brand-icon { position: relative; display: inline-flex; flex: 0 0 40px; align-items: center; justify-content: center; width: 40px; height: 40px; }
 .public-brand-icon .mfs-halo-pulse { position: absolute; inset: 0; border: 1px solid rgba(250,185,21,.55); border-radius: 50%; box-shadow: 0 0 13px rgba(250,185,21,.2); }
@@ -282,6 +287,7 @@
 @keyframes control-ripple { from { opacity: .75; transform: scale(.94); } to { opacity: 0; transform: scale(1.08); } }
 @keyframes control-icon-pop { 0% { transform: scale(1) rotate(0); } 35% { transform: scale(1.28) rotate(-8deg); } 70% { transform: scale(.94) rotate(4deg); } 100% { transform: scale(1) rotate(0); } }
 @keyframes control-label-in { 0% { opacity: .45; transform: translateX(-4px) scale(.95); } 65% { opacity: 1; transform: translateX(1px) scale(1.02); } 100% { opacity: 1; transform: translateX(0) scale(1); } }
+@keyframes public-nav-arrive { from { opacity: .86; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes cash-travel { 0% { left: -55px; opacity: 0; } 8% { opacity: 1; } 90% { opacity: 1; } 100% { left: calc(100% + 10px); opacity: 0; } }
 @keyframes coin-travel { 0% { left: -30px; opacity: 0; rotate: -40deg; } 8% { opacity: 1; } 90% { opacity: 1; } 100% { left: calc(100% + 15px); opacity: 0; rotate: 400deg; } }
 @keyframes streak-travel { from { left: -55px; opacity: 0; } 12% { opacity: .8; } to { left: calc(100% + 15px); opacity: 0; } }
@@ -290,7 +296,8 @@
 @keyframes card-hover { 0%,100% { translate: 0 0; } 50% { translate: 0 -6px; } }
 
 @media (max-width: 1050px) {
-  .public-nav, .public-hero-content { width: min(100% - 48px, 920px); }
+  .public-nav { padding-inline: 24px; }
+  .public-hero-content { width: min(100% - 48px, 920px); }
   .public-nav-links { gap: 15px; }
   .services-trigger { font-size: 11px; }
   .public-hero-content { grid-template-columns: minmax(350px,.9fr) minmax(430px,1.1fr); gap: 0; }
@@ -301,7 +308,7 @@
 }
 @media (max-width: 760px) {
   .public-hero-shell { min-height: initial; }
-  .public-nav { width: calc(100% - 36px); height: 70px; }
+  .public-nav { height: 70px; padding-inline: 18px; }
   .public-brand { font-size: 19px; }
   .brand-taka { font-size: 19px; }.brand-safe { font-size: 21px; }
   .nav-menu-toggle { display: grid; place-items: center; width: 36px; height: 36px; margin-right: 10px; border: 1px solid rgba(218,235,255,.23); border-radius: 9px; background: rgba(255,255,255,.05); color: #fff; }
@@ -343,7 +350,7 @@
   .public-product-strip button { justify-self: start; }
 }
 @media (max-width: 420px) {
-  .public-nav { width: calc(100% - 28px); }
+  .public-nav { padding-inline: 14px; }
   .nav-cta { gap: 4px; padding: 0 8px; }
   .nav-cta svg { width: 13px; }
   .sign-in-button { padding: 0 9px; font-size: 9px; }

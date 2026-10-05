@@ -34,6 +34,7 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [animatedControl, setAnimatedControl] = useState<string | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
   const animationTimeout = useRef<number | null>(null);
   const actionTimeout = useRef<number | null>(null);
   const servicesRef = useRef<HTMLDivElement>(null);
@@ -97,6 +98,9 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
     `${base} interactive-control${animatedControl === control ? ' is-animating' : ''}`;
 
   useEffect(() => {
+    const updateScrollState = () => setIsScrolled(window.scrollY > 24);
+    updateScrollState();
+    window.addEventListener('scroll', updateScrollState, { passive: true });
     const closeOnOutsideClick = (event: PointerEvent) => {
       if (servicesRef.current && !servicesRef.current.contains(event.target as Node)) setServicesOpen(false);
     };
@@ -108,6 +112,7 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
     return () => {
       document.removeEventListener('pointerdown', closeOnOutsideClick);
       document.removeEventListener('keydown', closeOnEscape);
+      window.removeEventListener('scroll', updateScrollState);
       if (animationTimeout.current !== null) window.clearTimeout(animationTimeout.current);
       if (actionTimeout.current !== null) window.clearTimeout(actionTimeout.current);
     };
@@ -115,8 +120,7 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
 
   return (
     <div className="public-dashboard" id="top" data-theme={theme}>
-      <section className="public-hero-shell">
-        <header className="public-nav">
+      <header className={`public-nav${isScrolled ? ' is-scrolled' : ''}`}>
           <a className="public-brand" href="#top" aria-label="TakaSafe home">
             <span className="public-brand-icon" aria-hidden="true">
               <span className="mfs-halo-pulse" />
@@ -208,7 +212,9 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
             <button type="button" className={controlClass('sign-in-button', 'signin')} onClick={() => animateThen('signin', onSignIn)}><span className="nav-control-label">{copy.signIn}</span></button>
             <button type="button" className={controlClass('nav-cta', 'getstarted')} onClick={() => animateThen('getstarted', onGetStarted)}><span className="nav-control-label">{copy.getStarted}</span> <ArrowRight className="control-icon" size={15} /></button>
           </div>
-        </header>
+      </header>
+
+      <section className="public-hero-shell">
 
         <main className="public-hero-content">
           <div className="hero-copy">

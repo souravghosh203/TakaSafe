@@ -1,19 +1,32 @@
 @import "tailwindcss";
 
+.app-sticky-header {
+  transition: box-shadow .28s ease, border-color .28s ease;
+}
+.app-sticky-header.is-scrolled {
+  border-bottom-color: rgba(219, 234, 254, .24);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .22);
+  animation: app-header-arrive .36s cubic-bezier(.2, .75, .25, 1) both;
+}
+@keyframes app-header-arrive {
+  from { opacity: .88; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @variant dark (&:where(.dark, .dark *));
 
 @layer base {
   html, body {
     width: 100%;
     max-width: 100vw;
-    overflow-x: hidden;
+    overflow-x: clip;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
   
   #root {
     width: 100%;
     max-width: 100vw;
-    overflow-x: hidden;
+    overflow-x: clip;
     min-height: 100vh;
   }
   

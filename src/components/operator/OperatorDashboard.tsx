@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Transaction,
   CustomerBaseline,
@@ -37,7 +37,12 @@ import {
   Download,
   Printer,
   Flame,
+  ChevronLeft,
+  ChevronRight,
+  Pause,
+  Play,
 } from 'lucide-react';
+import './OperatorMetricCarousel.css';
 
 interface OperatorDashboardProps {
   currentUser?: AuthUser | null;
@@ -78,6 +83,10 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   const [isTickerFlashing, setIsTickerFlashing] = useState<boolean>(false);
   const [isComplianceModalOpen, setIsComplianceModalOpen] = useState<boolean>(false);
   const [alertFeedback, setAlertFeedback] = useState<Array<{ outcome: string }>>([]);
+  const [activeMetricIndex, setActiveMetricIndex] = useState(0);
+  const [isMetricCarouselPaused, setIsMetricCarouselPaused] = useState(false);
+  const [isMetricCarouselHovered, setIsMetricCarouselHovered] = useState(false);
+  const metricTouchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     const refreshFeedback = () => fetch('/api/alert-feedback')
@@ -287,6 +296,33 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
     );
   });
 
+  const metricCards = [
+    { label: 'National Risk Index', value: '39.2', unit: '/100', detail: 'Elevated (Barishal Surge)', tone: 'amber', icon: Radar },
+    { label: 'High / Critical Alerts', value: String(criticalCount), unit: 'Active', detail: 'Requires Human Review', tone: 'rose', icon: AlertTriangle },
+    { label: 'Active Mule Ring', value: '12', unit: 'Wallets', detail: 'Network #17 (৳ 1.28M Flow)', tone: 'purple', icon: Network },
+    { label: 'Agent Shortfall', value: '5', unit: 'Depleted', detail: 'Coastal Cyclone Buffer', tone: 'blue', icon: CloudLightning },
+    { label: 'Audit Compliance', value: String(auditLogs.length), unit: 'Decisions', detail: '100% Traceable Logs', tone: 'emerald', icon: FileCheck2 },
+  ];
+
+  const moveMetricCarousel = (index: number) => {
+    const nextIndex = (index + metricCards.length) % metricCards.length;
+    setActiveMetricIndex(nextIndex);
+    setIsMetricCarouselPaused(true);
+  };
+
+  const handleMetricTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (metricTouchStartX.current === null) return;
+    const distance = event.changedTouches[0].clientX - metricTouchStartX.current;
+    metricTouchStartX.current = null;
+    if (Math.abs(distance) > 45) moveMetricCarousel(activeMetricIndex + (distance < 0 ? 1 : -1));
+  };
+
+  useEffect(() => {
+    if (isMetricCarouselPaused || isMetricCarouselHovered || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const timer = window.setInterval(() => setActiveMetricIndex((index) => (index + 1) % metricCards.length), 5200);
+    return () => window.clearInterval(timer);
+  }, [isMetricCarouselHovered, isMetricCarouselPaused, metricCards.length]);
+
   return (
     <div id="operator-workspace" className="space-y-6 scroll-mt-24">
       {/* Operator Authorization & Privilege Clearance Strip */}
@@ -332,79 +368,63 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         lang={lang}
       />
 
-      {/* Top Level Metric Cockpit Bar with Staggered Slide Up Animation */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 stagger-grid scroll-reveal">
-        <div className="bg-white dark:bg-[#0F172A] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm card-hover-lift text-slate-900 dark:text-slate-100">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">National Risk Index</span>
-            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black font-mono text-slate-900 dark:text-white">39.2</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">/100</span>
-          </div>
-          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold block mt-1">
-            Elevated (Barishal Surge)
-          </span>
+      {/* Top-level risk and event indicators in a featured infinite carousel */}
+      <section
+        className="operator-metric-carousel scroll-reveal"
+        aria-label="National risk and event indicators"
+        onMouseEnter={() => setIsMetricCarouselHovered(true)}
+        onMouseLeave={() => setIsMetricCarouselHovered(false)}
+        onTouchStart={(event) => { metricTouchStartX.current = event.touches[0].clientX; }}
+        onTouchEnd={handleMetricTouchEnd}
+        onTouchCancel={() => { metricTouchStartX.current = null; }}
+      >
+        <div className="operator-metric-carousel-head">
+          <span>Live security indicators <i /> Rotating overview</span>
+          <div className="operator-metric-carousel-count"><b>{String(activeMetricIndex + 1).padStart(2, '0')}</b> / {String(metricCards.length).padStart(2, '0')}</div>
         </div>
+        <div className="operator-metric-carousel-stage">
+          {metricCards.map((metric, index) => {
+            const Icon = metric.icon;
+            const relativePosition = (index - activeMetricIndex + metricCards.length) % metricCards.length;
+            const position = relativePosition === 0
+              ? 'center'
+              : relativePosition === 1
+              ? 'right'
+              : relativePosition === metricCards.length - 1
+              ? 'left'
+              : relativePosition <= Math.floor(metricCards.length / 2) ? 'far-right' : 'far-left';
 
-        <div className="bg-white dark:bg-[#0F172A] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm card-hover-lift text-slate-900 dark:text-slate-100">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">High / Critical Alerts</span>
-            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span key={criticalCount} className="text-2xl font-black font-mono text-rose-600 dark:text-rose-400 metric-change">{criticalCount}</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">Active</span>
-          </div>
-          <span className="text-[10px] text-rose-600 dark:text-rose-400 font-semibold block mt-1">
-            Requires Human Review
-          </span>
+            return (
+              <button
+                key={metric.label}
+                type="button"
+                className={`operator-metric-slide operator-metric-${position} metric-tone-${metric.tone}`}
+                onClick={() => moveMetricCarousel(index)}
+                aria-current={position === 'center' ? 'true' : undefined}
+                aria-label={`${metric.label}: ${metric.value} ${metric.unit}. ${position === 'center' ? 'Featured metric' : 'Show metric'}`}
+              >
+                <span className="operator-metric-art" aria-hidden="true">
+                  <span className="operator-metric-orbit" />
+                  <span className="operator-metric-grid" />
+                  <span className="operator-metric-icon"><Icon size={34} strokeWidth={1.6} /></span>
+                </span>
+                <span className="operator-metric-shade" />
+                <span className="operator-metric-info">
+                  <span className="operator-metric-label">{metric.label}</span>
+                  <span className="operator-metric-reading"><strong key={metric.value}>{metric.value}</strong><small>{metric.unit}</small></span>
+                  <span className="operator-metric-detail">{metric.detail}</span>
+                </span>
+              </button>
+            );
+          })}
+          <button type="button" className="operator-metric-toggle" onClick={() => setIsMetricCarouselPaused((paused) => !paused)} aria-label={isMetricCarouselPaused ? 'Play indicator carousel' : 'Pause indicator carousel'}>
+            {isMetricCarouselPaused ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}
+          </button>
+          <button type="button" className="operator-metric-arrow operator-metric-prev" onClick={() => moveMetricCarousel(activeMetricIndex - 1)} aria-label="Previous indicator"><ChevronLeft size={19} /></button>
+          <button type="button" className="operator-metric-arrow operator-metric-next" onClick={() => moveMetricCarousel(activeMetricIndex + 1)} aria-label="Next indicator"><ChevronRight size={19} /></button>
         </div>
-
-        <div className="bg-white dark:bg-[#0F172A] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm card-hover-lift text-slate-900 dark:text-slate-100">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Active Mule Ring</span>
-            <Network className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black font-mono text-slate-900 dark:text-white">12</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">Wallets</span>
-          </div>
-          <span className="text-[10px] text-purple-700 dark:text-purple-400 font-semibold block mt-1">
-            Network #17 (৳ 1.28M Flow)
-          </span>
-        </div>
-
-        <div className="bg-white dark:bg-[#0F172A] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm card-hover-lift text-slate-900 dark:text-slate-100">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Agent Shortfall</span>
-            <CloudLightning className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black font-mono text-amber-600 dark:text-amber-400">5</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">Depleted</span>
-          </div>
-          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold block mt-1">
-            Coastal Cyclone Buffer
-          </span>
-        </div>
-
-        <div className="bg-white dark:bg-[#0F172A] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm col-span-2 lg:col-span-1 card-hover-lift text-slate-900 dark:text-slate-100">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Audit Compliance</span>
-            <FileCheck2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span key={auditLogs.length} className="text-2xl font-black font-mono text-slate-900 dark:text-white metric-change">{auditLogs.length}</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">Decisions</span>
-          </div>
-          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block mt-1">
-            100% Traceable Logs
-          </span>
-        </div>
-      </div>
-
+        <div className="operator-metric-progress"><span style={{ width: `${((activeMetricIndex + 1) / metricCards.length) * 100}%` }} /></div>
+      </section>
       {/* Main Tabbed Navigation */}
       <div className="flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-800 overflow-x-auto pb-1">
         {[
