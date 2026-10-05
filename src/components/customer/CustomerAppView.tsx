@@ -860,14 +860,6 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                   </div>
                 )}
 
-                {/* AI-1 Real-time Inference Pipeline Visualizer (Transfer -> AI-1 Score -> Doubt check) */}
-                <div className="mt-4">
-                  <AI1PipelineVisualizer
-                    evaluation={liveAI1Evaluation}
-                    onOpenNotebookModal={() => setIsNotebookModalOpen(true)}
-                  />
-                </div>
-
                 <form onSubmit={handleSendPayment} className="space-y-4 mt-4">
                   <div>
                     <div className="flex items-center justify-between mb-1">
@@ -962,6 +954,13 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                     />
                   </div>
                 </form>
+                {/* Show the ML prediction beneath the complete Send Money flow. */}
+                <div className="mt-5">
+                  <AI1PipelineVisualizer
+                    evaluation={liveAI1Evaluation}
+                    onOpenNotebookModal={() => setIsNotebookModalOpen(true)}
+                  />
+                </div>
                 </>}
               </div>
             </div>
