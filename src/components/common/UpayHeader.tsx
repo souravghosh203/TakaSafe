@@ -134,7 +134,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
   ];
 
   return (
-    <header className={`app-sticky-header sticky top-0 z-50 w-full max-w-full bg-[#0054A6] text-white shadow-md border-b border-[#004080]${isScrolled ? ' is-scrolled' : ''}`} style={activeView === 'LOGIN' || darkHeader ? { background: 'linear-gradient(118deg, #071324 0%, #0b1d37 48%, #0d2e5e 100%)', borderBottomColor: 'rgba(219,234,254,.16)' } : undefined}>
+    <header className={`app-sticky-header sticky top-0 z-50 w-full max-w-full bg-[#173A5E] text-white dark:bg-[#0F172A] dark:text-slate-100 shadow-md border-b border-[#0D233B] dark:border-slate-800${isScrolled ? ' is-scrolled' : ''}`} style={activeView === 'LOGIN' || darkHeader ? { background: theme === 'dark' ? 'linear-gradient(118deg, #071324 0%, #0b1d37 48%, #0d2e5e 100%)' : 'linear-gradient(110deg, #142f4e 0%, #173a5e 52%, #102b47 100%)', borderBottomColor: theme === 'dark' ? 'rgba(219,234,254,.16)' : '#0d233b' } : undefined}>
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-2 sm:gap-3">
           {/* Brand Zone: Authentic MFS Animated Logo (Smile Spring, Dot Wink & Radiant Gold Bloom) */}
@@ -186,7 +186,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
               <span className="mfs-brand-word mfs-brand-taka font-['Hind_Siliguri','Noto_Sans_Bengali',sans-serif] text-xl sm:text-2xl font-black text-[#FAB915] leading-none">
                 টাকা
               </span>
-              <span className="mfs-brand-word mfs-brand-safe font-['Times_New_Roman',Times,serif] text-[22px] sm:text-[25px] font-bold text-white leading-none ml-0.5 sm:ml-1 tracking-tight">
+              <span className="mfs-brand-word mfs-brand-safe font-['Times_New_Roman',Times,serif] text-[22px] sm:text-[25px] font-bold text-slate-800 dark:text-white leading-none ml-0.5 sm:ml-1 tracking-tight">
                 Safe
               </span>
             </div>

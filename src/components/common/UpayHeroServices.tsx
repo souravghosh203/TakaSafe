@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ArrowRight,
   ArrowDownLeft,
@@ -19,7 +19,10 @@ import {
   Building2,
   ChevronDown,
   ChevronUp,
+  Pause,
+  Play,
 } from 'lucide-react';
+import './UpayHeroServices.css';
 
 interface UpayHeroServicesProps {
   onServiceSelect?: (serviceName: string) => void;
@@ -31,42 +34,58 @@ interface UpayHeroServicesProps {
 export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSelect, onOpenModal, showCashIn = true, lang }) => {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [isHovered, setIsHovered] = useState<boolean>(false);
   const [showAllServices, setShowAllServices] = useState<boolean>(false);
+  const touchStartX = useRef<number | null>(null);
 
   const totalSlides = 3;
 
   // Auto transition every 5 seconds (matching the 23-25s carousel transition in video)
   useEffect(() => {
-    if (isPaused) return;
-    const timer = setInterval(() => {
+    if (isPaused || isHovered || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const timer = window.setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % totalSlides);
     }, 5000);
-    return () => clearInterval(timer);
-  }, [isPaused, totalSlides]);
+    return () => window.clearInterval(timer);
+  }, [isHovered, isPaused, totalSlides]);
+
+  const slidePosition = (index: number) => index === currentSlide
+    ? 'center'
+    : index === (currentSlide + 1) % totalSlides ? 'right' : 'left';
 
   const handlePrev = () => {
+    setIsPaused(true);
     setCurrentSlide((prev) => (prev === 0 ? totalSlides - 1 : prev - 1));
   };
 
   const handleNext = () => {
+    setIsPaused(true);
     setCurrentSlide((prev) => (prev + 1) % totalSlides);
   };
 
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartX.current === null) return;
+    const distance = event.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(distance) > 45) distance < 0 ? handleNext() : handlePrev();
+  };
+
   return (
-    <div className="w-full max-w-full overflow-hidden bg-white select-none">
+    <div className="w-full max-w-full overflow-hidden bg-slate-50 dark:bg-[#0b1220] select-none">
       {/* Hero Carousel Container */}
-      <div
-        className="relative overflow-hidden border-b border-amber-200/60"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
+      <section
+        className="hero-showcase"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Slides Track with Smooth 700ms Horizontal Sliding Transition */}
         <div
-          className="flex transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
-          style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+          className="hero-showcase-stage"
+          onTouchStart={(event) => { touchStartX.current = event.touches[0].clientX; }}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={() => { touchStartX.current = null; }}
         >
           {/* SLIDE 1: ৳200 Bonus Campaign (From 0:00 - 0:23 in video) */}
-          <div className="w-full shrink-0 relative bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 py-10 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[360px] flex items-center">
+          <div className={`hero-showcase-slide hero-showcase-campaign hero-showcase-${slidePosition(0)} relative bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 py-10 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[440px] flex items-center`}>
             {/* Festive Confetti & Dot Accents */}
             <div className="absolute inset-0 pointer-events-none opacity-40">
               <div className="absolute top-4 left-10 w-3 h-3 rounded-full bg-blue-600" />
@@ -77,9 +96,9 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
               <div className="absolute top-12 right-64 w-2 h-2 rounded-full bg-rose-500" />
             </div>
 
-            <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+            <div className="hero-showcase-content max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
               {/* Left Headline */}
-              <div className="flex-1 text-center md:text-left">
+              <div className="hero-showcase-info-panel flex-1 text-center md:text-left">
                 <div className="inline-block bg-amber-300/60 text-blue-950 font-bold px-3 py-1 rounded-full text-xs mb-3 border border-amber-400/50">
                   {lang === 'BN' ? 'টাকা সেফ বিশেষ অফার' : 'TakaSafe Special Campaign'}
                 </div>
@@ -87,10 +106,10 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
                   {lang === 'BN' ? 'টাকা সেফ অ্যাকাউন্ট খুললেই' : 'Open a TakaSafe Account & Get'}
                 </h1>
                 <div className="mt-2 flex items-baseline justify-center md:justify-start gap-3">
-                  <span className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#0054A6]">৳ ২০০</span>
+                  <span className="hero-showcase-amount text-4xl sm:text-5xl lg:text-6xl font-black text-[#0054A6]">৳ ২০০</span>
                   <span className="text-2xl sm:text-3xl font-bold text-amber-500">{lang === 'BN' ? 'বোনাস*' : 'Bonus*'}</span>
                 </div>
-                <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-lg">
+                <p className="hero-showcase-description mt-2 text-xs sm:text-sm text-slate-600 max-w-lg">
                   {lang === 'BN'
                     ? 'এখনই নিজের অথবা এজেন্টের মাধ্যমে টাকা সেফ একাউন্ট খুলুন আর ক্যাশ-ইন, সেন্ড মানি ও বিল পে উপভোগ করুন।'
                     : 'Open your TakaSafe wallet via smartphone or nearby agent to unlock seamless Send Money, Cash Out, and Bill Payments.'}
@@ -104,7 +123,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
                     <span>{lang === 'BN' ? 'বিস্তারিত দেখুন' : 'Read More'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
-                  <div className="text-[11px] text-slate-500 italic">*শর্ত প্রযোজ্য (Terms Apply)</div>
+                  <div className="hero-showcase-terms text-[11px] text-slate-500 italic">*শর্ত প্রযোজ্য (Terms Apply)</div>
                 </div>
               </div>
 
@@ -134,17 +153,18 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
                 </div>
               </div>
             </div>
+            {slidePosition(0) !== 'center' && <button type="button" className="hero-showcase-side-select" onClick={() => { setCurrentSlide(0); setIsPaused(true); }} aria-label="Show TakaSafe bonus campaign" />}
           </div>
 
           {/* SLIDE 2: চার্জ 0 টাকা / Zero Charge Cash Out (Sleek Modern Digital Banking Visual) */}
-          <div className="w-full shrink-0 relative bg-gradient-to-r from-amber-50/90 via-sky-50/70 to-blue-50/80 py-10 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[360px] flex items-center">
+          <div className={`hero-showcase-slide hero-showcase-cashout hero-showcase-${slidePosition(1)} relative bg-gradient-to-r from-amber-50/90 via-sky-50/70 to-blue-50/80 py-10 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[440px] flex items-center`}>
             {/* Ambient Radiant Glow Accents */}
             <div className="absolute -top-10 right-1/3 w-80 h-80 bg-amber-300/25 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-10 right-10 w-96 h-96 bg-[#0054A6]/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+            <div className="hero-showcase-content max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
               {/* Left Headline & Features */}
-              <div className="flex-1 text-center md:text-left">
+              <div className="hero-showcase-info-panel flex-1 text-center md:text-left">
                 <div className="inline-flex items-center gap-1.5 bg-[#0054A6] text-white font-bold px-3.5 py-1 rounded-full text-xs mb-3 shadow-sm">
                   <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                   <span>{lang === 'BN' ? 'জিরো ক্যাশ-আউট চার্জ' : 'Zero Cash-Out Charge'}</span>
@@ -275,10 +295,11 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
                 </div>
               </div>
             </div>
+            {slidePosition(1) !== 'center' && <button type="button" className="hero-showcase-side-select" onClick={() => { setCurrentSlide(1); setIsPaused(true); }} aria-label="Show zero cash-out campaign" />}
           </div>
 
           {/* SLIDE 3: ScamShield AI Pre-Payment Protection (Vibrant Upay Royal Blue & Gold Palette) */}
-          <div className="w-full shrink-0 relative bg-gradient-to-r from-[#002E66] via-[#0054A6] to-[#007AE6] text-white py-10 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[360px] flex items-center">
+          <div className={`hero-showcase-slide hero-showcase-scamshield hero-showcase-${slidePosition(2)} relative bg-gradient-to-r from-[#002E66] via-[#0054A6] to-[#007AE6] text-white py-10 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[440px] flex items-center`}>
             {/* Radiant Ambient Light Orbs */}
             <div className="absolute -top-16 -right-16 w-80 h-80 rounded-full bg-amber-400/20 blur-3xl pointer-events-none" />
             <div className="absolute -bottom-16 -left-16 w-80 h-80 rounded-full bg-sky-300/25 blur-3xl pointer-events-none" />
@@ -292,8 +313,8 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
               }}
             />
 
-            <div className="max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
-              <div className="flex-1 text-center md:text-left">
+            <div className="hero-showcase-content max-w-6xl mx-auto w-full flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+              <div className="hero-showcase-info-panel flex-1 text-center md:text-left">
                 <div className="inline-flex items-center gap-1.5 bg-[#FAB915] text-[#003B75] font-black px-3.5 py-1.5 rounded-full text-xs mb-3 shadow-md border border-amber-300">
                   <ShieldCheck className="w-4 h-4 text-[#003B75]" />
                   <span>24/7 AI Trust & ScamShield</span>
@@ -352,32 +373,34 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
                 </div>
               </div>
             </div>
+            {slidePosition(2) !== 'center' && <button type="button" className="hero-showcase-side-select" onClick={() => { setCurrentSlide(2); setIsPaused(true); }} aria-label="Show ScamShield protection" />}
           </div>
-        </div>
 
         {/* Carousel Arrow Controls */}
         <button
           onClick={handlePrev}
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-slate-800 shadow-md flex items-center justify-center transition-all z-20 backdrop-blur-sm hover:scale-105"
+          className="hero-showcase-arrow hero-showcase-prev"
           title="Previous Banner"
+          aria-label="Previous campaign"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
 
         <button
           onClick={handleNext}
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-slate-800 shadow-md flex items-center justify-center transition-all z-20 backdrop-blur-sm hover:scale-105"
+          className="hero-showcase-arrow hero-showcase-next"
           title="Next Banner"
+          aria-label="Next campaign"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
 
         {/* Indicator Pagination Dots */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
+        <div className="hero-showcase-pagination">
           {[0, 1, 2].map((idx) => (
             <button
               key={idx}
-              onClick={() => setCurrentSlide(idx)}
+              onClick={() => { setCurrentSlide(idx); setIsPaused(true); }}
               className={`h-2 rounded-full transition-all duration-300 ${
                 currentSlide === idx
                   ? 'w-7 bg-[#0054A6]'
@@ -387,7 +410,11 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
             />
           ))}
         </div>
-      </div>
+        <button type="button" className="hero-showcase-pause" onClick={() => setIsPaused((paused) => !paused)} aria-label={isPaused ? 'Play campaigns' : 'Pause campaigns'} title={isPaused ? 'Play campaigns' : 'Pause campaigns'}>
+          {isPaused ? <Play className="w-4 h-4" fill="currentColor" /> : <Pause className="w-4 h-4" fill="currentColor" />}
+        </button>
+        </div>
+      </section>
 
       {/* OUR SERVICES SECTION (Matching Image 4) */}
       <div id="services-section" className="py-12 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">

@@ -23,7 +23,6 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { RegionalRiskMetric } from '../../types';
-import { HistoricalEventCarousel } from './HistoricalEventCarousel';
 
 interface DivisionHistoricalRiskChartProps {
   selectedDivision: string;
@@ -234,8 +233,6 @@ export const DivisionHistoricalRiskChart: React.FC<DivisionHistoricalRiskChartPr
     if (timeRange === '14D') return fullHistory.slice(-14);
     return fullHistory;
   }, [fullHistory, timeRange]);
-
-  const eventPoints = useMemo(() => fullHistory.filter((point) => point.incident), [fullHistory]);
 
   // Key statistical highlights
   const stats = useMemo(() => {
@@ -753,12 +750,32 @@ export const DivisionHistoricalRiskChart: React.FC<DivisionHistoricalRiskChartPr
           <span className="text-[11px] text-slate-400">Click any dot on chart to inspect event</span>
         </div>
 
-        <HistoricalEventCarousel
-          events={eventPoints}
-          selectedIncident={selectedIncident}
-          selectedDivision={selectedDivision}
-          onSelectIncident={setSelectedIncident}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+          {fullHistory
+            .filter((d) => d.incident)
+            .map((item) => {
+              const isSelected = selectedIncident?.day === item.day;
+              return (
+                <div
+                  key={item.day}
+                  onClick={() => setSelectedIncident(item)}
+                  className={`p-2.5 rounded-xl border text-xs transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-blue-50/90 dark:bg-blue-950/60 border-[#0054A6] ring-1 ring-[#0054A6]/30'
+                      : 'bg-slate-50/60 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <div className="flex items-center justify-between font-mono text-[10px] mb-1">
+                    <span className="font-bold text-[#0054A6] dark:text-blue-400">{item.date}</span>
+                    <span className="text-rose-600 dark:text-rose-400 font-bold">Score: {item.riskScore}</span>
+                  </div>
+                  <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-snug">
+                    {item.incident}
+                  </p>
+                </div>
+              );
+            })}
+        </div>
       </div>
     </div>
   );

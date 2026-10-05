@@ -597,7 +597,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-clip flex flex-col bg-slate-100 dark:bg-[#090D16] text-slate-900 dark:text-slate-100 transition-colors duration-200 relative" style={activeView === 'LOGIN' ? { background: theme === 'dark' ? 'linear-gradient(118deg, #071324 0%, #102a49 34%, #0c1d33 68%, #071324 100%)' : 'linear-gradient(118deg, #d5e7ff 0%, #edf5ff 26%, #fff 58%, #e1efff 100%)' } : undefined}>
+    <div className="min-h-screen w-full max-w-full overflow-x-clip flex flex-col bg-slate-100 dark:bg-[#090D16] text-slate-900 dark:text-slate-100 transition-colors duration-200 relative" style={activeView === 'LOGIN' ? { background: theme === 'dark' ? 'linear-gradient(118deg, #071324 0%, #102a49 34%, #0c1d33 68%, #071324 100%)' : 'linear-gradient(118deg, #e7f0f6 0%, #edf3f7 28%, #f5f7f9 60%, #dce8f0 100%)' } : undefined}>
       {/* Route & Page Change Transition Glow Bar */}
       {isTransitioning && (
         <div key={`${activeView}-${operatorTab}`} className="page-progress-bar" />
