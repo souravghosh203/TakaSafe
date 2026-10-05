@@ -124,6 +124,8 @@
 .hero-copy h1 > span:not(.headline-accent) { color: #d8e8ff; }
 .hero-copy h1 .headline-accent { color: var(--lime); }
 .hero-description { max-width: 465px; margin: 22px 0 0; color: rgba(222,234,251,.74); font-size: 14px; font-weight: 430; line-height: 1.8; }
+.hero-description .description-brand { color: var(--lime); font-weight: 760; white-space: nowrap; }
+.hero-description .description-scamshield { color: #80dcff; font-weight: 760; white-space: nowrap; }
 .signup-cta { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-width: 225px; min-height: 48px; margin-top: 25px; padding: 0 20px; border: 1px solid var(--lime); border-radius: 10px; background: var(--lime); color: #101a0b; font-size: 12px; font-weight: 760; white-space: nowrap; box-shadow: 0 12px 26px rgba(0,0,0,.16); transition: transform .2s ease, background .2s ease; }
 .hero-secondary { display: flex; align-items: center; gap: 19px; margin-top: 17px; }
 .hero-secondary > a { display: inline-flex; align-items: center; gap: 6px; color: #fff; font-size: 11px; font-weight: 670; text-decoration: none; }

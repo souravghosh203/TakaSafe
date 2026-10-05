@@ -57,7 +57,7 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
   } : {
     navLabel: 'Main navigation', services: 'Services', explore: 'EXPLORE TAKASAFE', search: 'Search', signIn: 'Sign in', getStarted: 'Get started',
     review: 'Loved by 2,000+ businesses', heroFirst: 'Your Money', heroSecond: 'Your Control', heroThird: 'Your Security',
-    description: 'Stay ahead of scams. Protect every payment with টাকা Safe using ScamShield Intelligent for scam detection, real-time risk insights, and safer digital transactions.',
+    description: 'Stay ahead of scams. Protect every payment with TakaSafe using ScamShield Intelligent for scam detection, real-time risk insights, and safer digital transactions.',
     freeStart: 'Get started for free',
     exploreProduct: 'Explore product', secureMovement: 'Built for safer money movement', businesses: 'businesses moving with confidence',
     liveFlow: 'LIVE MONEY FLOW', secure: 'SECURE', totalVolume: 'TOTAL BUSINESS VOLUME', allSecure: 'All systems secure',
@@ -71,6 +71,16 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
     switchTheme: theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode', themeLabel: theme === 'dark' ? 'Light' : 'Dark',
     boothAlt: 'Animated TakaSafe ATM booth showing secure money flow', starRating: '5 out of 5 stars', trustAria: 'Platform trust indicators',
   };
+
+  const renderDescription = () => copy.description.split(/(Taka\s*Safe|টাকা\s*Safe|ScamShield)/gi).map((part, index) => {
+    if (/^(Taka\s*Safe|টাকা\s*Safe)$/i.test(part)) {
+      return <span className="description-brand" key={index}>TakaSafe</span>;
+    }
+    if (/^ScamShield$/i.test(part)) {
+      return <span className="description-scamshield" key={index}>ScamShield</span>;
+    }
+    return part;
+  });
 
   const animateControl = (control: string) => {
     setAnimatedControl(null);
@@ -217,7 +227,7 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
             </h1>
 
             <p className="hero-description motion-reveal" style={{ animationDelay: '0.23s' }}>
-              {copy.description}
+              {renderDescription()}
             </p>
 
             <button type="button" className="signup-cta motion-reveal" style={{ animationDelay: '0.31s' }} onClick={() => onGetStarted()}>
