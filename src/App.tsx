@@ -671,6 +671,7 @@ export default function App() {
               onRegister={openRegistration}
               onOpenInfo={(modal) => setActiveModal(modal)}
               onLogin={(user, remember) => {
+                window.scrollTo(0, 0);
                 setCurrentUser(loadSavedProfile(user));
                 setRememberSession(remember);
                 recordCustomerLogin(user);
