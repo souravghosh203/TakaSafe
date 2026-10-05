@@ -134,7 +134,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
   ];
 
   return (
-    <header className={`app-sticky-header sticky top-0 z-50 w-full max-w-full bg-[#0054A6] text-white shadow-md border-b border-[#004080]${isScrolled ? ' is-scrolled' : ''}`} style={activeView === 'CUSTOMER' || activeView === 'LOGIN' || darkHeader ? { background: 'linear-gradient(118deg, #071324 0%, #0b1d37 48%, #0d2e5e 100%)', borderBottomColor: 'rgba(219,234,254,.16)' } : undefined}>
+    <header className={`app-sticky-header sticky top-0 z-50 w-full max-w-full bg-[#0054A6] text-white shadow-md border-b border-[#004080]${isScrolled ? ' is-scrolled' : ''}`} style={activeView === 'OPERATOR' || activeView === 'CUSTOMER' || activeView === 'LOGIN' || darkHeader ? { background: 'linear-gradient(118deg, #071324 0%, #0b1d37 48%, #0d2e5e 100%)', borderBottomColor: 'rgba(219,234,254,.16)' } : undefined}>
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-2 sm:gap-3">
           {/* Brand Zone: Authentic MFS Animated Logo (Smile Spring, Dot Wink & Radiant Gold Bloom) */}
