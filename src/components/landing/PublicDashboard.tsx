@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ArrowDownLeft, ArrowRight, ArrowUpRight, Check, ChevronDown, CreditCard, Globe, Info, MapPin, Menu, Moon, Newspaper, Phone, Search, ShieldCheck, Sparkles, Star, Sun, X } from 'lucide-react';
 import './PublicDashboard.css';
 import { DashboardAssistant } from '../common/DashboardAssistant';
+import { UpayFooter } from '../common/UpayFooter';
 
 interface PublicDashboardProps {
   onGetStarted: (email?: string) => void;
@@ -447,6 +448,10 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
         <button type="button" onClick={() => onGetStarted()}>{copy.openDashboard} <ArrowRight size={16} /></button>
         <span className="sr-only" id="resources">Resources</span><span className="sr-only" id="pricing">Pricing</span><span className="sr-only" id="careers">Careers</span>
       </section>
+      <UpayFooter
+        onOpenModal={onOpenModal}
+        onNavigateHome={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      />
       <DashboardAssistant lang={lang} onAsk={onOpenAssistant} />
     </div>
   );
