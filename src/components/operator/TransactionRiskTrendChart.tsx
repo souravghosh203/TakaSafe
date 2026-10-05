@@ -235,7 +235,7 @@ export const TransactionRiskTrendChart: React.FC<TransactionRiskTrendChartProps>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={chartData}
-            margin={{ top: 10, right: 20, left: -10, bottom: 5 }}
+            margin={{ top: 28, right: 28, left: -5, bottom: 5 }}
           >
             <defs>
               <linearGradient id="riskScoreGrad" x1="0" y1="0" x2="0" y2="1">
@@ -376,7 +376,7 @@ export const TransactionRiskTrendChart: React.FC<TransactionRiskTrendChartProps>
             <Legend
               verticalAlign="top"
               align="right"
-              wrapperStyle={{ paddingBottom: '8px', fontSize: '11px' }}
+              wrapperStyle={{ top: -6, right: 15, paddingBottom: '14px', fontSize: '11px' }}
             />
 
             {/* Gradient Area under Risk Score */}
@@ -384,7 +384,7 @@ export const TransactionRiskTrendChart: React.FC<TransactionRiskTrendChartProps>
               yAxisId="left"
               type="monotone"
               dataKey="avgRiskScore"
-              name="Risk Trend"
+              legendType="none"
               fill="url(#riskScoreGrad)"
               stroke="none"
             />

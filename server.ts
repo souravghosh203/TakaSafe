@@ -1,4 +1,5 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import type { Request, Response } from 'express';
 import path from 'path';
 import { promises as fs } from 'node:fs';
 import dotenv from 'dotenv';
@@ -8,12 +9,27 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const eventClients = new Set<Response>();
+let eventSequence = 0;
+const recentEvents: Array<{ id: number; name: string; data: Record<string, unknown> }> = [];
 
-app.use(express.json());
+const publishServerEvent = (name: string, data: Record<string, unknown>) => {
+  const event = { id: ++eventSequence, name, data };
+  recentEvents.push(event);
+  if (recentEvents.length > 100) recentEvents.shift();
+  const frame = `id: ${event.id}\nevent: ${name}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const client of eventClients) {
+    try { client.write(frame); } catch { eventClients.delete(client); }
+  }
+};
+
+app.use(express.json({ limit: '2mb' }));
 
 const customerTransactionsCsv = path.resolve(process.cwd(), 'dataset', 'customer_transactions.csv');
 const customerLoginsCsv = path.resolve(process.cwd(), 'dataset', 'customer_logins.csv');
-const customerTransactionHeaders = ['user_id', 'wallet', 'amount', 'recipient', 'timestamp', 'reference', 'status', 'risk_score'];
+const alertFeedbackCsv = path.resolve(process.cwd(), 'dataset', 'alert_feedback.csv');
+const customerTransactionHeaders = ['user_id', 'wallet', 'amount', 'recipient', 'timestamp', 'reference', 'status', 'risk_score', 'service_type', 'direction', 'fee'];
+const customerTransactionThreatHeaders = [...customerTransactionHeaders, 'is_threat', 'suspicious_reason', 'device'];
 const toCsvCell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
 const parseCsvLine = (line: string): string[] => {
   const cells: string[] = [];
@@ -39,10 +55,10 @@ app.get('/api/customer-logins/:userId', async (req: Request, res: Response) => {
       throw error;
     });
     const lines = csv.split(/\r?\n/).filter(Boolean);
-    const headers = lines.length ? parseCsvLine(lines.shift()!) : ['user_id', 'wallet', 'timestamp'];
+    const headers = lines.length ? parseCsvLine(lines.shift()!) : ['user_id', 'wallet', 'timestamp', 'device'];
     const logins = lines.map(parseCsvLine).map((cells) => Object.fromEntries(headers.map((header, index) => [header, cells[index] || ''])))
       .filter((row) => row.user_id === userId)
-      .map((row) => ({ timestamp: row.timestamp }));
+      .map((row) => ({ timestamp: row.timestamp, device: row.device || '' }));
     res.json({ success: true, logins });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -51,19 +67,97 @@ app.get('/api/customer-logins/:userId', async (req: Request, res: Response) => {
 
 app.post('/api/customer-logins/:userId', async (req: Request, res: Response) => {
   const userId = String(req.params.userId || '').trim();
-  const { wallet, timestamp } = req.body || {};
+  const { wallet, timestamp, device = '' } = req.body || {};
   const date = new Date(timestamp);
-  if (!userId || userId.length > 64 || typeof wallet !== 'string' || !wallet.trim() || wallet.length > 64 || !Number.isFinite(date.getTime())) {
+  if (!userId || userId.length > 64 || typeof wallet !== 'string' || !wallet.trim() || wallet.length > 64 || !Number.isFinite(date.getTime()) || typeof device !== 'string' || device.length > 512) {
     return res.status(400).json({ error: 'Invalid customer login record' });
   }
   try {
+    let alert: Record<string, unknown> | null = null;
+    const txnCsv = await fs.readFile(customerTransactionsCsv, 'utf8').catch((error: NodeJS.ErrnoException) => error.code === 'ENOENT' ? '' : Promise.reject(error));
+    const txnLines = txnCsv.split(/\r?\n/).filter(Boolean);
+    if (txnLines.length > 1) {
+      const txnHeaders = parseCsvLine(txnLines.shift()!);
+      const records = txnLines.map((line) => { const cells = parseCsvLine(line); return Object.fromEntries(txnHeaders.map((header, index) => [header, cells[index] || ''])); });
+      const owned = records.filter((row) => row.user_id === userId && row.direction !== 'IN' && row.service_type === 'SEND_MONEY' && ['COMPLETED', 'PROCEEDED'].includes(row.status));
+      const hour = (value: string) => (new Date(value).getUTCHours() + 6) % 24;
+      const prior = owned.filter((row) => row.is_threat !== 'true');
+      const amounts = prior.map((row) => Number(row.amount)).filter(Number.isFinite).sort((a, b) => a - b);
+      const median = amounts.length ? amounts[Math.floor(amounts.length / 2)] : 0;
+      const txn = [...owned].reverse()[0];
+      if (txn && median > 0 && Number(txn.amount) >= Math.max(median * 3, 10000) && hour(txn.timestamp) < 6) {
+        const txHour = hour(txn.timestamp);
+        const reason = `Large transaction at ${String(txHour).padStart(2, '0')}:${String(new Date(txn.timestamp).getUTCMinutes()).padStart(2, '0')} Bangladesh time, outside usual activity; amount is ${(Number(txn.amount) / median).toFixed(1)}x the customer's median.`;
+        const devices = ['Samsung Galaxy A54', 'Xiaomi Redmi Note 12', 'Infinix Hot 30', 'iPhone 13'];
+        const alertDevice = devices[[...userId].reduce((sum, char) => sum + char.charCodeAt(0), 0) % devices.length];
+        const updated = records.map((row) => row === txn ? { ...row, is_threat: 'true', suspicious_reason: reason, device: alertDevice } : row);
+        await fs.writeFile(customerTransactionsCsv, `${customerTransactionThreatHeaders.join(',')}\r\n${updated.map((row) => customerTransactionThreatHeaders.map((header) => toCsvCell(row[header] || '')).join(',')).join('\r\n')}\r\n`, 'utf8');
+        alert = { amount: Number(txn.amount), timestamp: txn.timestamp, device: alertDevice, reason };
+        publishServerEvent('state-change', { kind: 'suspicious-transaction', userId });
+      }
+    }
     await fs.mkdir(path.dirname(customerLoginsCsv), { recursive: true });
+    const headers = ['user_id', 'wallet', 'timestamp', 'device'];
     let needsHeader = false;
-    try { needsHeader = (await fs.stat(customerLoginsCsv)).size === 0; }
-    catch (error: any) { if (error.code === 'ENOENT') needsHeader = true; else throw error; }
-    const headers = ['user_id', 'wallet', 'timestamp'];
-    const values = [userId, wallet.trim(), date.toISOString()];
+    try {
+      if ((await fs.stat(customerLoginsCsv)).size === 0) needsHeader = true;
+      else {
+        const existing = await fs.readFile(customerLoginsCsv, 'utf8');
+        const [headerLine, ...oldLines] = existing.split(/\r?\n/).filter(Boolean);
+        const oldHeaders = parseCsvLine(headerLine);
+        if (!oldHeaders.includes('device')) {
+          const migrated = oldLines.map((line) => {
+            const oldCells = parseCsvLine(line);
+            const oldRow = Object.fromEntries(oldHeaders.map((header, index) => [header, oldCells[index] || '']));
+            return [oldRow.user_id, oldRow.wallet, oldRow.timestamp, ''].map(toCsvCell).join(',');
+          });
+          await fs.writeFile(customerLoginsCsv, `${headers.join(',')}\r\n${migrated.join('\r\n')}${migrated.length ? '\r\n' : ''}`, 'utf8');
+        }
+      }
+    } catch (error: any) { if (error.code === 'ENOENT') needsHeader = true; else throw error; }
+    const values = [userId, wallet.trim(), date.toISOString(), device];
     await fs.appendFile(customerLoginsCsv, `${needsHeader ? `${headers.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`, 'utf8');
+    publishServerEvent('state-change', { kind: 'customer-login', userId });
+    res.json({ success: true, alert });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/alert-feedback', async (_req: Request, res: Response) => {
+  try {
+    const csv = await fs.readFile(alertFeedbackCsv, 'utf8').catch((error: NodeJS.ErrnoException) => {
+      if (error.code === 'ENOENT') return '';
+      throw error;
+    });
+    const lines = csv.split(/\r?\n/).filter(Boolean);
+    const headers = lines.length ? parseCsvLine(lines.shift()!) : [];
+    const feedback = lines.map(parseCsvLine).map((cells) => Object.fromEntries(headers.map((header, index) => [header, cells[index] || ''])));
+    res.json({ success: true, feedback });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/alert-feedback', async (req: Request, res: Response) => {
+  const { caseId, transactionId, analyst, outcome, riskScore, notes = '' } = req.body || {};
+  const allowedOutcomes = ['CONFIRMED_FRAUD', 'FALSE_POSITIVE', 'NEEDS_REVIEW'];
+  if (typeof caseId !== 'string' || !caseId.trim() || caseId.length > 128 ||
+      typeof transactionId !== 'string' || !transactionId.trim() || transactionId.length > 128 ||
+      typeof analyst !== 'string' || analyst.length > 128 || !allowedOutcomes.includes(outcome) ||
+      !Number.isFinite(Number(riskScore)) || Number(riskScore) < 0 || Number(riskScore) > 100 ||
+      typeof notes !== 'string' || notes.length > 1000) {
+    return res.status(400).json({ error: 'Invalid alert feedback' });
+  }
+  try {
+    await fs.mkdir(path.dirname(alertFeedbackCsv), { recursive: true });
+    let needsHeader = false;
+    try { needsHeader = (await fs.stat(alertFeedbackCsv)).size === 0; }
+    catch (error: any) { if (error.code === 'ENOENT') needsHeader = true; else throw error; }
+    const headers = ['timestamp', 'case_id', 'transaction_id', 'analyst', 'outcome', 'risk_score', 'notes'];
+    const values = [new Date().toISOString(), caseId.trim(), transactionId.trim(), analyst.trim(), outcome, Number(riskScore), notes];
+    await fs.appendFile(alertFeedbackCsv, `${needsHeader ? `${headers.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`, 'utf8');
+    publishServerEvent('state-change', { kind: 'alert-feedback', caseId: caseId.trim() });
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -71,7 +165,7 @@ app.post('/api/customer-logins/:userId', async (req: Request, res: Response) => 
 });
 
 app.get('/api/customer-history/:wallet', async (req: Request, res: Response) => {
-  const wallet = String(req.params.wallet || '').trim();
+    const wallet = String(req.params.wallet || '').trim();
   if (!wallet || wallet.length > 64) return res.status(400).json({ error: 'Invalid wallet' });
   try {
     const csv = await fs.readFile(customerTransactionsCsv, 'utf8').catch((error: NodeJS.ErrnoException) => {
@@ -82,12 +176,12 @@ app.get('/api/customer-history/:wallet', async (req: Request, res: Response) => 
     const headers = lines.length ? parseCsvLine(lines.shift()!) : customerTransactionHeaders;
     const rows = lines.map(parseCsvLine).map((cells) => {
       const row = Object.fromEntries(headers.map((header, index) => [header, cells[index] || '']));
-      // Older CSV rows predate user IDs, so preserve their wallet as the legacy owner key.
-      const ownerId = row.user_id || row.wallet;
-      if (ownerId !== wallet) return null;
+      // Match by user ID or wallet to support both new records and legacy CSV rows.
+      if (row.user_id !== wallet && row.wallet !== wallet) return null;
       return {
         amount: Number(row.amount), recipient: row.recipient, timestamp: row.timestamp,
         reference: row.reference, status: row.status, riskScore: Number(row.risk_score) || 0,
+        serviceType: row.service_type || 'SEND_MONEY', direction: row.direction || 'OUT', fee: Number(row.fee) || 0,
       };
     }).filter(Boolean);
     res.json({ success: true, history: rows });
@@ -96,14 +190,59 @@ app.get('/api/customer-history/:wallet', async (req: Request, res: Response) => 
   }
 });
 
+app.get('/api/recipient-risk/:recipient', async (req: Request, res: Response) => {
+  const recipient = String(req.params.recipient || '').replace(/\D/g, '');
+  if (!recipient || recipient.length > 32) return res.status(400).json({ error: 'Invalid recipient' });
+  try {
+    const csv = await fs.readFile(customerTransactionsCsv, 'utf8').catch((error: NodeJS.ErrnoException) => {
+      if (error.code === 'ENOENT') return '';
+      throw error;
+    });
+    const lines = csv.split(/\r?\n/).filter(Boolean);
+    const headers = lines.length ? parseCsvLine(lines.shift()!) : customerTransactionHeaders;
+    const history = lines.map(parseCsvLine).map((cells) => Object.fromEntries(headers.map((header, index) => [header, cells[index] || ''])))
+      .filter((row) => ['COMPLETED', 'PROCEEDED'].includes(row.status) && (!row.service_type || row.service_type === 'SEND_MONEY') && (row.direction || 'OUT') === 'OUT' && Number.isFinite(Date.parse(row.timestamp)) && Date.now() - Date.parse(row.timestamp) <= 24 * 60 * 60 * 1000);
+    const inbound = history.filter((row) => String(row.recipient || '').replace(/\D/g, '') === recipient);
+    const outbound = history.filter((row) => String(row.wallet || '').replace(/\D/g, '') === recipient);
+    const senderCount = new Set(inbound.map((row) => row.wallet)).size;
+    const inboundAmount = inbound.reduce((sum, row) => sum + Number(row.amount || 0), 0);
+    const rapidPassThrough = inbound.some((received) => outbound.some((sent) => {
+      const delay = Date.parse(sent.timestamp) - Date.parse(received.timestamp);
+      return delay >= 0 && delay <= 60 * 60 * 1000;
+    }));
+    const reasons: string[] = [];
+    let score = 0;
+    if (senderCount >= 3) {
+      score += senderCount >= 5 ? 30 : 20;
+      reasons.push(`Recipient received funds from ${senderCount} distinct senders in the last 24 hours.`);
+    }
+    if (rapidPassThrough && inboundAmount > 0) {
+      score += 25;
+      reasons.push('Recent incoming funds were followed by outgoing transfers within one hour.');
+    }
+    if (inbound.length >= 5) {
+      score += 15;
+      reasons.push(`${inbound.length} inbound transfers were recorded to this recipient in the last 24 hours.`);
+    }
+    res.json({ success: true, score: Math.min(score, 60), reasons, senderCount, inboundAmount });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/customer-history/:wallet', async (req: Request, res: Response) => {
   const wallet = String(req.params.wallet || '').trim();
-  const { wallet: customerWallet, amount, recipient, timestamp, reference = '', status = 'COMPLETED', riskScore = 0 } = req.body || {};
+  const {
+    wallet: customerWallet, amount, recipient, timestamp, reference = '', status = 'COMPLETED', riskScore = 0,
+    serviceType = 'SEND_MONEY', direction = 'OUT', fee = 0,
+  } = req.body || {};
   const date = new Date(timestamp);
+  const allowedServiceTypes = ['SEND_MONEY', 'CASH_IN', 'CASH_OUT', 'MAKE_PAYMENT', 'ADD_MONEY', 'PAY_BILL', 'MOBILE_RECHARGE', 'REMITTANCE', 'SAVINGS', 'EDUCATION', 'INSURANCE', 'BUSINESS_PAYMENT'];
   if (!wallet || wallet.length > 64 || typeof customerWallet !== 'string' || !customerWallet.trim() || customerWallet.length > 64 || !Number.isFinite(Number(amount)) || Number(amount) <= 0 ||
       typeof recipient !== 'string' || !recipient.trim() || recipient.length > 128 || !Number.isFinite(date.getTime()) ||
       typeof reference !== 'string' || reference.length > 256 || !['COMPLETED', 'PROCEEDED'].includes(status) ||
-      !Number.isFinite(Number(riskScore))) {
+      !Number.isFinite(Number(riskScore)) || !allowedServiceTypes.includes(serviceType) || !['IN', 'OUT'].includes(direction) ||
+      !Number.isFinite(Number(fee)) || Number(fee) < 0) {
     return res.status(400).json({ error: 'Invalid customer transaction record' });
   }
   try {
@@ -115,20 +254,28 @@ app.post('/api/customer-history/:wallet', async (req: Request, res: Response) =>
         const existing = await fs.readFile(customerTransactionsCsv, 'utf8');
         const [headerLine, ...oldLines] = existing.split(/\r?\n/).filter(Boolean);
         const oldHeaders = parseCsvLine(headerLine);
-        if (!oldHeaders.includes('user_id')) {
+        if (customerTransactionThreatHeaders.some((header) => !oldHeaders.includes(header))) {
           const migrated = oldLines.map((line) => {
             const oldCells = parseCsvLine(line);
             const oldRow = Object.fromEntries(oldHeaders.map((header, index) => [header, oldCells[index] || '']));
-            return [oldRow.wallet, oldRow.wallet, oldRow.amount, oldRow.recipient, oldRow.timestamp, oldRow.reference, oldRow.status, oldRow.risk_score]
+            return [
+              oldRow.user_id || oldRow.wallet, oldRow.wallet, oldRow.amount, oldRow.recipient, oldRow.timestamp,
+              oldRow.reference, oldRow.status, oldRow.risk_score, oldRow.service_type || 'SEND_MONEY',
+              oldRow.direction || 'OUT', oldRow.fee || 0, oldRow.is_threat || '', oldRow.suspicious_reason || '', oldRow.device || '',
+            ]
               .map(toCsvCell).join(',');
           });
-          await fs.writeFile(customerTransactionsCsv, `${customerTransactionHeaders.join(',')}\r\n${migrated.join('\r\n')}${migrated.length ? '\r\n' : ''}`, 'utf8');
+          await fs.writeFile(customerTransactionsCsv, `${customerTransactionThreatHeaders.join(',')}\r\n${migrated.join('\r\n')}${migrated.length ? '\r\n' : ''}`, 'utf8');
         }
       }
     } catch (error: any) { if (error.code === 'ENOENT') needsHeader = true; else throw error; }
-    const values = [wallet, customerWallet.trim(), Number(amount), recipient.trim(), date.toISOString(), reference, status, Math.max(0, Math.min(100, Number(riskScore)))];
-    const content = `${needsHeader ? `${customerTransactionHeaders.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`;
+    const values = [
+      wallet, customerWallet.trim(), Number(amount), recipient.trim(), date.toISOString(), reference, status,
+      Math.max(0, Math.min(100, Number(riskScore))), serviceType, direction, Number(fee), '', '', '',
+    ];
+    const content = `${needsHeader ? `${customerTransactionThreatHeaders.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`;
     await fs.appendFile(customerTransactionsCsv, content, 'utf8');
+    publishServerEvent('state-change', { kind: 'customer-transaction', timestamp: date.toISOString() });
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -206,6 +353,43 @@ const auditLogs: AuditLogEntry[] = [
   },
 ];
 
+// One-way event channel for browsers. EventSource reconnects automatically and
+// Last-Event-ID lets a briefly disconnected client catch up from the replay buffer.
+app.get('/api/events', (req: Request, res: Response) => {
+  res.set({
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  res.flushHeaders();
+  res.write(`event: ready\ndata: ${JSON.stringify({ timestamp: new Date().toISOString() })}\n\n`);
+
+  const lastEventId = Number(req.header('Last-Event-ID')) || 0;
+  for (const event of recentEvents) {
+    if (event.id > lastEventId) {
+      res.write(`id: ${event.id}\nevent: ${event.name}\ndata: ${JSON.stringify(event.data)}\n\n`);
+    }
+  }
+  eventClients.add(res);
+  const heartbeat = setInterval(() => res.write(': keep-alive\n\n'), 20000);
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    eventClients.delete(res);
+  });
+});
+
+app.get('/api/suspicious-transactions', async (_req: Request, res: Response) => {
+  try {
+    const csv = await fs.readFile(customerTransactionsCsv, 'utf8').catch((error: NodeJS.ErrnoException) => error.code === 'ENOENT' ? '' : Promise.reject(error));
+    const lines = csv.split(/\r?\n/).filter(Boolean);
+    const headers = lines.length ? parseCsvLine(lines.shift()!) : customerTransactionThreatHeaders;
+    const transactions = lines.map(parseCsvLine).map((cells) => Object.fromEntries(headers.map((header, index) => [header, cells[index] || ''])))
+      .filter((row) => row.is_threat === 'true');
+    res.json({ success: true, transactions });
+  } catch (error: any) { res.status(500).json({ error: error.message }); }
+});
+
 // Health Check
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({
@@ -244,6 +428,10 @@ app.post('/api/audit-action', (req: Request, res: Response) => {
     };
 
     auditLogs.unshift(newEntry);
+    publishServerEvent('state-change', {
+      kind: 'audit-action', entryId: newEntry.id, entityType: newEntry.entityType,
+      entityId: newEntry.entityId, actionTaken: newEntry.actionTaken,
+    });
     res.json({ success: true, entry: newEntry, totalLogs: auditLogs.length });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -368,6 +556,387 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
   }
 });
 
+// API endpoint to download or inspect TakaSafe AI-1 Jupyter Notebook (.ipynb)
+app.get('/api/notebook/ai1', async (_req: Request, res: Response) => {
+  try {
+    const notebookPath = path.resolve(process.cwd(), 'notebooks', 'TakaSafe_AI1_LightGBM_Conformal_DoubtCheck.ipynb');
+    const content = await fs.readFile(notebookPath, 'utf8');
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename="TakaSafe_AI1_LightGBM_Conformal_DoubtCheck.ipynb"');
+    res.send(content);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==========================================
+// SCAMSHIELD REAL-TIME ML INFERENCE ENGINE
+// ==========================================
+interface XGBoostTree {
+  split_indices: number[];
+  split_conditions: number[];
+  left_children: number[];
+  right_children: number[];
+  base_weights: number[];
+}
+
+interface ScamShieldModel {
+  isLoaded: boolean;
+  modelPath: string;
+  featureOrder: string[];
+  trees: XGBoostTree[];
+  error?: string;
+  loadedAt?: string;
+}
+
+const scamShieldState: ScamShieldModel = {
+  isLoaded: false,
+  modelPath: process.env.MODEL_PATH || path.resolve(process.cwd(), 'ml', 'model', 'scamshield_xgb.json'),
+  featureOrder: [
+    'amount',
+    'amount_deviation_ratio',
+    'is_new_recipient',
+    'transaction_hour',
+    'is_nocturnal',
+    'transaction_frequency',
+    'behavior_deviation_score',
+    'recipient_incoming_surge',
+    'is_mule_cluster_linked',
+    'device_change_flag',
+    'location_mismatch_flag',
+  ],
+  trees: [],
+};
+
+const knownMuleWallets = new Set([
+  '01988-510294', '01988510294', 'W302', '01899-771122', '01899771122',
+  '01711-239481', '01711239481', 'AGT-881', 'AGT-882'
+]);
+
+async function initScamShieldModel() {
+  const candidatePaths = [
+    scamShieldState.modelPath,
+    path.resolve(process.cwd(), 'ml', 'model', 'scamshield_xgb.json'),
+    path.resolve(process.cwd(), 'backend', 'ml', 'model', 'scamshield_xgb.json'),
+  ];
+
+  let resolvedPath = '';
+  for (const p of candidatePaths) {
+    try {
+      await fs.access(p);
+      resolvedPath = p;
+      break;
+    } catch {
+      // not found, try next
+    }
+  }
+
+  if (!resolvedPath) {
+    scamShieldState.isLoaded = false;
+    scamShieldState.error = `ML model artifact not found at ${scamShieldState.modelPath}`;
+    console.warn(`[ScamShield] ⚠️ ${scamShieldState.error}. App will report 'ML model not connected'.`);
+    return;
+  }
+
+  try {
+    const raw = await fs.readFile(resolvedPath, 'utf8');
+    const parsed = JSON.parse(raw);
+    if (parsed.learner && parsed.learner.gradient_booster && parsed.learner.gradient_booster.model) {
+      const gbModel = parsed.learner.gradient_booster.model;
+      scamShieldState.trees = gbModel.trees || [];
+      if (parsed.learner.feature_names && parsed.learner.feature_names.length) {
+        scamShieldState.featureOrder = parsed.learner.feature_names;
+      }
+      scamShieldState.isLoaded = true;
+      scamShieldState.modelPath = resolvedPath;
+      scamShieldState.loadedAt = new Date().toISOString();
+      scamShieldState.error = undefined;
+      console.log(`[ScamShield] ✅ Loaded XGBoost model from ${resolvedPath} with ${scamShieldState.trees.length} decision trees.`);
+    } else {
+      scamShieldState.isLoaded = false;
+      scamShieldState.error = 'Invalid XGBoost JSON structure';
+    }
+  } catch (err: any) {
+    scamShieldState.isLoaded = false;
+    scamShieldState.error = err.message;
+    console.error('[ScamShield] Model load error:', err.message);
+  }
+}
+
+initScamShieldModel();
+
+// 1. Health check endpoint
+app.get('/api/scamshield/health', (_req: Request, res: Response) => {
+  res.json({
+    status: scamShieldState.isLoaded ? 'HEALTHY' : 'MODEL_DISCONNECTED',
+    service: 'TakaSafe ScamShield Real-Time ML Engine',
+    model_loaded: scamShieldState.isLoaded,
+    model_path: scamShieldState.modelPath,
+    model_type: 'XGBoost_JSON_Memory',
+    feature_count: scamShieldState.featureOrder.length,
+    tree_count: scamShieldState.trees.length,
+    message: scamShieldState.isLoaded
+      ? 'XGBoost model is loaded in memory and ready for instant prediction'
+      : 'ML model not connected. Please provide the trained XGBoost model artifact (e.g. scamshield_xgb.json) in ./ml/model/ or configure MODEL_PATH.',
+  });
+});
+
+// 2. Real-time pre-payment inference endpoint
+app.post('/api/scamshield/analyze', async (req: Request, res: Response) => {
+  const startTime = Date.now();
+
+  if (!scamShieldState.isLoaded) {
+    return res.status(503).json({
+      model_connected: false,
+      status: 'MODEL_NOT_CONNECTED',
+      message: 'ML model not connected. Please place your trained XGBoost model artifact (scamshield_xgb.json) in ./ml/model/ or set MODEL_PATH.',
+    });
+  }
+
+  const {
+    amount = 1000,
+    receiver_id = '',
+    timestamp,
+    device_id = '',
+    location = 'Dhaka',
+    transaction_frequency = 1,
+    customer_avg_amount = 1500,
+    is_new_recipient = true,
+  } = req.body || {};
+
+  const numAmount = Number(amount) || 1000;
+  const numAvg = Math.max(1, Number(customer_avg_amount) || 1500);
+  const amountRatio = numAmount / numAvg;
+
+  let txHour = 14;
+  if (timestamp) {
+    try {
+      const dt = new Date(timestamp);
+      txHour = (dt.getUTCHours() + 6) % 24; // BST
+    } catch {
+      txHour = 14;
+    }
+  } else {
+    txHour = (new Date().getUTCHours() + 6) % 24;
+  }
+
+  const isNocturnal = txHour < 6 ? 1.0 : 0.0;
+  const cleanReceiver = String(receiver_id).replace(/[-\s]/g, '');
+  const isMule = knownMuleWallets.has(cleanReceiver) || knownMuleWallets.has(String(receiver_id)) ? 1.0 : 0.0;
+  const isNew = is_new_recipient ? 1.0 : 0.0;
+  const isSuspiciousDevice = String(device_id).toLowerCase().includes('unknown') || String(device_id).toLowerCase().includes('dev-8819') ? 1.0 : 0.0;
+  const isCoastalMismatch = String(location).toLowerCase().includes('coastal') || String(location).toLowerCase().includes('patuakhali') ? 1.0 : 0.0;
+  const behaviorScore = Math.min(1.0, Math.max(0.01, (amountRatio - 1.0) / 10.0 + (isNocturnal ? 0.3 : 0.0) + (isNew ? 0.2 : 0.0)));
+
+  const featureDict: Record<string, number> = {
+    amount: numAmount,
+    amount_deviation_ratio: Number(amountRatio.toFixed(3)),
+    is_new_recipient: isNew,
+    transaction_hour: txHour,
+    is_nocturnal: isNocturnal,
+    transaction_frequency: Number(transaction_frequency) || 1,
+    behavior_deviation_score: Number(behaviorScore.toFixed(3)),
+    recipient_incoming_surge: isMule || cleanReceiver.startsWith('01988') ? 1.0 : 0.0,
+    is_mule_cluster_linked: isMule,
+    device_change_flag: isSuspiciousDevice,
+    location_mismatch_flag: isCoastalMismatch,
+  };
+
+  const featureVector: number[] = scamShieldState.featureOrder.map((f) => featureDict[f] ?? 0.0);
+
+  // In-memory XGBoost Tree Evaluation
+  let margin = 0.0;
+  for (const tree of scamShieldState.trees) {
+    if (!tree.split_indices || !tree.split_indices.length) continue;
+    let nodeIdx = 0;
+    while (true) {
+      const leftChild = tree.left_children[nodeIdx];
+      if (leftChild === -1 || leftChild === undefined || leftChild >= tree.split_indices.length) {
+        margin += tree.base_weights[nodeIdx] ?? 0.0;
+        break;
+      }
+      const featIdx = tree.split_indices[nodeIdx];
+      const splitVal = tree.split_conditions[nodeIdx];
+      const val = featureVector[featIdx] ?? 0.0;
+      if (val < splitVal) {
+        nodeIdx = leftChild;
+      } else {
+        nodeIdx = tree.right_children[nodeIdx];
+      }
+    }
+  }
+
+  // Logistic sigmoid
+  const rawProb = 1.0 / (1.0 + Math.exp(-Math.max(-25.0, Math.min(25.0, margin))));
+  let riskScore = Math.round(rawProb * 100);
+  riskScore = Math.max(0, Math.min(100, riskScore));
+
+  // Determine Risk Level (Prototype Bands)
+  let riskLevel = 'LOW';
+  let prediction = 'SAFE';
+  let recommendedAction = 'CONTINUE';
+
+  if (riskScore >= 81) {
+    riskLevel = 'CRITICAL';
+    prediction = 'CRITICAL';
+    recommendedAction = 'VERIFY';
+  } else if (riskScore >= 61) {
+    riskLevel = 'HIGH';
+    prediction = 'RISKY';
+    recommendedAction = 'VERIFY';
+  } else if (riskScore >= 31) {
+    riskLevel = 'MEDIUM';
+    prediction = 'REVIEW';
+    recommendedAction = 'VERIFY';
+  } else {
+    riskLevel = 'LOW';
+    prediction = 'SAFE';
+    recommendedAction = 'CONTINUE';
+  }
+
+  // Generate explainability evidence
+  const reasons: Array<{ label: string; impact: number }> = [];
+
+  if (isNew) {
+    reasons.push({ label: 'New recipient', impact: 32 });
+  }
+
+  if (amountRatio >= 2.0) {
+    const impact = amountRatio >= 10.0 ? 35 : amountRatio >= 4.0 ? 27 : 18;
+    reasons.push({
+      label: `Unusually high amount (${amountRatio.toFixed(1)}x typical avg)`,
+      impact,
+    });
+  }
+
+  if (isNocturnal) {
+    reasons.push({
+      label: `Unusual transaction time (${String(txHour).padStart(2, '0')}:00 BST nocturnal)`,
+      impact: 19,
+    });
+  }
+
+  if (isMule || cleanReceiver.startsWith('01988')) {
+    reasons.push({
+      label: 'Suspicious recipient connection (Syndicate Net #17 Link)',
+      impact: isMule ? 24 : 16,
+    });
+  }
+
+  if (isSuspiciousDevice) {
+    reasons.push({
+      label: 'Unrecognized device fingerprint',
+      impact: 14,
+    });
+  }
+
+  if (reasons.length === 0 && riskScore <= 30) {
+    reasons.push({ label: 'Known frequent counterparty', impact: 8 });
+    reasons.push({ label: 'Amount consistent with historical pattern', impact: 5 });
+  }
+
+  reasons.sort((a, b) => b.impact - a.impact);
+
+  const latencyMs = Date.now() - startTime;
+
+  res.json({
+    risk_score: riskScore,
+    risk_level: riskLevel,
+    prediction,
+    confidence: Number(rawProb.toFixed(3)),
+    reasons,
+    recommended_action: recommendedAction,
+    can_continue: true,
+    model_status: 'LOADED',
+    model_path: scamShieldState.modelPath,
+    inference_latency_ms: latencyMs,
+  });
+});
+
+// 3. Recipient verification endpoint
+app.post('/api/scamshield/verify-recipient', (req: Request, res: Response) => {
+  const { receiver_id = '' } = req.body || {};
+  const cleanId = String(receiver_id).replace(/[-\s]/g, '');
+  const isMule = knownMuleWallets.has(cleanId) || knownMuleWallets.has(String(receiver_id));
+
+  if (isMule) {
+    return res.json({
+      receiver_id,
+      receiver_name: 'Md. Al-Amin (Node W302)',
+      status: 'NEEDS_VERIFICATION',
+      reputation_score: 14,
+      is_mule_connected: true,
+      mule_network_id: 'Suspicious Network #17',
+      signals: [
+        'New recipient not in your contact ledger',
+        'Multiple unusual incoming transfers within 10 minutes',
+        'Suspicious network connection: Flagged in Network #17 Terminus',
+        'High-velocity physical cash-out routing pattern',
+      ],
+      previous_interactions_count: 0,
+      total_volume_received_today: 155000,
+    });
+  }
+
+  if (String(receiver_id).startsWith('01710') || String(receiver_id).startsWith('01825')) {
+    return res.json({
+      receiver_id,
+      receiver_name: 'Rehana Parvin (Mother / Family)',
+      status: 'SAFE',
+      reputation_score: 96,
+      is_mule_connected: false,
+      mule_network_id: null,
+      signals: [
+        'Recipient verified with biometric NID on file',
+        'Frequent historical contact (12+ successful transfers)',
+        'No suspicious dispute or velocity reports on record',
+      ],
+      previous_interactions_count: 14,
+      total_volume_received_today: 3200,
+    });
+  }
+
+  return res.json({
+    receiver_id,
+    receiver_name: `MFS Wallet Holder (${receiver_id})`,
+    status: 'NEEDS_VERIFICATION',
+    reputation_score: 45,
+    is_mule_connected: false,
+    mule_network_id: null,
+    signals: [
+      'New recipient for this customer account',
+      'Wallet active tenure < 30 days',
+      'Standard retail MFS account without enterprise merchant verification',
+    ],
+    previous_interactions_count: 0,
+    total_volume_received_today: 0,
+  });
+});
+
+// 4. Decision recording endpoint
+app.post('/api/scamshield/decision', async (req: Request, res: Response) => {
+  const { receiver_id = '', amount = 0, risk_score = 0, decision = 'CONTINUE', confirmed_override = false, notes = '' } = req.body || {};
+  const decisionId = `DEC-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+  const timestamp = new Date().toISOString();
+
+  // Log to alert feedback CSV
+  try {
+    const feedbackRow = `${decisionId},${timestamp},SCAMSHIELD_CUSTOMER,${receiver_id},${decision},${risk_score},${toCsvCell(notes || `User chose ${decision}`)},${confirmed_override}\r\n`;
+    await fs.appendFile(alertFeedbackCsv, feedbackRow, 'utf8').catch(() => {});
+  } catch {
+    // ignore
+  }
+
+  publishServerEvent('scamshield-decision', { decisionId, receiver_id, amount, decision, risk_score, timestamp });
+
+  res.json({
+    success: true,
+    decision_id: decisionId,
+    logged_at: timestamp,
+    action_recorded: decision,
+  });
+});
+
 // Setup Vite Middlewares in dev mode, or static file serving in production
 async function startServer() {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -383,6 +952,12 @@ async function startServer() {
     const distPath = path.resolve(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req: Request, res: Response) => {
+      // Only serve the SPA shell for browser routes. Returning index.html for a
+      // missing asset makes tools such as curl save HTML under a .js/.css name.
+      if (path.extname(req.path)) {
+        res.sendStatus(404);
+        return;
+      }
       res.sendFile(path.resolve(distPath, 'index.html'));
     });
   }

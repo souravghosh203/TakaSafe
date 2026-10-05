@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AuthUser, UserRole } from '../../types';
+import shababAvatar from '../../../assets/shabab.png';
 import {
   ShieldCheck,
   User,
@@ -20,9 +21,11 @@ import {
 } from 'lucide-react';
 
 interface LoginPageProps {
-  onLogin: (user: AuthUser) => void;
+  onLogin: (user: AuthUser, remember: boolean) => void;
   onCancel: () => void;
+  showBackButton?: boolean;
   lang: 'EN' | 'BN';
+  onOpenInfo?: (modal: 'TERMS' | 'PRIVACY_POLICY') => void;
 }
 
 const adminPermissions: AuthUser['permissions'] = {
@@ -70,6 +73,7 @@ export const DEMO_PROFILES: AuthUser[] = [
     phone: '+880 1912-403922',
     role: 'ADMIN',
     designation: 'Model Architecture & Explainability Lead',
+    avatar: shababAvatar,
     permissions: adminPermissions,
   },
   {
@@ -116,21 +120,45 @@ export const DEMO_ACCOUNTS: Record<UserRole, AuthUser> = {
   USER: DEMO_PROFILES.find((profile) => profile.role === 'USER')!,
 };
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, lang }) => {
+const PROFILE_STORAGE_PREFIX = 'takasafe-profile:';
+const loadQuickLoginProfiles = (): AuthUser[] => DEMO_PROFILES.map((profile) => {
+  try {
+    const saved = localStorage.getItem(`${PROFILE_STORAGE_PREFIX}${profile.id}`);
+    return saved ? { ...profile, ...JSON.parse(saved) } : profile;
+  } catch { return profile; }
+});
+
+export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, showBackButton = true, lang, onOpenInfo }) => {
+  const [quickLoginProfiles, setQuickLoginProfiles] = useState<AuthUser[]>(loadQuickLoginProfiles);
   const [selectedRole, setSelectedRole] = useState<UserRole>('ADMIN');
-  const [selectedProfileId, setSelectedProfileId] = useState<string>(DEMO_ACCOUNTS.ADMIN.id);
   const [email, setEmail] = useState<string>(DEMO_ACCOUNTS.ADMIN.email);
   const [password, setPassword] = useState<string>('••••••••••••');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showMatrixModal, setShowMatrixModal] = useState<boolean>(false);
+  const [remember, setRemember] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    const refreshProfiles = () => setQuickLoginProfiles(loadQuickLoginProfiles());
+    const refreshOnFocus = () => { if (document.visibilityState === 'visible') refreshProfiles(); };
+    const refreshOnStorage = (event: StorageEvent) => {
+      if (event.key?.startsWith(PROFILE_STORAGE_PREFIX)) refreshProfiles();
+    };
+    window.addEventListener('focus', refreshOnFocus);
+    window.addEventListener('storage', refreshOnStorage);
+    document.addEventListener('visibilitychange', refreshOnFocus);
+    return () => {
+      window.removeEventListener('focus', refreshOnFocus);
+      window.removeEventListener('storage', refreshOnStorage);
+      document.removeEventListener('visibilitychange', refreshOnFocus);
+    };
+  }, []);
 
   // Switch role selection and autofill matching demo credentials
   const handleSelectRole = (role: UserRole) => {
     setSelectedRole(role);
     const profile = DEMO_PROFILES.find((candidate) => candidate.role === role)!;
-    setSelectedProfileId(profile.id);
     setEmail(profile.email);
     setPassword('••••••••••••');
     setErrorMsg(null);
@@ -150,34 +178,41 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, lang })
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      const user = DEMO_PROFILES.find((profile) => profile.id === selectedProfileId && profile.role === selectedRole && profile.email.toLowerCase() === email.trim().toLowerCase());
-      if (!user) {
-        setErrorMsg('Choose a demo profile that matches the selected role and email.');
+      const emailProfile = DEMO_PROFILES.find((profile) => profile.email.toLowerCase() === email.trim().toLowerCase());
+      if (!emailProfile || emailProfile.role !== selectedRole) {
+        setErrorMsg('That email does not match a demo profile for the selected role. Use one of the listed demo profiles below.');
         return;
       }
-      onLogin(user);
+      onLogin(emailProfile, remember);
     }, 400);
   };
 
   const handleGoogleSignIn = () => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      onLogin(DEMO_PROFILES.find((profile) => profile.id === selectedProfileId)!);
-    }, 450);
+    setErrorMsg('Google sign-in is not configured for this demo. Choose a demo profile below to continue.');
+  };
+
+  const handleQuickLogin = (profile: AuthUser) => {
+    setSelectedRole(profile.role);
+    setEmail(profile.email);
+    setErrorMsg(null);
+    onLogin(profile, true);
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center py-10 px-4 sm:px-6 font-sans">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-200/80 p-8 sm:p-10 relative animate-slide-up card-hover-lift">
+    <div className="login-scene min-h-[85vh] flex items-center justify-center py-10 px-4 sm:px-6 font-sans">
+      <div className="login-glow login-glow-one" aria-hidden="true" />
+      <div className="login-glow login-glow-two" aria-hidden="true" />
+      <div className="login-card w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-200/80 p-8 sm:p-10 relative card-hover-lift">
         {/* Top Back Navigation */}
-        <button
-          onClick={onCancel}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-6 cursor-pointer"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Home</span>
-        </button>
+        {showBackButton && (
+          <button
+            onClick={onCancel}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-6 cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Home</span>
+          </button>
+        )}
 
         {/* Header Kicker and Title matching user image reference */}
         <div className="text-center mb-6">
@@ -189,7 +224,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, lang })
             Sign in
           </h1>
           <p className="text-xs text-slate-500 mt-2 max-w-xs mx-auto leading-relaxed">
-            Access your TakaSafe dashboard, fraud surveillance controls, and wallet security.
+            Demo access only. Email selects a sample profile; passwords are not authenticated.
           </p>
         </div>
 
@@ -199,12 +234,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, lang })
             Select Access Role
           </div>
 
-          <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100/90 rounded-2xl border border-slate-200">
+          <div className="login-role-switch grid grid-cols-2 gap-2 p-1 bg-slate-100/90 rounded-2xl border border-slate-200">
             {/* Admin Option */}
             <button
               type="button"
               onClick={() => handleSelectRole('ADMIN')}
-              className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              aria-pressed={selectedRole === 'ADMIN'}
+              className={`login-role-option flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedRole === 'ADMIN'
                   ? 'bg-white text-slate-950 shadow-md ring-1 ring-slate-900/10'
                   : 'text-slate-600 hover:text-slate-900'
@@ -218,7 +254,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, lang })
             <button
               type="button"
               onClick={() => handleSelectRole('USER')}
-              className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              aria-pressed={selectedRole === 'USER'}
+              className={`login-role-option flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 selectedRole === 'USER'
                   ? 'bg-white text-slate-950 shadow-md ring-1 ring-slate-900/10'
                   : 'text-slate-600 hover:text-slate-900'
@@ -230,7 +267,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, lang })
           </div>
 
           {/* Dynamic Active Role Privileges Panel */}
-          <div className={`p-3.5 rounded-2xl border text-xs transition-all ${
+          <div key={selectedRole} className={`login-privileges p-3.5 rounded-2xl border text-xs transition-all ${
             selectedRole === 'ADMIN'
               ? 'bg-blue-50/80 border-blue-200 text-blue-950'
               : 'bg-emerald-50/80 border-emerald-200 text-emerald-950'
@@ -352,7 +389,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, lang })
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
             />
           </svg>
-          <span>Continue with Google</span>
+            <span>Google sign-in unavailable</span>
         </button>
 
         {/* OR Divider */}
@@ -367,7 +404,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, lang })
 
         {/* Error notification if any */}
         {errorMsg && (
-          <div className="mb-4 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+          <div role="alert" className="login-error mb-4 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
             <span>{errorMsg}</span>
           </div>
@@ -384,19 +421,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, lang })
                 type="email"
                 value={email}
                 onChange={(e) => {
-                  const nextEmail = e.target.value;
-                  setEmail(nextEmail);
-                  const matchingProfile = DEMO_PROFILES.find((profile) => profile.email.toLowerCase() === nextEmail.trim().toLowerCase());
-                  if (matchingProfile) {
-                    setSelectedRole(matchingProfile.role);
-                    setSelectedProfileId(matchingProfile.id);
-                  }
+                  // Keep the chosen access mode stable while typing. Deriving the
+                  // role from email caused autofill/input to silently switch a
+                  // customer sign-in back to the admin view.
+                  setEmail(e.target.value);
                 }}
                 placeholder="Enter Your Email"
+                autoComplete="off"
                 required
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#164E3D] focus:border-transparent transition-all"
+                className="login-input w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#164E3D] focus:border-transparent transition-all"
               />
             </div>
+            <p className="mt-1 text-[10px] text-slate-500">Use an email shown on a demo profile button below. The password is not verified.</p>
           </div>
 
           <div>
@@ -410,11 +446,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, lang })
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter Your Password"
                 required
-                className="w-full px-3.5 py-2.5 pr-10 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#164E3D] focus:border-transparent transition-all"
+                className="login-input w-full px-3.5 py-2.5 pr-10 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#164E3D] focus:border-transparent transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
                 className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -426,14 +464,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, lang })
             <label className="flex items-center gap-2 text-slate-600 cursor-pointer select-none">
               <input
                 type="checkbox"
-                defaultChecked
+                checked={remember}
+                onChange={(event) => setRemember(event.target.checked)}
                 className="rounded border-slate-300 text-[#164E3D] focus:ring-[#164E3D]"
               />
               <span className="text-[11px]">Remember me</span>
             </label>
             <button
               type="button"
-              onClick={() => setErrorMsg('Password reset link sent to registered email.')}
+              onClick={() => setErrorMsg('Password reset is unavailable because this demo has no account or email service. Use a demo profile below.')}
               className="text-[11px] font-semibold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
             >
               Forgot password?
@@ -442,15 +481,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, lang })
 
           <div className="text-[11px] text-slate-500 text-center leading-normal pt-1">
             By signing in, I agree to the{' '}
-            <span className="text-slate-700 underline font-medium cursor-pointer">Terms of Service</span> and{' '}
-            <span className="text-slate-700 underline font-medium cursor-pointer">Privacy Policy</span>
+            <button type="button" onClick={() => onOpenInfo?.('TERMS')} className="text-slate-700 underline font-medium cursor-pointer">Terms of Service</button> and{' '}
+            <button type="button" onClick={() => onOpenInfo?.('PRIVACY_POLICY')} className="text-slate-700 underline font-medium cursor-pointer">Privacy Policy</button>
           </div>
 
           {/* Primary Sign In Button */}
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`w-full py-3 px-4 text-white font-bold rounded-full text-xs shadow-md hover:shadow-lg transition-all transform active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 ${
+            className={`login-submit w-full py-3 px-4 text-white font-bold rounded-full text-xs shadow-md hover:shadow-lg transition-all transform active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 ${
               selectedRole === 'ADMIN'
                 ? 'bg-[#0054A6] hover:bg-[#004080]'
                 : 'bg-[#164E3D] hover:bg-[#113C2F]'
@@ -473,12 +512,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, lang })
             Quick 1-Click Demo Logins for Evaluators
           </span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {DEMO_PROFILES.map((profile) => (
+            {quickLoginProfiles.map((profile) => (
               <button
                 key={profile.id}
                 type="button"
-                onClick={() => onLogin(profile)}
-                className={`w-full text-[11px] font-bold text-slate-800 ${profile.role === 'ADMIN' ? 'bg-blue-50 hover:bg-blue-100 border-blue-200' : 'bg-emerald-50 hover:bg-emerald-100 border-emerald-200'} border px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs`}
+                onClick={() => handleQuickLogin(profile)}
+                className={`login-profile w-full text-[11px] font-bold text-slate-800 ${profile.role === 'ADMIN' ? 'bg-blue-50 hover:bg-blue-100 border-blue-200' : 'bg-emerald-50 hover:bg-emerald-100 border-emerald-200'} border px-3 py-2 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs`}
               >
                 {profile.role === 'ADMIN'
                   ? <ShieldCheck className="w-3.5 h-3.5 text-[#0054A6]" />

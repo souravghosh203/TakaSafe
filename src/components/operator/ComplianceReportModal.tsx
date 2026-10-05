@@ -167,8 +167,8 @@ export const ComplianceReportModal: React.FC<ComplianceReportModalProps> = ({
   ).length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-[#0F172A] w-full max-w-5xl rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh] text-slate-900 dark:text-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4 overflow-y-auto modal-backdrop-enter">
+      <div className="bg-white dark:bg-[#0F172A] w-full max-w-5xl rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh] text-slate-900 dark:text-slate-100 modal-panel-enter">
         {/* Modal Header Command Bar */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">

@@ -17,6 +17,9 @@ import {
   ChevronDown,
   Newspaper,
   User,
+  Camera,
+  Pencil,
+  X as CloseIcon,
   LogOut,
   ChevronRight,
   Sun,
@@ -37,6 +40,7 @@ interface UpayHeaderProps {
   currentUser?: AuthUser | null;
   onLogout?: () => void;
   onSwitchUserRole?: (role: UserRole) => void;
+  onUpdateProfile?: (profile: Pick<AuthUser, 'name' | 'email' | 'phone' | 'avatar'>) => void;
   onOpenModal?: (modalType: string) => void;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
@@ -53,6 +57,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
   currentUser,
   onLogout,
   onSwitchUserRole,
+  onUpdateProfile,
   onOpenModal,
   theme = 'light',
   onToggleTheme,
@@ -60,6 +65,8 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
   const [isServicesOpen, setIsServicesOpen] = useState<boolean>(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+  const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
+  const [profileDraft, setProfileDraft] = useState({ name: '', email: '', phone: '', avatar: '' });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -108,9 +115,9 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
   const OPERATOR_MODULES = [
     { id: 'OVERVIEW', label: '1. Transaction Guardian', icon: ShieldCheck, badge: criticalAlertCount },
     { id: 'MULEVISION', label: '2. MuleVision (Graph)', icon: Network },
-    { id: 'RESILIENCE', label: '3. Disaster Resilience', icon: CloudLightning },
+    { id: 'GEOSPATIAL', label: '3. Geospatial Intelligence', icon: Globe },
     { id: 'RADAR', label: '4. Early-Warning Radar', icon: Radar },
-    { id: 'GEOSPATIAL', label: '5. Geospatial Intelligence', icon: Globe },
+    { id: 'RESILIENCE', label: '5. Disaster Resilience', icon: CloudLightning },
     { id: 'POLICY', label: '6. Policy Weights', icon: Sliders },
     { id: 'AUDIT', label: '7. Audit Logs', icon: FileCheck2 },
   ];
@@ -165,17 +172,17 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
 
             {/* Typography with Golden Bloom Aura (No Color Change on Taka or Safe) */}
             <div className="mfs-logo-text flex items-baseline tracking-tight select-none">
-              <span className="font-['Hind_Siliguri','Noto_Sans_Bengali',sans-serif] text-xl sm:text-2xl font-black text-[#FAB915] leading-none">
+              <span className="mfs-brand-word mfs-brand-taka font-['Hind_Siliguri','Noto_Sans_Bengali',sans-serif] text-xl sm:text-2xl font-black text-[#FAB915] leading-none">
                 টাকা
               </span>
-              <span className="font-['Times_New_Roman',Times,serif] text-[22px] sm:text-[25px] font-bold text-white leading-none ml-0.5 sm:ml-1 tracking-tight">
+              <span className="mfs-brand-word mfs-brand-safe font-['Times_New_Roman',Times,serif] text-[22px] sm:text-[25px] font-bold text-white leading-none ml-0.5 sm:ml-1 tracking-tight">
                 Safe
               </span>
             </div>
           </button>
 
           {/* Operator Modules Tabs directly in Top Navbar (Hidden on smaller screens, shown on XL) */}
-          <nav className="hidden xl:flex flex-1 min-w-0 items-center gap-1 overflow-x-auto py-1 px-1 scrollbar-none mx-2">
+          {currentUser?.role === 'ADMIN' && <nav className="hidden xl:flex flex-1 min-w-0 items-center gap-1 overflow-x-auto py-1 px-1 scrollbar-none mx-2">
             {OPERATOR_MODULES.map((mod) => {
               const Icon = mod.icon;
               const isSelected = activeView === 'OPERATOR' && operatorTab === mod.id;
@@ -184,7 +191,8 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
                 <button
                   key={mod.id}
                   onClick={() => handleModuleClick(mod.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                  aria-current={isSelected ? 'page' : undefined}
+                  className={`operator-module-link relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
                     isSelected
                       ? 'bg-white text-[#0054A6] shadow-md border-b-2 border-amber-400'
                       : 'text-blue-100 hover:text-white hover:bg-white/10'
@@ -206,7 +214,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
                 </button>
               );
             })}
-          </nav>
+          </nav>}
 
           {/* Right Action Utilities & Clean Services Dropdown */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -234,6 +242,13 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
                   <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                     Explore TakaSafe
                   </div>
+                  <button
+                    onClick={() => handleNavClick('ABSTRACT')}
+                    className="w-full px-3 py-2 text-left text-xs bg-amber-50/70 hover:bg-amber-100/80 flex items-center gap-2.5 transition-colors cursor-pointer text-[#0054A6] font-bold"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Project Abstract & SDGs</span>
+                  </button>
                   <button
                     onClick={() => handleNavClick('ABOUT_US')}
                     className="w-full px-3 py-2 text-left text-xs hover:bg-blue-50 flex items-center gap-2.5 transition-colors cursor-pointer"
@@ -287,7 +302,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
             </div>
 
             {/* Customer App Switcher Pill (Tablet & Desktop) */}
-            <button
+            {currentUser?.role === 'ADMIN' && <button
               onClick={() => setActiveView(activeView === 'CUSTOMER' ? 'OPERATOR' : 'CUSTOMER')}
               className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 activeView === 'CUSTOMER'
@@ -300,7 +315,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
               <span>
                 {activeView === 'CUSTOMER' ? 'Operator Cockpit' : 'Customer App'}
               </span>
-            </button>
+            </button>}
 
             <button
               onClick={() => onOpenModal?.('SEARCH')}
@@ -347,8 +362,8 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
                   className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white text-[#0054A6] shadow-sm hover:bg-blue-50 transition-all cursor-pointer border border-white"
                   title="Account Details"
                 >
-                  <div className="w-5 h-5 rounded-full bg-[#0054A6] text-white flex items-center justify-center text-[10px] font-bold">
-                    {currentUser.name.charAt(0)}
+                  <div className="w-5 h-5 rounded-full bg-[#0054A6] text-white flex items-center justify-center text-[10px] font-bold overflow-hidden">
+                    {currentUser.avatar ? <img src={currentUser.avatar} alt="" className="w-full h-full object-cover" /> : currentUser.name.charAt(0)}
                   </div>
                   <span className="max-w-[85px] truncate hidden md:inline">{currentUser.name}</span>
                   <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded-full font-bold uppercase ${
@@ -390,22 +405,19 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
                     </div>
 
                     <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setProfileDraft({ name: currentUser.name, email: currentUser.email, phone: currentUser.phone, avatar: currentUser.avatar || '' });
+                          setIsUserMenuOpen(false);
+                          setIsProfileEditorOpen(true);
+                        }}
+                        className="w-full px-4 py-2 text-left text-xs bg-blue-50 hover:bg-blue-100 text-[#0054A6] font-bold flex items-center justify-between cursor-pointer transition-colors"
+                      >
+                        <span className="flex items-center gap-1.5"><Pencil className="w-3.5 h-3.5" /> Edit profile</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
                       {/* 1-Click Role Switcher */}
-                      {currentUser.role === 'USER' ? (
-                        <button
-                          onClick={() => {
-                            setIsUserMenuOpen(false);
-                            onSwitchUserRole?.('ADMIN');
-                          }}
-                          className="w-full px-4 py-2 text-left text-xs bg-blue-50/80 hover:bg-blue-100 text-[#0054A6] font-bold flex items-center justify-between cursor-pointer transition-colors"
-                        >
-                          <span className="flex items-center gap-1.5">
-                            <ShieldCheck className="w-3.5 h-3.5 text-[#0054A6]" />
-                            <span>Switch to Admin (Wider Privileges)</span>
-                          </span>
-                          <ChevronRight className="w-3.5 h-3.5 text-[#0054A6]" />
-                        </button>
-                      ) : (
+                      {currentUser.role === 'ADMIN' && (
                         <button
                           onClick={() => {
                             setIsUserMenuOpen(false);
@@ -475,6 +487,39 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
               </button>
             )}
 
+            {isProfileEditorOpen && currentUser && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/55 backdrop-blur-sm p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setIsProfileEditorOpen(false); }}>
+                <form
+                  className="w-full max-w-md overflow-hidden rounded-3xl bg-white text-slate-800 shadow-2xl border border-white/70"
+                  onSubmit={(event) => { event.preventDefault(); onUpdateProfile?.(profileDraft); setIsProfileEditorOpen(false); }}
+                >
+                  <div className="bg-gradient-to-r from-[#0054A6] to-[#0879C9] px-6 py-5 text-white flex items-start justify-between">
+                    <div><p className="text-xs font-semibold text-blue-100">YOUR ACCOUNT</p><h2 className="mt-1 text-xl font-bold">Edit profile</h2><p className="mt-1 text-xs text-blue-100">Personalize how you appear in TakaSafe.</p></div>
+                    <button type="button" onClick={() => setIsProfileEditorOpen(false)} className="rounded-xl p-2 hover:bg-white/15" aria-label="Close"><CloseIcon className="w-4 h-4" /></button>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-2xl bg-blue-50 text-[#0054A6] border border-blue-100 overflow-hidden flex items-center justify-center text-2xl font-bold">
+                        {profileDraft.avatar ? <img src={profileDraft.avatar} alt="Profile preview" className="w-full h-full object-cover" /> : profileDraft.name.charAt(0).toUpperCase() || <User />}
+                      </div>
+                      <label className="inline-flex items-center gap-2 rounded-xl border border-blue-200 px-3 py-2 text-xs font-bold text-[#0054A6] hover:bg-blue-50 cursor-pointer"><Camera className="w-4 h-4" /> Change photo<input type="file" accept="image/*" className="sr-only" onChange={(event) => {
+                        const file = event.target.files?.[0]; if (!file) return;
+                        if (!file.type.startsWith('image/')) return;
+                        const reader = new FileReader(); reader.onload = () => {
+                          const image = new Image(); image.onload = () => { const canvas = document.createElement('canvas'); const scale = Math.min(1, 512 / Math.max(image.width, image.height)); canvas.width = Math.max(1, Math.round(image.width * scale)); canvas.height = Math.max(1, Math.round(image.height * scale)); canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height); setProfileDraft((draft) => ({ ...draft, avatar: canvas.toDataURL('image/jpeg', 0.82) })); }; image.src = String(reader.result);
+                        }; reader.readAsDataURL(file);
+                      }} /></label>
+                      {profileDraft.avatar && <button type="button" onClick={() => setProfileDraft((draft) => ({ ...draft, avatar: '' }))} className="text-xs font-semibold text-slate-500 hover:text-rose-600">Remove</button>}
+                    </div>
+                    {([['name', 'Full name', 'text'], ['email', 'Email address', 'email'], ['phone', 'Phone number', 'tel']] as const).map(([key, label, type]) => (
+                      <label key={key} className="block"><span className="mb-1.5 block text-xs font-bold text-slate-600">{label}</span><input type={type} required value={profileDraft[key]} onChange={(event) => setProfileDraft((draft) => ({ ...draft, [key]: event.target.value }))} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm outline-none transition focus:border-[#0054A6] focus:bg-white focus:ring-2 focus:ring-blue-100" /></label>
+                    ))}
+                    <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setIsProfileEditorOpen(false)} className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100">Cancel</button><button type="submit" className="rounded-xl bg-[#0054A6] px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-[#004080]">Save changes</button></div>
+                  </div>
+                </form>
+              </div>
+            )}
+
             {/* Mobile Hamburger Menu Toggle Button (Visible on < XL screens) */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -492,7 +537,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
       {isMobileMenuOpen && (
         <div className="xl:hidden bg-[#004080] border-t border-blue-400/20 px-4 py-4 space-y-4 animate-in slide-in-from-top-2 text-white shadow-2xl max-h-[85vh] overflow-y-auto">
           {/* Quick View Switcher */}
-          <div className="flex items-center gap-1.5 p-1 bg-black/25 rounded-xl">
+          {currentUser?.role === 'ADMIN' && <div className="flex items-center gap-1.5 p-1 bg-black/25 rounded-xl">
             <button
               onClick={() => {
                 setActiveView('OPERATOR');
@@ -526,10 +571,10 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
             >
               Storyline
             </button>
-          </div>
+          </div>}
 
           {/* Operator Modules Quick Links */}
-          <div>
+          {currentUser?.role === 'ADMIN' && <div>
             <div className="text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-2">
               Operator Modules
             </div>
@@ -561,7 +606,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
                 );
               })}
             </div>
-          </div>
+          </div>}
 
           {/* Services & Quick Links */}
           <div className="pt-2 border-t border-blue-400/20">
@@ -569,6 +614,15 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
               Services &amp; Directory
             </div>
             <div className="grid grid-cols-2 gap-1.5 text-xs">
+              <button
+                onClick={() => {
+                  handleNavClick('ABSTRACT');
+                  setIsMobileMenuOpen(false);
+                }}
+                className="p-2.5 rounded-xl bg-amber-400 text-blue-950 text-left font-bold"
+              >
+                ✨ Abstract &amp; SDGs
+              </button>
               <button
                 onClick={() => {
                   handleNavClick('ABOUT_US');
@@ -629,15 +683,15 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
             <div className="pt-2 border-t border-blue-400/20 text-xs space-y-2">
               <div className="flex items-center justify-between bg-black/20 p-2.5 rounded-xl">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-white text-[#0054A6] flex items-center justify-center font-bold text-xs">
-                    {currentUser.name.charAt(0)}
+                  <div className="w-7 h-7 rounded-full bg-white text-[#0054A6] flex items-center justify-center font-bold text-xs overflow-hidden">
+                    {currentUser.avatar ? <img src={currentUser.avatar} alt="" className="w-full h-full object-cover" /> : currentUser.name.charAt(0)}
                   </div>
                   <div>
                     <span className="font-bold block leading-tight">{currentUser.name}</span>
                     <span className="text-[10px] text-blue-200 font-mono">Role: {currentUser.role}</span>
                   </div>
                 </div>
-                {onSwitchUserRole && (
+                {currentUser.role === 'ADMIN' && onSwitchUserRole && (
                   <button
                     onClick={() => {
                       onSwitchUserRole(currentUser.role === 'ADMIN' ? 'USER' : 'ADMIN');
@@ -649,6 +703,17 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
                   </button>
                 )}
               </div>
+
+              <button
+                onClick={() => {
+                  setProfileDraft({ name: currentUser.name, email: currentUser.email, phone: currentUser.phone, avatar: currentUser.avatar || '' });
+                  setIsMobileMenuOpen(false);
+                  setIsProfileEditorOpen(true);
+                }}
+                className="w-full p-2.5 text-left rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold flex items-center gap-2"
+              >
+                <Pencil className="w-3.5 h-3.5" /> Edit profile
+              </button>
 
               <button
                 onClick={() => {

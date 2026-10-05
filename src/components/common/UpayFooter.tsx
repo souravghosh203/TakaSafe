@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, Mail, Phone, MapPin, Clock } from 'lucide-react';
+import { MessageSquare, Mail, Phone, MapPin, Clock, Sparkles } from 'lucide-react';
 
 interface UpayFooterProps {
   onOpenModal?: (modalType: string) => void;
@@ -136,6 +136,10 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
             <div>
               <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">USEFUL LINKS</h4>
               <ul className="space-y-1.5 text-[12px] text-slate-400">
+                <li onClick={() => onOpenModal?.('ABSTRACT')} className="text-amber-300 font-bold hover:text-white cursor-pointer transition-colors flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3 text-amber-400" />
+                  <span>Official Project Abstract & SDGs</span>
+                </li>
                 <li onClick={() => onOpenModal?.('LIMITS_CHARGES')} className="hover:text-white cursor-pointer transition-colors">Limits and Charges</li>
                 <li onClick={() => onOpenModal?.('MEDIA')} className="hover:text-white cursor-pointer transition-colors">Press Release</li>
                 <li onClick={() => onOpenModal?.('NEED_HELP')} className="hover:text-white cursor-pointer transition-colors">Need Help?</li>

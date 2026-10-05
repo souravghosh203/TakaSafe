@@ -199,25 +199,8 @@ body, .bg-white, input, table, header {
 }
 
 @keyframes slideUp {
-  0% {
-    opacity: 0;
-    transform: translateY(32px) scale(0.988);
-    filter: blur(4px);
-  }
-  60% {
-    opacity: 0.95;
-    filter: blur(0.5px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0px);
-  }
-}
-
-.page-enter {
-  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform, opacity, filter;
+  from { opacity: 0; transform: translate3d(0, 18px, 0) scale(0.995); filter: blur(3px); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
 }
 
 /* Staggered entrance for internal page blocks */
@@ -229,6 +212,94 @@ body, .bg-white, input, table, header {
 }
 .page-enter > *:nth-child(3) {
   animation: slideUp 0.46s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
+}
+
+/* Route changes feel like a soft reveal, with the shared header staying still. */
+@keyframes pageReveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) scale(0.995);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.page-enter {
+  animation: pageReveal 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+@keyframes modalBackdropIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modalPanelIn { from { opacity: 0; transform: translate3d(0, 12px, 0) scale(.98); } to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); } }
+.modal-backdrop-enter { animation: modalBackdropIn 180ms ease-out both; }
+.modal-panel-enter { animation: modalPanelIn 240ms cubic-bezier(.22, 1, .36, 1) both; }
+
+@keyframes alert-arrive {
+  0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, .35); }
+  100% { box-shadow: 0 0 0 8px rgba(244, 63, 94, 0); }
+}
+.alert-arrive { animation: alert-arrive 700ms ease-out 2; }
+
+.tab-indicator { transition: transform 220ms cubic-bezier(.22, 1, .36, 1), opacity 180ms ease; }
+.customer-view-tabs button { position: relative; }
+.customer-view-tabs button::after { content: ''; position: absolute; left: .75rem; right: .75rem; bottom: 0; height: 2px; border-radius: 999px; background: #fab915; transform: scaleX(.45); opacity: 0; transition: transform 220ms cubic-bezier(.22, 1, .36, 1), opacity 180ms ease; }
+.customer-view-tabs button[aria-pressed='true']::after { transform: scaleX(1); opacity: 1; }
+.operator-module-link::after { content: ''; position: absolute; left: .75rem; right: .75rem; bottom: 2px; height: 2px; border-radius: 999px; background: #fab915; transform: scaleX(.4); opacity: 0; transition: transform 220ms cubic-bezier(.22, 1, .36, 1), opacity 180ms ease; }
+.operator-module-link[aria-current='page']::after { transform: scaleX(1); opacity: 1; }
+.metric-change { animation: metric-change 500ms ease-out; }
+@keyframes metric-change { 0% { transform: translateY(-2px) scale(1.06); text-shadow: 0 0 12px rgba(250,185,21,.7); } 100% { transform: translateY(0) scale(1); text-shadow: 0 0 0 transparent; } }
+
+.skeleton-shimmer { background: linear-gradient(100deg, rgba(148,163,184,.12) 20%, rgba(148,163,184,.28) 38%, rgba(148,163,184,.12) 56%); background-size: 220% 100%; animation: skeleton-shimmer 1.4s ease-in-out infinite; }
+@keyframes skeleton-shimmer { to { background-position-x: -220%; } }
+
+@keyframes reveal-on-scroll { from { opacity: .45; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@supports (animation-timeline: view()) {
+  .scroll-reveal { animation: reveal-on-scroll linear both; animation-timeline: view(); animation-range: entry 0% entry 28%; }
+}
+
+.interactive-lift {
+  transform: translateZ(0);
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 260ms ease, border-color 260ms ease;
+}
+
+.interactive-lift:hover {
+  transform: translateY(-5px) scale(1.008);
+  box-shadow: 0 18px 36px -20px rgba(0, 64, 128, 0.42);
+  border-color: rgba(250, 185, 21, 0.72);
+}
+
+.interactive-lift:active {
+  transform: translateY(-1px) scale(0.995);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid rgba(250, 185, 21, 0.85);
+  outline-offset: 3px;
+}
+
+button:not(:disabled):active { transform: scale(.98); }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .page-enter, .modal-backdrop-enter, .modal-panel-enter, .alert-arrive, .metric-change, .skeleton-shimmer, .scroll-reveal { animation: none !important; }
+  .interactive-lift:hover, .interactive-lift:active, button:not(:disabled):active { transform: none; }
 }
 
 /* =========================================================
@@ -290,6 +361,49 @@ body, .bg-white, input, table, header {
 
 .group:hover .mfs-icon-bounce {
   animation: mfsSmileBounce 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes mfsBrandShimmer {
+  from {
+    background-position: 200% 50%;
+  }
+  to {
+    background-position: -100% 50%;
+  }
+}
+
+.mfs-brand-word {
+  transition: filter 240ms ease, transform 240ms ease;
+}
+
+.mfs-brand-taka {
+  --brand-base: #fab915;
+}
+
+.mfs-brand-safe {
+  --brand-base: #ffffff;
+}
+
+.mfs-brand-word {
+  transition: filter 240ms ease, transform 240ms ease;
+}
+
+.group:hover .mfs-brand-word {
+  color: transparent;
+  background-image: linear-gradient(
+    105deg,
+    var(--brand-base) 0%,
+    var(--brand-base) 35%,
+    #fff4c2 50%,
+    var(--brand-base) 65%,
+    var(--brand-base) 100%
+  );
+  background-size: 220% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: mfsBrandShimmer 850ms ease-out both;
+  filter: drop-shadow(0 0 7px rgba(250, 185, 21, 0.42));
+  transform: translateY(-1px);
 }
 
 .group:hover .mfs-dot-wink {
@@ -382,3 +496,150 @@ html.dark {
   cursor: pointer;
 }
 
+@media (max-width: 639px) {
+  .services-card-grid > * {
+    min-width: 0;
+    padding: 0.75rem;
+  }
+
+  .services-card-grid > * > div:first-child {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 0.5rem;
+    flex: 0 0 auto;
+  }
+
+  .services-card-grid > * > span {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+  }
+}
+
+/* Login screen polish: quiet ambient light, crisp depth, and responsive feedback. */
+.login-scene {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(255,255,255,.94) 0%, rgba(248,250,252,.72) 48%, transparent 78%);
+}
+
+.login-glow {
+  position: absolute;
+  z-index: -1;
+  width: min(34rem, 90vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: .2;
+  pointer-events: none;
+  animation: login-drift 14s ease-in-out infinite alternate;
+}
+
+.login-glow-one {
+  top: 2%;
+  left: calc(50% - 30rem);
+  background: #5da7ed;
+}
+
+.login-glow-two {
+  right: calc(50% - 30rem);
+  bottom: -12%;
+  background: #41b58a;
+  animation-delay: -7s;
+}
+
+.login-card {
+  z-index: 0;
+  box-shadow: 0 32px 80px -42px rgba(15, 23, 42, .34), 0 12px 30px -22px rgba(15, 23, 42, .24);
+  animation: login-card-arrive 620ms cubic-bezier(.22, 1, .36, 1) both;
+  transition: box-shadow 300ms ease, border-color 300ms ease, transform 300ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.login-card:hover {
+  box-shadow: 0 38px 88px -44px rgba(15, 23, 42, .4), 0 14px 34px -22px rgba(15, 23, 42, .27);
+}
+
+.login-role-option {
+  transition: color 200ms ease, background-color 240ms ease, box-shadow 240ms ease, transform 240ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.login-role-option:hover { transform: translateY(-1px); }
+.login-role-option:active { transform: scale(.98); }
+
+.login-privileges { animation: login-panel-arrive 280ms cubic-bezier(.22, 1, .36, 1) both; }
+
+.login-input {
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.login-input:focus {
+  border-color: #164E3D;
+  box-shadow: 0 0 0 4px rgba(22, 78, 61, .12), 0 3px 10px -6px rgba(22, 78, 61, .35);
+}
+
+.login-submit {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 18px -9px rgba(0, 64, 128, .55);
+  transition: transform 180ms ease, box-shadow 220ms ease, filter 220ms ease;
+}
+
+.login-submit::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: linear-gradient(110deg, transparent 25%, rgba(255,255,255,.2) 48%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 650ms cubic-bezier(.22, 1, .36, 1);
+  pointer-events: none;
+}
+
+.login-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px -10px rgba(0, 64, 128, .58);
+  filter: saturate(1.08);
+}
+
+.login-submit:hover:not(:disabled)::after { transform: translateX(120%); }
+.login-submit:active:not(:disabled) { transform: translateY(0) scale(.99); }
+.login-submit:disabled { cursor: wait; opacity: .82; }
+
+.login-profile {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.login-profile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -11px rgba(15, 23, 42, .42);
+}
+
+.login-error { animation: login-error-arrive 260ms cubic-bezier(.22, 1, .36, 1) both; }
+
+@keyframes login-card-arrive {
+  from { opacity: 0; transform: translate3d(0, 14px, 0) scale(.99); filter: blur(5px); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+}
+
+@keyframes login-panel-arrive {
+  from { opacity: .55; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes login-error-arrive {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes login-drift {
+  from { transform: translate3d(-8px, -10px, 0) scale(.96); }
+  to { transform: translate3d(14px, 12px, 0) scale(1.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-glow, .login-card, .login-privileges, .login-error { animation: none !important; }
+  .login-card, .login-role-option, .login-input, .login-submit, .login-profile { transition: none !important; }
+  .login-card:hover, .login-role-option:hover, .login-role-option:active,
+  .login-submit:hover:not(:disabled), .login-submit:active:not(:disabled), .login-profile:hover { transform: none; }
+}

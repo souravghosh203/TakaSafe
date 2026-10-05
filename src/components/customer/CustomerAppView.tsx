@@ -3,6 +3,10 @@ import { CustomerBaseline, LinkedWallet } from '../../types';
 import { MOCK_LINKED_WALLETS } from '../../data/mockData';
 import { QRCodeScannerModal } from './QRCodeScannerModal';
 import { TakaSafeSovereignCard } from './TakaSafeSovereignCard';
+import { AI1PipelineVisualizer } from './ML1PipelineVisualizer';
+import { AI1NotebookModal } from '../common/ML1NotebookModal';
+import { ScamShieldCard } from '../scamshield/ScamShieldCard';
+import { evaluateAI1AndDoubtCheck, AI1EvaluationResult } from '../../services/ai1ScoringEngine';
 import {
   Send,
   ArrowUpRight,
@@ -28,12 +32,17 @@ import {
   Shield,
   Zap,
   X,
+  FileCode2,
+  Brain,
 } from 'lucide-react';
 
 interface CustomerAppViewProps {
   customer: CustomerBaseline;
   userId: string;
   onSimulateRiskyPayment: () => void;
+  initialService?: string | null;
+  allowCashIn?: boolean;
+  onServiceDismiss?: () => void;
   lang: 'EN' | 'BN';
 }
 
@@ -44,11 +53,41 @@ interface CustomerTransfer {
   reference?: string;
   status?: 'COMPLETED' | 'PROCEEDED';
   riskScore?: number;
+  serviceType?: string;
+  direction?: 'IN' | 'OUT';
+  fee?: number;
 }
 
 interface CustomerLogin {
   timestamp: string;
+  device?: string;
 }
+
+const WALLET_SERVICES: Record<string, {
+  title: string;
+  type: string;
+  direction: 'IN' | 'OUT';
+  targetLabel: string;
+  targets: string[];
+  feeRate: number;
+}> = {
+  'Cash In': { title: 'Cash In', type: 'CASH_IN', direction: 'IN', targetLabel: 'Deposit method', targets: ['Agent Deposit', 'Bank Transfer'], feeRate: 0 },
+  'Cash Out': { title: 'Cash Out', type: 'CASH_OUT', direction: 'OUT', targetLabel: 'Withdrawal method', targets: ['Agent Cash Out', 'ATM Cash Out'], feeRate: 0.014 },
+  'Make Payment': { title: 'Make Payment', type: 'MAKE_PAYMENT', direction: 'OUT', targetLabel: 'Merchant', targets: [], feeRate: 0 },
+  'Add Money': { title: 'Add Money', type: 'ADD_MONEY', direction: 'IN', targetLabel: 'Funding source', targets: ['Linked Bank Account', 'Debit Card'], feeRate: 0 },
+  'Pay Bill': { title: 'Pay Bill', type: 'PAY_BILL', direction: 'OUT', targetLabel: 'Biller', targets: ['DESCO', 'WASA', 'Titas Gas', 'DPDC', 'NESCO'], feeRate: 0 },
+  'Mobile Recharge': { title: 'Mobile Recharge', type: 'MOBILE_RECHARGE', direction: 'OUT', targetLabel: 'Mobile operator', targets: ['Grameenphone', 'Banglalink', 'Robi', 'Airtel', 'Teletalk'], feeRate: 0 },
+  Remittance: { title: 'Remittance', type: 'REMITTANCE', direction: 'IN', targetLabel: 'Remittance provider', targets: ['Bank Remittance', 'International Remittance'], feeRate: 0 },
+  Savings: { title: 'Micro-Savings', type: 'SAVINGS', direction: 'OUT', targetLabel: 'Savings plan', targets: ['TakaSafe Savings Pocket', 'Monthly Savings Plan'], feeRate: 0 },
+  Education: { title: 'Education Fee', type: 'EDUCATION', direction: 'OUT', targetLabel: 'Institution', targets: ['University Tuition', 'School Fees', 'College Fees'], feeRate: 0 },
+  Insurance: { title: 'Insurance / Takaful', type: 'INSURANCE', direction: 'OUT', targetLabel: 'Plan', targets: ['Health Takaful', 'Family Takaful'], feeRate: 0 },
+  Business: { title: 'Business Payment', type: 'BUSINESS_PAYMENT', direction: 'OUT', targetLabel: 'Business or merchant', targets: ['Supplier Payment', 'Merchant Settlement', 'Business Invoice'], feeRate: 0 },
+};
+
+const getServiceFee = (service: string, target: string, amount: number): number => {
+  if (service === 'Cash Out' && target === 'ATM Cash Out') return 0;
+  return Math.round(amount * (WALLET_SERVICES[service]?.feeRate || 0));
+};
 
 const loadTransferHistory = (userId: string, wallet: string): CustomerTransfer[] => {
   try {
@@ -77,6 +116,9 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
   customer,
   userId,
   onSimulateRiskyPayment,
+  initialService = null,
+  allowCashIn = true,
+  onServiceDismiss,
   lang,
 }) => {
   const [activeTab, setActiveTab] = useState<'WALLET' | 'RESILIENCE'>('WALLET');
@@ -85,11 +127,48 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
   const [note, setNote] = useState<string>('');
   const [showScamModal, setShowScamModal] = useState<boolean>(false);
   const [scamDecision, setScamDecision] = useState<string | null>(null);
+  const [isNotebookModalOpen, setIsNotebookModalOpen] = useState<boolean>(false);
+  const [currentAI1Evaluation, setCurrentAI1Evaluation] = useState<AI1EvaluationResult | null>(null);
   const [normalSuccess, setNormalSuccess] = useState<boolean>(false);
+  const [balanceError, setBalanceError] = useState<string | null>(null);
   const [riskReasons, setRiskReasons] = useState<string[]>([]);
   const [riskScore, setRiskScore] = useState<number>(0);
+  const [isScoring, setIsScoring] = useState<boolean>(false);
+  const [activeWalletService, setActiveWalletService] = useState<string | null>(null);
+  const [serviceTarget, setServiceTarget] = useState<string>('');
+  const [serviceAmount, setServiceAmount] = useState<string>('');
+  const [serviceNote, setServiceNote] = useState<string>('');
+  const [serviceError, setServiceError] = useState<string | null>(null);
+  const [serviceReceipt, setServiceReceipt] = useState<string | null>(null);
+  const [isServiceReview, setIsServiceReview] = useState<boolean>(false);
+  const balanceStorageKey = `takasafe-balance:${userId}:${customer.wallet}`;
+  const [availableBalance, setAvailableBalance] = useState<number>(() => {
+    try {
+      const savedBalance = Number(window.localStorage.getItem(balanceStorageKey));
+      return window.localStorage.getItem(balanceStorageKey) !== null && Number.isFinite(savedBalance) && savedBalance >= 0
+        ? savedBalance
+        : customer.balance;
+    } catch {
+      return customer.balance;
+    }
+  });
   const [transferHistory, setTransferHistory] = useState<CustomerTransfer[]>(() => loadTransferHistory(userId, customer.wallet));
   const [loginHistory, setLoginHistory] = useState<CustomerLogin[]>(() => loadLoginHistory(userId, customer.wallet));
+
+  useEffect(() => {
+    if (!initialService || !WALLET_SERVICES[initialService]) return;
+    if (initialService === 'Cash In' && !allowCashIn) {
+      onServiceDismiss?.();
+      return;
+    }
+    setActiveWalletService(initialService);
+    setServiceTarget(WALLET_SERVICES[initialService].targets[0] || '');
+    setServiceAmount('');
+    setServiceNote('');
+    setServiceError(null);
+    setServiceReceipt(null);
+    setIsServiceReview(false);
+  }, [initialService, allowCashIn, onServiceDismiss]);
 
   useEffect(() => {
     let active = true;
@@ -141,18 +220,50 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     return () => { active = false; };
   }, [userId, customer.wallet]);
 
+  useEffect(() => {
+    const refreshOnServerEvent = (event: Event) => {
+      const detail = (event as CustomEvent<{ kind?: string; userId?: string }>).detail;
+      if (detail?.kind === 'customer-login' && detail.userId === userId) {
+        fetch(`/api/customer-logins/${encodeURIComponent(userId)}`, { cache: 'no-store' })
+          .then((response) => response.ok ? response.json() : Promise.reject(new Error('Login history refresh failed')))
+          .then(({ logins }: { logins: CustomerLogin[] }) => {
+            if (!Array.isArray(logins)) return;
+            setLoginHistory(logins);
+            try { window.localStorage.setItem(`takasafe-logins:${userId}:${customer.wallet}`, JSON.stringify(logins)); } catch { /* Keep refreshed history in memory. */ }
+          }).catch(() => undefined);
+        return;
+      }
+      if (detail?.kind !== 'customer-transaction') return;
+      fetch(`/api/customer-history/${encodeURIComponent(userId)}`, { cache: 'no-store' })
+        .then((response) => response.ok ? response.json() : Promise.reject(new Error('History refresh failed')))
+        .then(({ history }: { history: CustomerTransfer[] }) => {
+          if (!Array.isArray(history)) return;
+          setTransferHistory(history);
+          try { window.localStorage.setItem(`takasafe-transfers:${userId}:${customer.wallet}`, JSON.stringify(history)); } catch { /* Keep the refreshed history in memory. */ }
+        })
+        .catch(() => undefined);
+    };
+    window.addEventListener('takasafe-server-update', refreshOnServerEvent);
+    return () => window.removeEventListener('takasafe-server-update', refreshOnServerEvent);
+  }, [userId, customer.wallet]);
+
   const recentTransfers = transferHistory.filter((transfer) => Date.now() - Date.parse(transfer.timestamp) <= 90 * 24 * 60 * 60 * 1000);
-  const observedAverage = recentTransfers.length
-    ? recentTransfers.reduce((sum, transfer) => sum + transfer.amount, 0) / recentTransfers.length
+  const sendMoneyTransfers = recentTransfers.filter((transfer) => !transfer.serviceType || transfer.serviceType === 'SEND_MONEY');
+  const baselineTransfers = sendMoneyTransfers.filter((transfer) => transfer.status !== 'PROCEEDED' && (transfer.riskScore ?? 0) < 40);
+  const observedAverage = baselineTransfers.length
+    ? baselineTransfers.reduce((sum, transfer) => sum + transfer.amount, 0) / baselineTransfers.length
     : customer.avgAmount;
-  const sortedAmounts = recentTransfers.map((transfer) => transfer.amount).sort((a, b) => a - b);
+  const sortedAmounts = baselineTransfers.map((transfer) => transfer.amount).sort((a, b) => a - b);
+  const medianAmount = sortedAmounts.length ? sortedAmounts[Math.floor(sortedAmounts.length / 2)] : customer.avgAmount;
+  const absoluteDeviations = sortedAmounts.map((value) => Math.abs(value - medianAmount)).sort((a, b) => a - b);
+  const medianAbsoluteDeviation = absoluteDeviations.length ? absoluteDeviations[Math.floor(absoluteDeviations.length / 2)] : 0;
   const observedUpperRange = sortedAmounts.length
     ? sortedAmounts[Math.floor((sortedAmounts.length - 1) * 0.9)]
     : customer.maxAmountTypical;
-  const observedRecipients = new Set(recentTransfers.map((transfer) => transfer.recipient.replace(/\D/g, '')));
+  const observedRecipients = new Set(sendMoneyTransfers.map((transfer) => transfer.recipient.replace(/\D/g, '')).filter(Boolean));
   const knownRecipients = observedRecipients.size ? observedRecipients : new Set(customer.frequentRecipients.map((item) => item.replace(/\D/g, '')));
   const activityTimestamps = [
-    ...recentTransfers.map((transfer) => transfer.timestamp),
+    ...baselineTransfers.map((transfer) => transfer.timestamp),
     ...loginHistory.map((login) => login.timestamp).filter((timestamp) => Date.now() - Date.parse(timestamp) <= 90 * 24 * 60 * 60 * 1000),
   ];
   const observedHours = activityTimestamps.map((timestamp) => new Date(timestamp).getHours()).sort((a, b) => a - b);
@@ -160,19 +271,63 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     ? `${String(observedHours[0]).padStart(2, '0')}:00 - ${String((observedHours[observedHours.length - 1] + 1) % 24).padStart(2, '0')}:00`
     : customer.usualHours;
 
-  const recordTransfer = (transferAmount: number, transferRecipient: string, score: number, status: 'COMPLETED' | 'PROCEEDED') => {
+  const liveAI1Evaluation = React.useMemo(() => {
+    const num = Number(amount) || Math.round(observedAverage);
+    const normalizedRecipient = recipient.trim().replace(/\D/g, '');
+    const recipientIsKnown = knownRecipients.has(normalizedRecipient);
+    const isKnownMule = recipient.trim().includes('510294');
+    const currentHour = new Date().getHours();
+    const [usualStart = 9, usualEnd = 21] = usualHours.split('-').map((time) => Number(time.trim().split(':')[0]));
+    const outsideUsualHours = currentHour < usualStart || currentHour >= usualEnd;
+
+    return evaluateAI1AndDoubtCheck({
+      amount: num,
+      observedAverage,
+      recipient: recipient || '01XXXXXXXXX',
+      recipientIsKnown,
+      isKnownMule,
+      momentHourBST: currentHour,
+      outsideUsualHours,
+      recentAttemptCount10m: 0,
+      isNewDevice: false,
+      splitPaymentDetected: false,
+      note,
+    });
+  }, [amount, recipient, observedAverage, knownRecipients, usualHours, note]);
+
+  const recordTransfer = (
+    transferAmount: number,
+    transferRecipient: string,
+    score: number,
+    status: 'COMPLETED' | 'PROCEEDED',
+    serviceType = 'SEND_MONEY',
+    direction: 'IN' | 'OUT' = 'OUT',
+    fee = 0,
+    reference = note.trim(),
+  ) => {
     const record: CustomerTransfer = {
       amount: transferAmount,
       recipient: transferRecipient.trim(),
       timestamp: new Date().toISOString(),
-      reference: note.trim(),
+      reference,
       status,
       riskScore: score,
+      serviceType,
+      direction,
+      fee,
     };
     const nextHistory = [
       ...transferHistory,
       record,
     ].slice(-500);
+    const nextBalance = Math.max(0, availableBalance + (direction === 'IN' ? transferAmount : -(transferAmount + fee)));
+    setAvailableBalance(nextBalance);
+    setBalanceError(null);
+    try {
+      window.localStorage.setItem(balanceStorageKey, String(nextBalance));
+    } catch {
+      // Keep the balance update in memory if browser storage is unavailable.
+    }
     setTransferHistory(nextHistory);
     try {
       window.localStorage.setItem(`takasafe-transfers:${userId}:${customer.wallet}`, JSON.stringify(nextHistory));
@@ -188,24 +343,113 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     });
   };
 
+  const handleWalletServiceSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!activeWalletService) return;
+    const config = WALLET_SERVICES[activeWalletService];
+    const value = Number(serviceAmount);
+    if (!Number.isFinite(value) || value <= 0) {
+      setServiceError('Enter an amount greater than ৳0.');
+      return;
+    }
+    const fee = getServiceFee(activeWalletService, serviceTarget, value);
+    const totalDebit = value + fee;
+    if (config.direction === 'OUT' && totalDebit > availableBalance) {
+      setServiceError(`Insufficient balance. This service needs ৳${totalDebit.toLocaleString()} including fees; ৳${availableBalance.toLocaleString()} is available.`);
+      return;
+    }
+    if (!serviceTarget.trim()) {
+      setServiceError(`Select a ${config.targetLabel.toLowerCase()}.`);
+      return;
+    }
+    const needsAgentNumber = (activeWalletService === 'Cash In' && serviceTarget === 'Agent Deposit') || (activeWalletService === 'Cash Out' && serviceTarget === 'Agent Cash Out');
+    if (needsAgentNumber && !/^01[3-9]\d{8}$/.test(serviceNote.replace(/\D/g, ''))) {
+      setServiceError('Enter a valid 11-digit Bangladesh agent number.');
+      return;
+    }
+    if (activeWalletService === 'Mobile Recharge' && !/^01[3-9]\d{8}$/.test(serviceNote.replace(/\D/g, ''))) {
+      setServiceError('Enter a valid 11-digit Bangladesh mobile number.');
+      return;
+    }
+    if ((activeWalletService === 'Mobile Recharge' || activeWalletService === 'Pay Bill') && !serviceNote.trim()) {
+      setServiceError(activeWalletService === 'Mobile Recharge' ? 'Enter the mobile number to recharge.' : 'Enter the bill account number.');
+      return;
+    }
+    setServiceError(null);
+    setIsServiceReview(true);
+  };
+
+  const confirmWalletService = () => {
+    if (!activeWalletService || !isServiceReview) return;
+    const config = WALLET_SERVICES[activeWalletService];
+    const value = Number(serviceAmount);
+    const fee = getServiceFee(activeWalletService, serviceTarget, value);
+    const totalDebit = value + fee;
+    if (!Number.isFinite(value) || value <= 0 || (config.direction === 'OUT' && totalDebit > availableBalance)) {
+      setIsServiceReview(false);
+      setServiceError('Your available balance changed. Check the amount and try again.');
+      return;
+    }
+
+    const isAgentTransaction = (activeWalletService === 'Cash In' && serviceTarget === 'Agent Deposit') || (activeWalletService === 'Cash Out' && serviceTarget === 'Agent Cash Out');
+    const historyCounterparty = isAgentTransaction ? serviceNote.trim() : serviceTarget;
+    const historyReference = isAgentTransaction ? `${serviceTarget} · ${serviceNote.trim()}` : serviceNote.trim();
+    recordTransfer(value, historyCounterparty, 0, 'COMPLETED', config.type, config.direction, fee, historyReference);
+    const balanceAfter = availableBalance + (config.direction === 'IN' ? value : -totalDebit);
+    setServiceReceipt(`Simulated ${config.title} completed for BDT ${value.toLocaleString()}${fee ? ` (BDT ${fee.toLocaleString()} fee)` : ''}. Demo balance: BDT ${balanceAfter.toLocaleString()}. No real payment was made.`);
+    setIsServiceReview(false);
+  };
+
+  const closeWalletService = () => {
+    setActiveWalletService(null);
+    setServiceError(null);
+    setServiceReceipt(null);
+    setIsServiceReview(false);
+    onServiceDismiss?.();
+  };
+
   // QR Code Scanner & Secure Wallet Linking States
   const [isQRScannerOpen, setIsQRScannerOpen] = useState<boolean>(false);
+  const [qrInitialTab, setQrInitialTab] = useState<'SCANNER' | 'MY_QR'>('SCANNER');
   const [linkedWallets, setLinkedWallets] = useState<LinkedWallet[]>(MOCK_LINKED_WALLETS);
   const [linkSuccessBanner, setLinkSuccessBanner] = useState<string | null>(null);
   const [formHighlight, setFormHighlight] = useState<boolean>(false);
 
-  const handleSendPayment = (e: React.FormEvent) => {
+  const handleSendPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     const num = Number(amount);
+    if (!Number.isFinite(num) || num <= 0) {
+      setBalanceError('Enter an amount greater than ৳0.');
+      return;
+    }
+    if (num > availableBalance) {
+      setBalanceError(`Insufficient balance. You have ৳${availableBalance.toLocaleString()} available.`);
+      return;
+    }
+    setBalanceError(null);
+    setIsScoring(true);
 
     const normalizedRecipient = recipient.trim().replace(/\D/g, '');
     const recipientIsKnown = knownRecipients.has(normalizedRecipient);
     const isKnownMule = recipient.trim().includes('510294');
+    let recipientNetworkRisk = { score: 0, reasons: [] as string[] };
+    try {
+      const response = await fetch(`/api/recipient-risk/${encodeURIComponent(normalizedRecipient)}`);
+      if (response.ok) {
+        const data = await response.json();
+        recipientNetworkRisk = {
+          score: Number(data.score) || 0,
+          reasons: Array.isArray(data.reasons) ? data.reasons.filter((reason: unknown): reason is string => typeof reason === 'string') : [],
+        };
+      }
+    } catch {
+      // Continue with individual behavior signals when network history is unavailable.
+    }
     const currentHour = new Date().getHours();
     const [usualStart = 9, usualEnd = 21] = usualHours.split('-').map((time) => Number(time.trim().split(':')[0]));
-    const amountRatio = num / Math.max(observedAverage, 1);
-    const amountThreshold = recentTransfers.length >= 5
-      ? Math.max(observedUpperRange, observedAverage * 2.5)
+    const amountRatio = num / Math.max(medianAmount, 1);
+    const amountThreshold = baselineTransfers.length >= 5
+      ? Math.max(medianAmount + 3 * 1.4826 * medianAbsoluteDeviation, medianAmount * 2.5, observedUpperRange)
       : Math.max(customer.maxAmountTypical, observedAverage * 3);
     const amountIsUnusual = num > amountThreshold && amountRatio >= 3;
     const outsideUsualHours = currentHour < usualStart || currentHour >= usualEnd;
@@ -215,40 +459,92 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     }, {} as Record<number, number>);
     const peakActivityCount = Math.max(0, ...Object.values(activityHourCounts));
     const learnedUnusualTime = observedHours.length >= 6 && peakActivityCount >= 2 && (activityHourCounts[currentHour] || 0) === 0;
-    const recentAttemptCount = transferHistory.filter((transfer) => Date.now() - Date.parse(transfer.timestamp) <= 10 * 60 * 1000).length;
+    const outgoingHistory = transferHistory.filter((transfer) => (transfer.direction || 'OUT') === 'OUT');
+    const recentAttemptCount = outgoingHistory.filter((transfer) => Date.now() - Date.parse(transfer.timestamp) <= 10 * 60 * 1000).length;
+    const dailyTransfers = outgoingHistory.filter((transfer) => Date.now() - Date.parse(transfer.timestamp) <= 24 * 60 * 60 * 1000);
+    const dailyAmount = dailyTransfers.reduce((total, transfer) => total + transfer.amount, num);
+    const splitPaymentPattern = dailyTransfers.length >= 2 && num <= amountThreshold &&
+      dailyTransfers.every((transfer) => transfer.amount <= amountThreshold) &&
+      dailyAmount > Math.max(amountThreshold * 3, medianAmount * customer.avgDailyTxns * 2.5);
+    const normalizeDevice = (device: string) => device.replace(/(Chrome|Firefox|Version|Safari|Edg)\/[\d.]+/g, '$1/*');
+    const knownSessionDevices = loginHistory.map((login) => login.device).filter((device): device is string => Boolean(device)).map(normalizeDevice);
+    const currentDevice = typeof navigator === 'undefined' ? '' : normalizeDevice(navigator.userAgent);
+    const newDevice = knownSessionDevices.length >= 2 && Boolean(currentDevice) && !knownSessionDevices.includes(currentDevice);
     const reasons: string[] = [];
     let score = 0;
     if (amountIsUnusual) {
-      score += Math.min(40, 15 + Math.round((amountRatio - 3) * 3));
+      score += Math.min(40, 20 + Math.round((amountRatio - 3) * 3));
       reasons.push(`Unusual amount: ৳${num.toLocaleString()} is ${amountRatio.toFixed(1)}× your recent average of ৳${Math.round(observedAverage).toLocaleString()}.`);
     }
     if (outsideUsualHours) {
-      score += amountIsUnusual ? 22 : 8;
+      score += amountIsUnusual ? 25 : 8;
       reasons.push(`This transfer is outside your usual activity hours (${usualHours})${amountIsUnusual ? ', increasing the risk of this unusually large payment' : ''}.`);
     } else if (learnedUnusualTime) {
-      score += amountIsUnusual ? 22 : 8;
+      score += amountIsUnusual ? 25 : 8;
       reasons.push(`You have not usually logged in or transacted at this hour${amountIsUnusual ? ', and this amount is unusually large' : ''}.`);
     }
     if (!recipientIsKnown) {
       score += 8;
       reasons.push('This is a recipient you have not sent money to before.');
     }
-    if (recentAttemptCount >= 3) {
+    const unusualPaceThreshold = Math.max(3, Math.ceil(customer.avgDailyTxns / 6));
+    if (recentAttemptCount >= unusualPaceThreshold) {
       score += 20;
       reasons.push(`${recentAttemptCount} transfers were recorded in the last 10 minutes, above your usual pace.`);
+    }
+    if (splitPaymentPattern) {
+      score += 20;
+      reasons.push('Several smaller transfers add up to an unusually high total for your recent activity.');
+    }
+    if (newDevice) {
+      score += amountIsUnusual ? 28 : 16;
+      reasons.push(`This session is using a device or browser not seen in your previous ${knownSessionDevices.length} logins${amountIsUnusual ? ', alongside an unusually large transfer' : ''}.`);
     }
     if (isKnownMule) {
       score += 65;
       reasons.push('This recipient is linked to a suspicious money-mule network.');
     }
+    if (recipientNetworkRisk.score > 0) {
+      score += recipientNetworkRisk.score;
+      reasons.push(...recipientNetworkRisk.reasons);
+    }
+
+    // AI-1 Engine evaluation (LightGBM + Calibration + Conformal Doubt Check)
+    const evalResult = evaluateAI1AndDoubtCheck({
+      amount: num,
+      observedAverage,
+      recipient,
+      recipientIsKnown,
+      isKnownMule,
+      momentHourBST: currentHour,
+      outsideUsualHours,
+      recentAttemptCount10m: recentAttemptCount,
+      isNewDevice: newDevice,
+      splitPaymentDetected: splitPaymentPattern,
+      note,
+    });
+    setCurrentAI1Evaluation(evalResult);
+
+    // Fuse scores: incorporate calibrated AI-1 probability
+    const finalScore = Math.min(100, Math.max(score, evalResult.ai1Score.calibratedScore));
+
+    if (evalResult.doubtCheck.conformal.isDoubtFlagged) {
+      reasons.push(`Model Doubt Check: Conformal prediction set {${evalResult.doubtCheck.conformal.predictionSet.join(', ')}} indicates high statistical ambiguity.`);
+    }
+    if (evalResult.doubtCheck.novelty.isNovel) {
+      reasons.push(`Model Novelty Check: Transfer exhibits ${(evalResult.doubtCheck.novelty.noveltyScore * 100).toFixed(0)}% Out-of-Distribution deviance across Amount, Receiver & Moment.`);
+    }
+
+    setIsScoring(false);
     setRiskReasons(reasons);
-    setRiskScore(Math.min(score, 100));
-    // A new recipient or a routine amount alone should not interrupt a transfer.
-    if (score >= 40) {
+    setRiskScore(finalScore);
+
+    // Trigger ScamShield if finalScore >= 40 or AI-1 doubt/risk policy flags it
+    if (finalScore >= 40 || evalResult.scamShieldTriggered) {
       setShowScamModal(true);
       onSimulateRiskyPayment();
     } else {
-      recordTransfer(num, recipient, score, 'COMPLETED');
+      recordTransfer(num, recipient, finalScore, 'COMPLETED');
       setNormalSuccess(true);
       setTimeout(() => setNormalSuccess(false), 4000);
     }
@@ -275,6 +571,22 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
 
   // Called when a payment or merchant QR is scanned
   const handlePaymentQRScanned = (recipientWallet: string, suggestedAmount?: number, suggestedNote?: string) => {
+    if (activeWalletService === 'Make Payment') {
+      const merchant = suggestedNote?.replace(/^QR Payment to\s*/i, '').trim() || recipientWallet;
+      setServiceTarget(merchant);
+      setServiceAmount(suggestedAmount && suggestedAmount > 0 ? String(suggestedAmount) : '');
+      setServiceNote(`QR recipient: ${recipientWallet}`);
+      setServiceError(null);
+      setIsServiceReview(false);
+      return;
+    }
+    if ((activeWalletService === 'Cash Out' && serviceTarget === 'Agent Cash Out') || (activeWalletService === 'Cash In' && serviceTarget === 'Agent Deposit')) {
+      setServiceNote(recipientWallet);
+      setServiceAmount(suggestedAmount && suggestedAmount > 0 ? String(suggestedAmount) : '');
+      setServiceError(null);
+      setIsServiceReview(false);
+      return;
+    }
     setActiveTab('WALLET');
     setRecipient(recipientWallet);
     if (suggestedAmount) {
@@ -301,6 +613,9 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <div role="note" className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-950">
+        Demo mode: payments, service requests, balances, and QR links are simulated. No real money moves and no external account is connected.
+      </div>
       {/* Customer Mode Header */}
       <div className="bg-white dark:bg-[#0F172A] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -329,9 +644,10 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
             <span>{lang === 'BN' ? 'কিউআর স্ক্যান / ওয়ালেট লিঙ্ক' : 'Scan QR & Link Wallet'}</span>
           </button>
 
-          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+          <div className="customer-view-tabs flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
             <button
               onClick={() => setActiveTab('WALLET')}
+              aria-pressed={activeTab === 'WALLET'}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'WALLET'
                   ? 'bg-white text-[#0054A6] shadow-xs'
@@ -342,6 +658,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('RESILIENCE')}
+              aria-pressed={activeTab === 'RESILIENCE'}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'RESILIENCE'
                   ? 'bg-white text-[#0054A6] shadow-xs'
@@ -377,7 +694,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
               {/* Balance & Card Details */}
               <div className="md:col-span-1 space-y-4">
                 {/* Digital Wallet Card - Sovereign Luxury Centurion Inspired */}
-                <TakaSafeSovereignCard customer={customer} lang={lang} />
+                <TakaSafeSovereignCard customer={{ ...customer, balance: availableBalance }} lang={lang} />
 
                 {/* Quick Demo Pre-fills */}
                 <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
@@ -395,11 +712,11 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                   <button
                     type="button"
                     onClick={() => handlePreFill('RISKY')}
-                    className="w-full text-left p-2.5 rounded-xl border-2 border-rose-200 bg-rose-50/40 hover:bg-rose-50 hover:border-rose-400 transition-all text-xs cursor-pointer"
+                    className="w-full text-left p-2.5 rounded-xl border border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition-all text-xs cursor-pointer"
                   >
-                    <div className="font-bold text-rose-800 flex items-center justify-between">
+                    <div className="font-bold text-slate-800 flex items-center justify-between">
                       <span>2. Risky Transfer (৳ 80,000)</span>
-                      <span className="bg-rose-600 text-white text-[9px] px-1.5 py-0.5 rounded">TRIGGERS SHIELD</span>
+                      <span className="bg-slate-800 text-white text-[9px] px-1.5 py-0.5 rounded font-mono">SIMULATION</span>
                     </div>
                     <div className="text-[11px] text-slate-500">To: New nocturnal account · Mule W302 link</div>
                   </button>
@@ -408,10 +725,48 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
 
               {/* Transfer Form */}
               <div
-                className={`md:col-span-2 bg-white p-6 rounded-3xl border shadow-sm transition-all duration-300 ${
+                className={`md:col-span-2 bg-white p-6 rounded-3xl border shadow-sm transition-all duration-300 min-h-[626px] ${
                   formHighlight ? 'ring-2 ring-[#0054A6] border-[#0054A6]' : 'border-slate-200'
                 }`}
               >
+                {activeWalletService && WALLET_SERVICES[activeWalletService] ? (
+                  <div className="min-h-[578px] flex flex-col">
+                    <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                      <div className="flex items-center gap-2">
+                        <ArrowUpRight className="w-5 h-5 text-[#0054A6]" />
+                        <h3 className="font-bold text-slate-900 text-base">{WALLET_SERVICES[activeWalletService].title}</h3>
+                      </div>
+                      <button type="button" onClick={closeWalletService} className="text-xs font-bold text-[#0054A6] hover:underline">Back to Send Money</button>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-3">Account: {customer.name} · Available ৳{availableBalance.toLocaleString()}</p>
+                    <div className="flex-1 pt-4">
+                      {serviceReceipt ? (
+                        <div className="space-y-4"><div role="status" className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-sm font-semibold text-emerald-800">{serviceReceipt}</div><button type="button" onClick={closeWalletService} className="w-full py-3 rounded-xl bg-[#FAB915] text-slate-950 font-black text-sm">Done</button></div>
+                      ) : isServiceReview ? (
+                        <div className="space-y-4">
+                          <div className="rounded-2xl border border-slate-200 divide-y divide-slate-100 text-sm">
+                            <div className="p-3 flex justify-between gap-4"><span className="text-slate-500">Service</span><strong>{WALLET_SERVICES[activeWalletService].title}</strong></div>
+                            <div className="p-3 flex justify-between gap-4"><span className="text-slate-500">{WALLET_SERVICES[activeWalletService].targetLabel}</span><strong>{serviceTarget}</strong></div>
+                            {serviceNote && <div className="p-3 flex justify-between gap-4"><span className="text-slate-500">Reference</span><strong className="break-all">{serviceNote}</strong></div>}
+                            <div className="p-3 flex justify-between gap-4"><span>Amount</span><strong>BDT {Number(serviceAmount).toLocaleString()}</strong></div>
+                            <div className="p-3 flex justify-between gap-4"><span>Fee</span><strong>BDT {getServiceFee(activeWalletService, serviceTarget, Number(serviceAmount)).toLocaleString()}</strong></div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3"><button type="button" onClick={() => setIsServiceReview(false)} className="py-3 rounded-xl border border-slate-300 text-slate-700 font-bold text-sm">Edit details</button><button type="button" onClick={confirmWalletService} className="py-3 rounded-xl bg-[#FAB915] text-slate-950 font-black text-sm">Confirm</button></div>
+                        </div>
+                      ) : (
+                        <form onSubmit={handleWalletServiceSubmit} className="space-y-4">
+                          <label className="block text-xs font-semibold text-slate-700">{WALLET_SERVICES[activeWalletService].targetLabel}{WALLET_SERVICES[activeWalletService].targets.length ? <select value={serviceTarget} onChange={(event) => setServiceTarget(event.target.value)} required className="mt-1.5 w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-3 text-sm">{WALLET_SERVICES[activeWalletService].targets.map((target) => <option key={target} value={target}>{target}</option>)}</select> : <input value={serviceTarget} onChange={(event) => setServiceTarget(event.target.value)} required placeholder="Enter merchant name or scan its QR" className="mt-1.5 w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-3 text-sm" />}</label>
+                          {(activeWalletService === 'Make Payment' || (activeWalletService === 'Cash Out' && serviceTarget === 'Agent Cash Out') || (activeWalletService === 'Cash In' && serviceTarget === 'Agent Deposit')) && <button type="button" onClick={() => setIsQRScannerOpen(true)} className="w-full py-2.5 rounded-xl border border-[#0054A6] text-[#0054A6] font-bold text-xs flex items-center justify-center gap-2"><QrCode className="w-4 h-4" /> Scan QR</button>}
+                          {(activeWalletService === 'Cash In' || activeWalletService === 'Cash Out' || activeWalletService === 'Make Payment' || activeWalletService === 'Pay Bill' || activeWalletService === 'Mobile Recharge' || activeWalletService === 'Education' || activeWalletService === 'Insurance' || activeWalletService === 'Business' || activeWalletService === 'Add Money' || activeWalletService === 'Remittance' || activeWalletService === 'Savings') && <label className="block text-xs font-semibold text-slate-700">Reference / account number (optional)<input value={serviceNote} onChange={(event) => setServiceNote(event.target.value)} placeholder="Enter a reference" className="mt-1.5 w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm" /></label>}
+                          <label className="block text-xs font-semibold text-slate-700">Amount (BDT ৳)<input type="number" min="1" step="1" required value={serviceAmount} onChange={(event) => { setServiceAmount(event.target.value); setServiceError(null); }} placeholder="Enter amount" className="mt-1.5 w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-base font-bold" /></label>
+                          {serviceError && <p role="alert" className="text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-3">{serviceError}</p>}
+                          <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600 flex justify-between"><span>Estimated charge</span><strong>৳{getServiceFee(activeWalletService, serviceTarget, Number(serviceAmount) || 0).toLocaleString()}</strong></div>
+                          <button type="submit" className="w-full bg-[#FAB915] hover:bg-[#e5a80f] text-slate-950 font-black py-3 rounded-xl shadow-md text-sm">Review Transaction</button>
+                        </form>
+                      )}
+                    </div>
+                  </div>
+                ) : <>
                 <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                   <div className="flex items-center gap-2">
                     <Send className="w-5 h-5 text-[#0054A6]" />
@@ -433,82 +788,43 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                   <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 text-emerald-800 text-xs animate-in fade-in">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                     <div>
-                      <div className="font-bold">Payment Completed Successfully!</div>
-                      <div>Sent ৳{Number(amount).toLocaleString()} to {recipient}. Transaction fee: ৳0.</div>
+                      <div className="font-bold">Simulated payment completed</div>
+                      <div>Demo transfer of ৳{Number(amount).toLocaleString()} to {recipient}. No real payment was made.</div>
                     </div>
                   </div>
                 )}
 
-                <form onSubmit={handleSendPayment} className="space-y-4 mt-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-semibold text-slate-700 block">
-                        {lang === 'BN' ? 'প্রাপকের টাকা সেফ নম্বর' : 'Recipient TakaSafe Wallet / Phone'}
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setIsQRScannerOpen(true)}
-                        className="text-[11px] text-[#0054A6] font-bold hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <QrCode className="w-3 h-3" />
-                        <span>Scan Recipient QR</span>
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={recipient}
-                        onChange={(e) => setRecipient(e.target.value)}
-                        placeholder="01XXXXXXXXX"
-                        required
-                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0054A6]"
-                      />
-                    </div>
+                {balanceError && (
+                  <div role="alert" className="mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-semibold">
+                    {balanceError}
                   </div>
+                )}
 
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 block mb-1">
-                      {lang === 'BN' ? 'টাকার পরিমাণ (৳)' : 'Amount (BDT ৳)'}
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-2.5 text-slate-400 font-bold">৳</span>
-                      <input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="1000"
-                        required
-                        className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-8 pr-4 py-2.5 text-base font-bold font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0054A6]"
-                      />
-                    </div>
-                    <span className="text-[11px] text-slate-500 mt-1 block">
-                      Your recent 90-day transfer average is <strong>৳{Math.round(observedAverage).toLocaleString()}</strong> ({recentTransfers.length} recorded transfers).
-                    </span>
-                  </div>
+                {/* AI-1 Real-time Inference Pipeline Visualizer (Transfer -> AI-1 Score -> Doubt check) */}
+                <div className="mt-4">
+                  <AI1PipelineVisualizer
+                    evaluation={liveAI1Evaluation}
+                    onOpenNotebookModal={() => setIsNotebookModalOpen(true)}
+                    lang={lang}
+                  />
+                </div>
 
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 block mb-1">
-                      Reference Note (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      placeholder="e.g. Family support, emergency, bill"
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0054A6]"
-                    />
-                  </div>
-
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      className="w-full bg-[#FAB915] hover:bg-[#e5a80f] text-slate-950 font-black py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
-                    >
-                      <Send className="w-4 h-4" />
-                      <span>{lang === 'BN' ? 'টাকা পাঠান' : 'Proceed to Send Money'}</span>
-                    </button>
-                  </div>
-                </form>
+                {/* Interactive Real-Time ScamShield Card (IDLE -> PAYMENT INPUT -> ANALYZING -> SAFE/MEDIUM/HIGH/CRITICAL) */}
+                <div className="mt-4">
+                  <ScamShieldCard
+                    initialAmount={amount}
+                    initialRecipient={recipient}
+                    recentAverage={observedAverage}
+                    onPaymentCompleted={(paidAmount, targetRecipient, calculatedRisk) => {
+                      recordTransfer(paidAmount, targetRecipient, calculatedRisk, 'COMPLETED');
+                      setNormalSuccess(true);
+                      setTimeout(() => setNormalSuccess(false), 4500);
+                    }}
+                    onOpenQRScanner={() => setIsQRScannerOpen(true)}
+                    lang={lang}
+                  />
+                </div>
+                </>}
               </div>
             </div>
 
@@ -626,13 +942,44 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => setIsQRScannerOpen(true)}
+                  onClick={() => { setQrInitialTab('MY_QR'); setIsQRScannerOpen(true); }}
                   className="px-3.5 py-1.5 bg-white border border-[#0054A6] text-[#0054A6] hover:bg-blue-50 font-bold rounded-xl text-xs transition-colors cursor-pointer"
                 >
                   Show My Receiving QR
                 </button>
               </div>
             </div>
+
+            <section className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <h3 className="font-extrabold text-sm text-slate-900">Recent Wallet Activity</h3>
+                <span className="text-[10px] font-mono text-slate-500">{transferHistory.length} records</span>
+              </div>
+              {transferHistory.length === 0 ? (
+                <p className="text-xs text-slate-500 py-3">Completed wallet services will appear here.</p>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {[...transferHistory].reverse().slice(0, 8).map((transfer, index) => {
+                    const isCredit = (transfer.direction || 'OUT') === 'IN';
+                    const serviceName = (transfer.serviceType || 'SEND_MONEY').replace(/_/g, ' ');
+                    return (
+                      <div key={`${transfer.timestamp}-${index}`} className="py-3 flex items-center justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-800 truncate">{serviceName} · {transfer.recipient}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">{new Date(transfer.timestamp).toLocaleString()} {transfer.reference ? `· ${transfer.reference}` : ''}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className={`text-xs font-black ${isCredit ? 'text-emerald-700' : 'text-slate-900'}`}>
+                            {isCredit ? '+' : '−'}৳{transfer.amount.toLocaleString()}
+                          </p>
+                          {Boolean(transfer.fee) && <p className="text-[10px] text-slate-500">Fee ৳{transfer.fee!.toLocaleString()}</p>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
           </div>
         ) : (
           /* Customer Financial Resilience Tab */
@@ -727,24 +1074,26 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
       {/* QR Code Scanner & Secure Linking Modal */}
       <QRCodeScannerModal
         isOpen={isQRScannerOpen}
-        onClose={() => setIsQRScannerOpen(false)}
+        onClose={() => { setIsQRScannerOpen(false); setQrInitialTab('SCANNER'); }}
         customer={customer}
         onWalletLinked={handleWalletLinked}
         onPaymentQRScanned={handlePaymentQRScanned}
+        scanMode={activeWalletService === 'Make Payment' ? 'PAYMENT' : (activeWalletService === 'Cash Out' && serviceTarget === 'Agent Cash Out') || (activeWalletService === 'Cash In' && serviceTarget === 'Agent Deposit') ? 'AGENT' : 'LINK'}
+        initialTab={qrInitialTab}
         lang={lang}
       />
 
       {/* ScamShield Pre-Payment Modal (Human-Choice Protection) */}
       {showScamModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md modal-backdrop-enter"
           onClick={() => {
             setShowScamModal(false);
             setScamDecision(null);
           }}
         >
           <div
-            className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border-2 border-rose-300 space-y-5 animate-in fade-in zoom-in-95 duration-200"
+            className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border-2 border-rose-300 space-y-5 modal-panel-enter max-h-[92vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with Title and Cross Button */}
@@ -781,6 +1130,14 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
             <p className="text-xs text-slate-700 leading-relaxed">
               Hold on, <strong>{customer.name}</strong>. This transfer has signals that differ from your usual activity. Review them before continuing.
             </p>
+
+            {/* AI-1 Model Architecture Pipeline Visualizer in ScamShield */}
+            <AI1PipelineVisualizer
+              evaluation={currentAI1Evaluation || liveAI1Evaluation}
+              onOpenNotebookModal={() => setIsNotebookModalOpen(true)}
+              compact
+              lang={lang}
+            />
 
             {/* Plain Language Reasons */}
             <div className="bg-rose-50/80 rounded-2xl p-4 border border-rose-200 space-y-2.5 text-xs">
@@ -877,6 +1234,13 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* AI-1 Model Architecture & Python Notebook Modal */}
+      <AI1NotebookModal
+        isOpen={isNotebookModalOpen}
+        onClose={() => setIsNotebookModalOpen(false)}
+        lang={lang}
+      />
     </div>
   );
 };

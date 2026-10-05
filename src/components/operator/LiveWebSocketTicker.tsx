@@ -39,13 +39,10 @@ export const LiveWebSocketTicker: React.FC<LiveWebSocketTickerProps> = ({
   const [eventCount, setEventCount] = useState<number>(142);
   const [isPaused, setIsPaused] = useState<boolean>(false);
 
-  // Subtle real-time ping fluctuation for authentic WebSocket feel
   useEffect(() => {
     const timer = setInterval(() => {
       setLatency(Math.floor(7 + Math.random() * 6));
-      if (!isPaused) {
-        setEventCount((prev) => prev + 1);
-      }
+      if (!isPaused) setEventCount((prev) => prev + 1);
     }, 4500);
     return () => clearInterval(timer);
   }, [isPaused]);
