@@ -2,18 +2,30 @@ import React from 'react';
 
 interface AnalysisTimelineProps {
   currentStage: number; // 1 to 5
+  lang?: 'EN' | 'BN';
 }
 
 export const AnalysisTimeline: React.FC<AnalysisTimelineProps> = ({
   currentStage = 1,
+  lang = 'EN',
 }) => {
-  const steps = [
-    { id: 1, line1: 'Transaction', line2: '' },
-    { id: 2, line1: 'Context', line2: 'Check' },
-    { id: 3, line1: 'AI Risk', line2: 'Engine' },
-    { id: 4, line1: 'Evidence', line2: 'Check' },
-    { id: 5, line1: 'Decision', line2: '' },
-  ];
+  const isBn = lang === 'BN';
+
+  const steps = isBn
+    ? [
+        { id: 1, line1: 'লেনদেন', line2: 'ইনপুট' },
+        { id: 2, line1: 'কনটেক্সট', line2: 'চেক' },
+        { id: 3, line1: 'এআই রিস্ক', line2: 'ইঞ্জিন' },
+        { id: 4, line1: 'প্রমাণ', line2: 'যাচাই' },
+        { id: 5, line1: 'সিদ্ধান্ত', line2: 'পর্যালোচনা' },
+      ]
+    : [
+        { id: 1, line1: 'Transaction', line2: 'Input' },
+        { id: 2, line1: 'Context', line2: 'Check' },
+        { id: 3, line1: 'AI Risk', line2: 'Engine' },
+        { id: 4, line1: 'Evidence', line2: 'Check' },
+        { id: 5, line1: 'Decision', line2: 'Review' },
+      ];
 
   return (
     <div className="w-full select-none py-1">
@@ -36,7 +48,7 @@ export const AnalysisTimeline: React.FC<AnalysisTimelineProps> = ({
                 >
                   {isPassed ? '✓' : step.id}
                 </div>
-                <div className="flex flex-col text-left leading-tight">
+                <div className="flex flex-col text-left leading-tight min-h-[26px] justify-center">
                   <span
                     className={`text-[10px] sm:text-[11px] font-semibold transition-colors whitespace-nowrap ${
                       isCurrent
@@ -48,19 +60,17 @@ export const AnalysisTimeline: React.FC<AnalysisTimelineProps> = ({
                   >
                     {step.line1}
                   </span>
-                  {step.line2 ? (
-                    <span
-                      className={`text-[9px] sm:text-[10px] font-medium transition-colors whitespace-nowrap ${
-                        isCurrent
-                          ? 'text-slate-700 dark:text-slate-200 font-semibold'
-                          : isPassed
-                          ? 'text-emerald-600 dark:text-emerald-500'
-                          : 'text-slate-400 dark:text-slate-500'
-                      }`}
-                    >
-                      {step.line2}
-                    </span>
-                  ) : null}
+                  <span
+                    className={`text-[9px] sm:text-[10px] font-medium transition-colors whitespace-nowrap ${
+                      isCurrent
+                        ? 'text-slate-700 dark:text-slate-200 font-semibold'
+                        : isPassed
+                        ? 'text-emerald-600 dark:text-emerald-500'
+                        : 'text-slate-400 dark:text-slate-500'
+                    }`}
+                  >
+                    {step.line2}
+                  </span>
                 </div>
               </div>
 

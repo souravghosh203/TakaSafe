@@ -673,7 +673,7 @@ export const ScamShieldCard: React.FC<ScamShieldCardProps> = ({
       {/* Bottom Timeline Indicator */}
       {currentState !== 'IDLE' && currentState !== 'PAYMENT_SUCCESS' && (
         <div className="px-3.5 sm:px-5 py-3 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40">
-          <AnalysisTimeline currentStage={timelineStage} />
+          <AnalysisTimeline currentStage={timelineStage} lang={lang} />
         </div>
       )}
     </div>

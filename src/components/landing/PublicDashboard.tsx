@@ -311,7 +311,7 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
       <section className="public-product-strip" id="products">
         <div><span className="product-eyebrow">{copy.oneView}</span><h2>{copy.moneyMotion}</h2></div>
         <p id="solutions">{copy.productDescription}</p>
-        <button type="button" onClick={onGetStarted}>{copy.openDashboard} <ArrowRight size={16} /></button>
+        <button type="button" onClick={() => onGetStarted()}>{copy.openDashboard} <ArrowRight size={16} /></button>
         <span className="sr-only" id="resources">Resources</span><span className="sr-only" id="pricing">Pricing</span><span className="sr-only" id="careers">Careers</span>
       </section>
     </div>
