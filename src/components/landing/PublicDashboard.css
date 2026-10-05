@@ -57,11 +57,11 @@
   height: 86px;
   margin: 0;
   padding: 0 max(36px, calc((100vw - 1240px) / 2));
-  background: #0054A6;
-  border-bottom: 1px solid #004080;
+  background: linear-gradient(118deg, #071324 0%, #0b1d37 48%, #0d2e5e 100%);
+  border-bottom: 1px solid rgba(219,234,254,.13);
   transition: background .28s ease, box-shadow .28s ease, border-color .28s ease;
 }
-.public-nav.is-scrolled { background: #0054A6; border-color: #004080; box-shadow: 0 12px 32px rgba(0,0,0,.2); backdrop-filter: blur(18px); animation: public-nav-arrive .38s cubic-bezier(.2,.75,.25,1) both; }
+.public-nav.is-scrolled { background: rgba(7,19,36,.92); border-color: rgba(219,234,254,.2); box-shadow: 0 12px 32px rgba(0,0,0,.2); backdrop-filter: blur(18px); animation: public-nav-arrive .38s cubic-bezier(.2,.75,.25,1) both; }
 .public-brand { display: inline-flex; align-items: center; gap: 10px; width: fit-content; color: #fff; font-size: 21px; font-weight: 760; letter-spacing: -.9px; text-decoration: none; }
 .public-brand-icon { position: relative; display: inline-flex; flex: 0 0 40px; align-items: center; justify-content: center; width: 40px; height: 40px; }
 .public-brand-icon .mfs-halo-pulse { position: absolute; inset: 0; border: 1px solid rgba(250,185,21,.55); border-radius: 50%; box-shadow: 0 0 13px rgba(250,185,21,.2); }
