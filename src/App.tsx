@@ -558,14 +558,20 @@ export default function App() {
         />
         <UpayInfoModal
           modalType={activeModal}
-          onClose={() => setActiveModal(null)}
+          initialQuestion={assistantQuestion}
+          onClose={() => { setActiveModal(null); setAssistantQuestion(''); }}
           lang={lang}
           onNavigateView={(view) => {
             navigateToView(view);
             setShowRegistration(false);
             setActiveModal(null);
+            setAssistantQuestion('');
           }}
         />
+        <DashboardAssistant lang={lang} onAsk={(question) => {
+          setAssistantQuestion(question);
+          setActiveModal('LIVE_CHAT');
+        }} />
       </>
     );
   }
@@ -824,10 +830,10 @@ export default function App() {
         }}
       />
 
-      {(activeView === 'OPERATOR' || activeView === 'CUSTOMER') && <DashboardAssistant lang={lang} onAsk={(question) => {
+      <DashboardAssistant lang={lang} onAsk={(question) => {
         setAssistantQuestion(question);
         setActiveModal('LIVE_CHAT');
-      }} />}
+      }} />
 
       {/* Upay Official Footer (Matching user wireframe photo 5) */}
       <UpayFooter
