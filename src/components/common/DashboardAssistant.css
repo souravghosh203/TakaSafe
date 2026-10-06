@@ -38,8 +38,8 @@
 .assistant-card {
   box-sizing: border-box;
   width: min(376px, calc(100vw - 28px - env(safe-area-inset-left) - env(safe-area-inset-right)));
-  max-height: min(720px, calc(100vh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
-  max-height: min(720px, calc(100dvh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+  max-height: min(620px, 64vh, calc(100vh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+  max-height: min(620px, 64dvh, calc(100dvh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -101,8 +101,8 @@
 @keyframes assistant-launcher-pulse { 0% { opacity: .7; transform: scale(.88); } 85%,100% { opacity: 0; transform: scale(1.28); } }
 @media (max-width: 480px) {
   .dashboard-assistant { right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); gap: clamp(6px, 1.5dvh, 10px); }
-  .assistant-card { width: min(376px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right))); max-height: calc(100dvh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); border-radius: clamp(18px, 5vw, 23px); }
-  .assistant-art { height: clamp(92px, 19dvh, 151px); flex: 0 0 auto; }
+  .assistant-card { width: min(376px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right))); max-height: min(540px, 68vh, calc(100vh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); max-height: min(540px, 68dvh, calc(100dvh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); border-radius: clamp(18px, 5vw, 23px); }
+  .assistant-art { height: clamp(76px, 15dvh, 120px); flex: 0 0 auto; }
   .assistant-content { padding: 2px 16px max(15px, env(safe-area-inset-bottom)); }
   .assistant-content h2 { font-size: 19px; }
   .assistant-suggestions { gap: 7px; }
@@ -110,8 +110,8 @@
   .assistant-launcher { width: 54px; height: 54px; }
 }
 @media (max-height: 700px) {
-  .assistant-card { max-height: calc(100vh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); max-height: calc(100dvh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
-  .assistant-art { height: clamp(76px, 17dvh, 120px); }
+  .assistant-card { max-height: min(560px, 58vh, calc(100vh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); max-height: min(560px, 58dvh, calc(100dvh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); }
+  .assistant-art { height: clamp(64px, 12dvh, 96px); }
 }
 @media (max-width: 360px) {
   .dashboard-assistant { right: max(8px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom)); }
