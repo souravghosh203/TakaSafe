@@ -2,14 +2,17 @@ import React from 'react';
 import { MessageSquare, Mail, Phone, MapPin, Clock, Sparkles } from 'lucide-react';
 
 interface UpayFooterProps {
+  lang?: 'EN' | 'BN';
   onOpenModal?: (modalType: string) => void;
   onNavigateHome?: () => void;
 }
 
 export const UpayFooter: React.FC<UpayFooterProps> = ({
+  lang = 'EN',
   onOpenModal,
   onNavigateHome,
 }) => {
+  const isBn = lang === 'BN';
   const handleLogoClick = () => {
     if (onNavigateHome) onNavigateHome();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -61,13 +64,13 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
               </div>
             </button>
             <p className="text-slate-400 text-[12px] leading-relaxed">
-              TakaSafe is aiming to help aspirers achieve their goals through easy, secure and innovative Digital Financial Solutions.
+              {isBn ? 'সহজ, নিরাপদ ও উদ্ভাবনী ডিজিটাল আর্থিক সেবার মাধ্যমে মানুষের লক্ষ্য অর্জনে TakaSafe কাজ করছে।' : 'TakaSafe is aiming to help people achieve their goals through easy, secure and innovative digital financial services.'}
             </p>
           </div>
 
           {/* Column 2: GET IN TOUCH */}
           <div className="lg:col-span-2 space-y-3">
-            <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">GET IN TOUCH</h4>
+            <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">{isBn ? 'যোগাযোগ' : 'GET IN TOUCH'}</h4>
             
             <button
               onClick={() => onOpenModal?.('LIVE_CHAT')}
@@ -75,7 +78,7 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
             >
               <MessageSquare className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <span className="font-semibold underline decoration-amber-400/50 underline-offset-2">
-                Live Chat Support (24/7 Assistant)
+                {isBn ? 'লাইভ চ্যাট সহায়তা (২৪/৭)' : 'Live Chat Support (24/7 Assistant)'}
               </span>
             </button>
 
@@ -134,34 +137,34 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
           {/* Column 3: USEFUL LINKS & COMPANY INFO */}
           <div className="space-y-6">
             <div>
-              <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">USEFUL LINKS</h4>
+              <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">{isBn ? 'প্রয়োজনীয় লিংক' : 'USEFUL LINKS'}</h4>
               <ul className="space-y-1.5 text-[12px] text-slate-400">
                 <li onClick={() => onOpenModal?.('ABSTRACT')} className="text-amber-300 font-bold hover:text-white cursor-pointer transition-colors flex items-center gap-1.5">
                   <Sparkles className="w-3 h-3 text-amber-400" />
-                  <span>Official Project Abstract & SDGs</span>
+                  <span>{isBn ? 'প্রকল্পের সারসংক্ষেপ ও SDG' : 'Official Project Abstract & SDGs'}</span>
                 </li>
-                <li onClick={() => onOpenModal?.('LIMITS_CHARGES')} className="hover:text-white cursor-pointer transition-colors">Limits and Charges</li>
-                <li onClick={() => onOpenModal?.('MEDIA')} className="hover:text-white cursor-pointer transition-colors">Press Release</li>
-                <li onClick={() => onOpenModal?.('NEED_HELP')} className="hover:text-white cursor-pointer transition-colors">Need Help?</li>
-                <li onClick={() => onOpenModal?.('PARTNER')} className="hover:text-white cursor-pointer transition-colors">Partner</li>
-                <li onClick={() => onOpenModal?.('DISCONTINUED_AGENTS')} className="hover:text-white cursor-pointer transition-colors">Discontinued Agents</li>
+                <li onClick={() => onOpenModal?.('LIMITS_CHARGES')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'সীমা ও চার্জ' : 'Limits and Charges'}</li>
+                <li onClick={() => onOpenModal?.('MEDIA')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'সংবাদ বিজ্ঞপ্তি' : 'Press Release'}</li>
+                <li onClick={() => onOpenModal?.('NEED_HELP')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'সহায়তা' : 'Need Help?'}</li>
+                <li onClick={() => onOpenModal?.('PARTNER')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'অংশীদার' : 'Partner'}</li>
+                <li onClick={() => onOpenModal?.('DISCONTINUED_AGENTS')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'বন্ধ এজেন্ট' : 'Discontinued Agents'}</li>
               </ul>
             </div>
 
             <div>
-              <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-2">COMPANY INFO</h4>
+              <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-2">{isBn ? 'প্রতিষ্ঠানের তথ্য' : 'COMPANY INFO'}</h4>
               <ul className="space-y-1.5 text-[12px] text-slate-400">
-                <li onClick={() => onOpenModal?.('PRIVACY_POLICY')} className="hover:text-white cursor-pointer transition-colors">Privacy Policy</li>
-                <li onClick={() => onOpenModal?.('TERMS')} className="hover:text-white cursor-pointer transition-colors">Terms and Conditions</li>
-                <li onClick={() => onOpenModal?.('ABOUT_US')} className="hover:text-white cursor-pointer transition-colors">Who We Are</li>
-                <li onClick={() => onOpenModal?.('BUSINESS')} className="hover:text-white cursor-pointer transition-colors">Business Solution</li>
+                <li onClick={() => onOpenModal?.('PRIVACY_POLICY')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'গোপনীয়তা নীতি' : 'Privacy Policy'}</li>
+                <li onClick={() => onOpenModal?.('TERMS')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'শর্তাবলি' : 'Terms and Conditions'}</li>
+                <li onClick={() => onOpenModal?.('ABOUT_US')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'আমাদের পরিচিতি' : 'Who We Are'}</li>
+                <li onClick={() => onOpenModal?.('BUSINESS')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'ব্যবসায়িক সমাধান' : 'Business Solution'}</li>
               </ul>
             </div>
           </div>
 
           {/* Column 4: STAY CONNECTED & APP DOWNLOADS */}
           <div>
-            <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">STAY CONNECTED</h4>
+          <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">{isBn ? 'সঙ্গে থাকুন' : 'STAY CONNECTED'}</h4>
             
             {/* Social Icons */}
             <div className="flex items-center gap-2 mb-4">

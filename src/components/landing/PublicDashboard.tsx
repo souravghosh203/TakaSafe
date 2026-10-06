@@ -449,6 +449,7 @@ export const PublicDashboard: React.FC<PublicDashboardProps> = ({
         <span className="sr-only" id="resources">Resources</span><span className="sr-only" id="pricing">Pricing</span><span className="sr-only" id="careers">Careers</span>
       </section>
       <UpayFooter
+        lang={lang}
         onOpenModal={onOpenModal}
         onNavigateHome={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       />
