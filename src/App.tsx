@@ -805,6 +805,7 @@ export default function App() {
       {/* Full Explainable AI SHAP Investigation Modal */}
       {selectedTxnForInvestigation && (
         <InvestigationModal
+          lang={lang}
           currentUser={currentUser}
           transaction={selectedTxnForInvestigation}
           customerProfile={CURRENT_CUSTOMER}
@@ -836,6 +837,7 @@ export default function App() {
 
       {/* Upay Official Footer (Matching user wireframe photo 5) */}
       <UpayFooter
+        lang={lang}
         lang={lang}
         onOpenModal={(modal) => setActiveModal(modal)}
         onNavigateHome={() => {

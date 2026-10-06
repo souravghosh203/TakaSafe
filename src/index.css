@@ -80,6 +80,12 @@
     overflow-x: clip;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
+
+  html:lang(bn) body {
+    font-family: 'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif;
+    line-height: 1.55;
+    letter-spacing: 0;
+  }
   
   #root {
     width: 100%;

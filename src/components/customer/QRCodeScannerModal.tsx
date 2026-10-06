@@ -7,6 +7,7 @@ import {
   CustomerBaseline,
 } from '../../types';
 import { SAMPLE_QR_PRESETS } from '../../data/mockData';
+import { formatLocalizedNumber } from '../../utils/formatCurrency';
 import {
   QrCode,
   Camera,
@@ -730,7 +731,9 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
                           <span>
                             {scanMode === 'AGENT'
                               ? <>Agent QR found for <strong>{scannedPayload.accountHolder}</strong> ({scannedPayload.accountNumberMasked}).</>
-                              : <>Merchant payment ready for <strong>৳{scannedPayload.suggestedAmount?.toLocaleString()}</strong> at {scannedPayload.accountHolder}.</>}
+                              : lang === 'BN'
+                                ? <>{scannedPayload.accountHolder}-এর জন্য <strong>৳{formatLocalizedNumber(scannedPayload.suggestedAmount || 0, lang)}</strong> মার্চেন্ট পেমেন্ট প্রস্তুত।</>
+                                : <>Merchant payment ready for <strong>৳{formatLocalizedNumber(scannedPayload.suggestedAmount || 0, lang)}</strong> at {scannedPayload.accountHolder}.</>}
                           </span>
                         </div>
                         <button
@@ -739,7 +742,7 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
                           className="w-full py-3 px-4 bg-[#0054A6] hover:bg-[#004284] text-white font-extrabold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
                         >
                           <DollarSign className="w-4 h-4 text-amber-300" />
-                          <span>{scanMode === 'AGENT' ? 'Use Agent Details' : `Pay ৳${scannedPayload.suggestedAmount?.toLocaleString()} Now`}</span>
+                          <span>{scanMode === 'AGENT' ? (lang === 'BN' ? 'এজেন্টের তথ্য ব্যবহার করুন' : 'Use Agent Details') : lang === 'BN' ? `এখনই ৳${formatLocalizedNumber(scannedPayload.suggestedAmount || 0, lang)} পরিশোধ করুন` : `Pay ৳${formatLocalizedNumber(scannedPayload.suggestedAmount || 0, lang)} Now`}</span>
                         </button>
                       </div>
                     ) : (
@@ -761,7 +764,7 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
                         <div>
                           <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-1">
                             <span>Daily Authorized Transfer Limit</span>
-                            <span className="font-mono text-[#0054A6]">৳{dailyLimit.toLocaleString()}</span>
+                            <span className="font-mono text-[#0054A6]">৳{formatLocalizedNumber(dailyLimit, lang)}</span>
                           </div>
                           <input
                             type="range"

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 
 interface InvestigationModalProps {
+  lang?: 'EN' | 'BN';
   currentUser?: AuthUser | null;
   transaction: Transaction;
   customerProfile: CustomerBaseline;
@@ -33,6 +34,7 @@ interface InvestigationModalProps {
 }
 
 export const InvestigationModal: React.FC<InvestigationModalProps> = ({
+  lang = 'EN',
   currentUser,
   transaction,
   customerProfile,
@@ -268,6 +270,7 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
               </div>
             </div>
             <MoneyPathInvestigationGraph
+              lang={lang}
               transaction={transaction}
               onFreezeNode={(nodeId, nodeName) => {
                 handleAction('FREEZE_WALLET');
