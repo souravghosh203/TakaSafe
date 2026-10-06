@@ -839,6 +839,9 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
             >
               {lang === 'BN' ? 'আর্থিক সুরক্ষা সূচক' : 'Resilience Score'}
             </button>
+            <button onClick={() => setActiveTab('SECURITY')} aria-pressed={activeTab === 'SECURITY'} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'SECURITY' ? 'bg-white text-[#0054A6] shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`}>
+              Security Center
+            </button>
           </div>
         </div>
       </div>
@@ -1230,7 +1233,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
               )}
             </section>
           </div>
-        ) : (
+        ) : activeTab === 'RESILIENCE' ? (
           /* Customer Financial Resilience Tab */
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
