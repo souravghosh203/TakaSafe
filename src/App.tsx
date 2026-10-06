@@ -184,6 +184,22 @@ export default function App() {
   const [selectedTxnForInvestigation, setSelectedTxnForInvestigation] = useState<Transaction | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [requestedWalletService, setRequestedWalletService] = useState<string | null>(null);
+  const [dashboardBalance, setDashboardBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!currentUser) {
+      setDashboardBalance(null);
+      return;
+    }
+    const customer = getCustomerProfile(currentUser);
+    try {
+      const saved = localStorage.getItem(`takasafe-balance:${currentUser.id}:${customer.wallet}`);
+      const amount = saved === null ? NaN : Number(saved);
+      setDashboardBalance(Number.isFinite(amount) && amount >= 0 ? amount : customer.balance);
+    } catch {
+      setDashboardBalance(customer.balance);
+    }
+  }, [currentUser?.id, currentUser?.phone]);
 
   const recordCustomerLogin = (user: AuthUser) => {
     if (user.role !== 'USER') return;
@@ -559,7 +575,7 @@ export default function App() {
         <UpayInfoModal
           modalType={activeModal}
           initialQuestion={assistantQuestion}
-          customerIdentity={currentUser?.role === 'USER' ? { userId: currentUser.id, wallet: currentUser.phone, balance: getCustomerProfile(currentUser).balance, usualLimit: getCustomerProfile(currentUser).maxAmountTypical } : undefined}
+          customerIdentity={currentUser?.role === 'USER' ? { userId: currentUser.id, wallet: currentUser.phone, balance: dashboardBalance ?? getCustomerProfile(currentUser).balance, usualLimit: getCustomerProfile(currentUser).maxAmountTypical } : undefined}
           onClose={() => { setActiveModal(null); setAssistantQuestion(''); }}
           lang={lang}
           onNavigateView={(view) => {
@@ -599,7 +615,7 @@ export default function App() {
         <UpayInfoModal
           modalType={activeModal}
           initialQuestion={assistantQuestion}
-          customerIdentity={currentUser?.role === 'USER' ? { userId: currentUser.id, wallet: currentUser.phone, balance: getCustomerProfile(currentUser).balance, usualLimit: getCustomerProfile(currentUser).maxAmountTypical } : undefined}
+          customerIdentity={currentUser?.role === 'USER' ? { userId: currentUser.id, wallet: currentUser.phone, balance: dashboardBalance ?? getCustomerProfile(currentUser).balance, usualLimit: getCustomerProfile(currentUser).maxAmountTypical } : undefined}
           onClose={() => { setActiveModal(null); setAssistantQuestion(''); }}
           lang={lang}
           onNavigateView={(view) => {
@@ -779,6 +795,7 @@ export default function App() {
             <CustomerAppView
               customer={getCustomerProfile(currentUser)}
               userId={currentUser?.id || 'guest'}
+              onBalanceChange={setDashboardBalance}
               onSimulateRiskyPayment={() => {
                 // Ensure critical transaction is visible in operator queue
               }}
@@ -824,7 +841,7 @@ export default function App() {
       <UpayInfoModal
         modalType={activeModal}
         initialQuestion={assistantQuestion}
-        customerIdentity={currentUser?.role === 'USER' ? { userId: currentUser.id, wallet: currentUser.phone, balance: getCustomerProfile(currentUser).balance, usualLimit: getCustomerProfile(currentUser).maxAmountTypical } : undefined}
+        customerIdentity={currentUser?.role === 'USER' ? { userId: currentUser.id, wallet: currentUser.phone, balance: dashboardBalance ?? getCustomerProfile(currentUser).balance, usualLimit: getCustomerProfile(currentUser).maxAmountTypical } : undefined}
         onClose={() => { setActiveModal(null); setAssistantQuestion(''); }}
         lang={lang}
         onNavigateView={(v) => {
