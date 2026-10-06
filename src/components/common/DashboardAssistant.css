@@ -1,6 +1,6 @@
 .dashboard-assistant {
   position: fixed;
-  z-index: 60;
+  z-index: 40;
   right: max(22px, env(safe-area-inset-right));
   bottom: max(22px, env(safe-area-inset-bottom));
   display: flex;

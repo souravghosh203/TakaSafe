@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { FormEvent } from 'react';
 import { Bot, MessageCircle, RotateCw, Send, Sparkles, X } from 'lucide-react';
@@ -23,6 +23,15 @@ export const DashboardAssistant: React.FC<DashboardAssistantProps> = ({ lang, on
   const [question, setQuestion] = useState('');
   const isBn = lang === 'BN';
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
   const submitQuestion = (event: FormEvent) => {
     event.preventDefault();
     const trimmedQuestion = question.trim();
@@ -40,7 +49,7 @@ export const DashboardAssistant: React.FC<DashboardAssistantProps> = ({ lang, on
   return createPortal((
     <div className="dashboard-assistant" data-open={isOpen}>
       {isOpen && (
-        <section className="assistant-card" aria-label={isBn ? 'টাকা সেফ এআই সহকারী' : 'TakaSafe AI assistant'}>
+        <section className="assistant-card" role="dialog" aria-modal="true" aria-label={isBn ? 'টাকা সেফ এআই সহকারী' : 'TakaSafe AI assistant'}>
           <div className="assistant-art" aria-hidden="true">
             <div className="assistant-orbit assistant-orbit-one" />
             <div className="assistant-orbit assistant-orbit-two" />

@@ -93,6 +93,18 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   const [inputMsg, setInputMsg] = useState('');
   const processedInitialQuestion = useRef('');
 
+  useEffect(() => {
+    if (!modalType) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [modalType, onClose]);
+
   const getLiveFollowUps = (query: string): string[] => {
     if (/(balance|available amount|wallet|account|ব্যালেন্স)/i.test(query)) {
       return lang === 'BN'
@@ -974,7 +986,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
     <div className={isLiveChat
       ? 'fixed inset-0 z-50 pointer-events-none'
       : `fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs ${isExiting ? 'modal-backdrop-exit' : 'modal-backdrop-enter'}`}>
-      <div className={isLiveChat
+      <div role="dialog" aria-modal="true" aria-label={getTitle()} className={isLiveChat
         ? `assistant-chat-panel pointer-events-auto fixed bottom-4 right-4 flex h-[min(680px,calc(100dvh-2rem))] w-[min(420px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ${isExiting ? 'modal-panel-exit' : 'modal-panel-enter'}`
         : `bg-white rounded-3xl ${modalMaxWidth} w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col ${isExiting ? 'modal-panel-exit' : 'modal-panel-enter'}`}>
         {/* Header */}
@@ -986,7 +998,9 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
             <h3 className="assistant-chat-title font-bold text-slate-900 text-base">{getTitle()}</h3>
           </div>
           <button
+            type="button"
             onClick={onClose}
+            aria-label={lang === 'BN' ? 'বন্ধ করুন' : 'Close dialog'}
             className="w-8 h-8 rounded-full bg-slate-200/80 hover:bg-slate-300 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
