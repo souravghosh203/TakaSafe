@@ -92,17 +92,44 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   ]);
   const [inputMsg, setInputMsg] = useState('');
   const processedInitialQuestion = useRef('');
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!modalType) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const getFocusable = () => dialogRef.current?.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    );
+    getFocusable()?.[0]?.focus();
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
         onClose();
+        return;
+      }
+      if (event.key === 'Tab') {
+        const focusable = getFocusable();
+        if (!focusable?.length) {
+          event.preventDefault();
+          dialogRef.current?.focus();
+          return;
+        }
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      previouslyFocused?.focus();
+    };
   }, [modalType, onClose]);
 
   const getLiveFollowUps = (query: string): string[] => {
@@ -715,7 +742,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
         ];
 
         return (
-          <div className="assistant-chat-content flex flex-col h-full min-h-0">
+          <div className="assistant-chat-content flex flex-1 flex-col min-h-0">
             {/* Quick Suggestion Chips Carousel */}
               <div className="assistant-chat-topics pb-2.5 mb-2 border-b border-slate-200">
               <span className="text-[10px] font-bold text-slate-600 tracking-wider uppercase block mb-1.5">
@@ -986,7 +1013,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
     <div className={isLiveChat
       ? 'fixed inset-0 z-50 pointer-events-none'
       : `fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs ${isExiting ? 'modal-backdrop-exit' : 'modal-backdrop-enter'}`}>
-      <div role="dialog" aria-modal="true" aria-label={getTitle()} className={isLiveChat
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={getTitle()} tabIndex={-1} className={isLiveChat
         ? `assistant-chat-panel pointer-events-auto fixed bottom-4 right-4 flex h-[min(680px,calc(100dvh-2rem))] w-[min(420px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ${isExiting ? 'modal-panel-exit' : 'modal-panel-enter'}`
         : `bg-white rounded-3xl ${modalMaxWidth} w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col ${isExiting ? 'modal-panel-exit' : 'modal-panel-enter'}`}>
         {/* Header */}
