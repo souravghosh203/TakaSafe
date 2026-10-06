@@ -27,3 +27,4 @@ user_id,wallet,amount,recipient,timestamp,reference,status,risk_score,service_ty
 "USR-CUST-88","01711-239481","50000","Linked Bank Account","2026-10-06T15:06:42.617Z","","COMPLETED","0","ADD_MONEY","IN","0","","",""
 "USR-CUST-88","01711-239481","50000","01819-440129","2026-10-06T15:07:03.369Z","","PROCEEDED","51","SEND_MONEY","OUT","0","","",""
 "USR-ADM-03","+880 1558803509","500","TakaSafe Savings Pocket","2026-10-06T15:33:20.318Z","","COMPLETED","0","SAVINGS","OUT","0","","",""
+"USR-CUST-89","01818-234567","60000","01819-440129","2026-10-03T20:39:06.617Z","","PROCEEDED","65","SEND_MONEY","OUT","0","","",""
