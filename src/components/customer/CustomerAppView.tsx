@@ -64,6 +64,14 @@ interface CustomerLogin {
   device?: string;
 }
 
+interface SafetyAssessment {
+  flagged: boolean;
+  amount: number;
+  recipient: string;
+  score: number;
+  reasons: string[];
+}
+
 const WALLET_SERVICES: Record<string, {
   title: string;
   type: string;
@@ -134,6 +142,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
   const [balanceError, setBalanceError] = useState<string | null>(null);
   const [riskReasons, setRiskReasons] = useState<string[]>([]);
   const [riskScore, setRiskScore] = useState<number>(0);
+  const [safetyAssessment, setSafetyAssessment] = useState<SafetyAssessment | null>(null);
   const [isScoring, setIsScoring] = useState<boolean>(false);
   const [pipelineStage, setPipelineStage] = useState<number>(1);
   const [pipelineProgress, setPipelineProgress] = useState<number>(20);
@@ -593,6 +602,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     setIsScoring(false);
     setRiskReasons(reasons);
     setRiskScore(finalScore);
+    setSafetyAssessment({ flagged: isRisky, amount: num, recipient, score: finalScore, reasons });
 
     // Trigger ScamShield if finalScore >= 40 or AI-1 doubt/risk policy flags it
     if (finalScore >= 40 || evalResult.scamShieldTriggered) {
@@ -677,6 +687,51 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
       <div role="note" className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-950">
         Demo mode: payments, service requests, balances, and QR links are simulated. No real money moves and no external account is connected.
       </div>
+      <section
+        role="status"
+        aria-live="polite"
+        className={`flex items-start gap-3 rounded-2xl border p-4 shadow-sm ${
+          safetyAssessment?.flagged
+            ? 'border-rose-300 bg-rose-50 text-rose-950 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-100'
+            : safetyAssessment
+              ? 'border-emerald-300 bg-emerald-50 text-emerald-950 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100'
+              : 'border-blue-200 bg-blue-50 text-blue-950 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-100'
+        }`}
+      >
+        <span className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl ${safetyAssessment?.flagged ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-200' : safetyAssessment ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-200' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-200'}`}>
+          {safetyAssessment?.flagged ? <AlertTriangle className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-extrabold">
+              {safetyAssessment?.flagged
+                ? (lang === 'BN' ? 'ScamShield এই লেনদেনে ঝুঁকি শনাক্ত করেছে' : 'ScamShield flagged this transfer')
+                : safetyAssessment
+                  ? (lang === 'BN' ? 'ScamShield-এর পরীক্ষায় অস্বাভাবিক ঝুঁকি পাওয়া যায়নি' : 'No unusual risk found in the ScamShield check')
+                  : (lang === 'BN' ? 'ScamShield প্রতিটি ডেমো লেনদেন পরীক্ষা করে' : 'Protected by ScamShield')}
+            </h3>
+            <span className="rounded-full border border-current/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+              {lang === 'BN' ? 'ডেমো সুরক্ষা' : 'Demo protection'}
+            </span>
+          </div>
+          <p className="mt-1 text-xs leading-relaxed opacity-85">
+            {safetyAssessment?.flagged
+              ? lang === 'BN'
+                ? `৳${formatLocalizedNumber(safetyAssessment.amount, lang)}-এর লেনদেনটি পর্যালোচনার জন্য থামানো হয়েছে। অস্বাভাবিক লেনদেনের পরিমাণ বা প্রাপকের ঝুঁকির সংকেত পাওয়া গেছে। ঝুঁকি স্কোর ${formatLocalizedNumber(safetyAssessment.score, lang)}/১০০।`
+                : `The ৳${formatLocalizedNumber(safetyAssessment.amount, lang)} demo transfer was paused for review because the amount or recipient showed risk signals. Risk score: ${formatLocalizedNumber(safetyAssessment.score, lang)}/100.`
+              : safetyAssessment
+                ? lang === 'BN'
+                  ? `৳${formatLocalizedNumber(safetyAssessment.amount, lang)}-এর ডেমো লেনদেনে অস্বাভাবিক সংকেত পাওয়া যায়নি। স্কোর: ${formatLocalizedNumber(safetyAssessment.score, lang)}/১০০।`
+                  : `The ৳${formatLocalizedNumber(safetyAssessment.amount, lang)} demo transfer showed no unusual signals. Score: ${formatLocalizedNumber(safetyAssessment.score, lang)}/100.`
+                : lang === 'BN'
+                  ? 'প্রতিটি ডেমো লেনদেন নিশ্চিত করার আগে ScamShield ঝুঁকি যাচাই করে।'
+                  : 'ScamShield checks each demo transfer for risk before you confirm it.'}
+          </p>
+          {safetyAssessment?.flagged && safetyAssessment.reasons.length > 0 && lang !== 'BN' && (
+            <p className="mt-1 text-xs font-semibold">Reason: {safetyAssessment.reasons[0]}</p>
+          )}
+        </div>
+      </section>
       {/* Customer Mode Header */}
       <div className="bg-white dark:bg-[#0F172A] p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div>
