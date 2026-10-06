@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { RegionalRiskMetric } from '../../types';
 import { Radar, AlertTriangle, ShieldCheck, MapPin, Activity, ArrowUpRight, ArrowDownRight, Eye } from 'lucide-react';
 import { DivisionHistoricalRiskChart } from './DivisionHistoricalRiskChart';
+import { BayOfBengalMaritimeRadar } from './BayOfBengalMaritimeRadar';
 
 interface EarlyWarningRadarProps {
   metrics: RegionalRiskMetric[];
@@ -101,6 +102,13 @@ export const EarlyWarningRadar: React.FC<EarlyWarningRadarProps> = ({
           })}
         </div>
       </div>
+
+      {/* Bay of Bengal Maritime & Meteorological Doppler Radar */}
+      <BayOfBengalMaritimeRadar
+        metrics={metrics}
+        onActivateMonitoring={onActivateMonitoring}
+        lang={lang}
+      />
 
       {/* Selected Division Deep Dive */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
