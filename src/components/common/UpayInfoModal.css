@@ -6,12 +6,6 @@
   min-height: 0;
 }
 
-/* The floating launcher would otherwise peek through at the bottom of the
-   full-screen chat on phones. */
-body:has(.assistant-chat-panel) .dashboard-assistant {
-  display: none;
-}
-
 .assistant-chat-header {
   gap: 12px;
   padding-top: max(0.875rem, env(safe-area-inset-top));
@@ -33,13 +27,7 @@ body:has(.assistant-chat-panel) .dashboard-assistant {
   min-height: 0;
 }
 
-.assistant-chat-content {
-  flex: 1 1 auto;
-  height: auto;
-}
-
 .assistant-chat-messages {
-  flex: 1 1 0%;
   overscroll-behavior: contain;
   overflow-wrap: anywhere;
   -webkit-overflow-scrolling: touch;
@@ -90,11 +78,6 @@ body:has(.assistant-chat-panel) .dashboard-assistant {
     flex-direction: column;
     padding: 10px;
     padding-bottom: max(10px, env(safe-area-inset-bottom));
-  }
-
-  .assistant-chat-content {
-    flex: 1 1 0%;
-    height: auto;
   }
 
   .assistant-chat-topics {

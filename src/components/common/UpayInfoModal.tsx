@@ -742,7 +742,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
         ];
 
         return (
-          <div className="assistant-chat-content flex flex-1 flex-col min-h-0">
+          <div className="assistant-chat-content flex flex-col h-full min-h-0">
             {/* Quick Suggestion Chips Carousel */}
               <div className="assistant-chat-topics pb-2.5 mb-2 border-b border-slate-200">
               <span className="text-[10px] font-bold text-slate-600 tracking-wider uppercase block mb-1.5">
