@@ -486,23 +486,23 @@ export const RegionalRiskHeatmapGrid: React.FC<RegionalRiskHeatmapGridProps> = (
       </div>
 
       {/* 3. Main Workspace: Graphical District Heat Map + Inspector & Recharts Matrix */}
-      <div className="p-5 md:p-6 grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+      <div className="p-5 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Graphical District Heat Map / Recharts Matrix */}
         <div
           className={`${
             viewMode === 'SPLIT'
-              ? 'xl:col-span-8 space-y-6'
+              ? 'lg:col-span-8 space-y-6'
               : viewMode === 'MAP'
-              ? 'xl:col-span-8'
-              : 'xl:col-span-12'
+              ? 'lg:col-span-8 xl:col-span-8'
+              : 'lg:col-span-12'
           }`}
         >
           {/* SECTION A: GRAPHICAL DISTRICT HEAT MAP OF BANGLADESH */}
           {(viewMode === 'SPLIT' || viewMode === 'MAP') && (
             <div className="relative bg-gradient-to-b from-slate-50 via-sky-50/20 to-slate-100/60 dark:from-[#070D1F] dark:via-[#09112A] dark:to-[#050914] p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-inner overflow-hidden">
               {/* Map Canvas Header & Controls */}
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-3 relative z-10">
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <div className="flex items-center justify-between gap-3 mb-3 relative z-10">
+                <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-[#0054A6] dark:text-sky-400" />
                   <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                     {isBn
@@ -1171,7 +1171,7 @@ export const RegionalRiskHeatmapGrid: React.FC<RegionalRiskHeatmapGridProps> = (
         </div>
 
         {/* Right Column: Interactive Regional Threat & District Inspector */}
-        <div className={`${viewMode === 'SPLIT' ? 'xl:col-span-4' : viewMode === 'MAP' ? 'xl:col-span-4' : 'xl:col-span-12'}`}>
+        <div className={`${viewMode === 'SPLIT' ? 'lg:col-span-4' : viewMode === 'MAP' ? 'lg:col-span-4' : 'lg:col-span-12'}`}>
           <div className="bg-slate-50/70 dark:bg-[#070D1F] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-5">
             {/* Inspector Top Bar */}
             <div className="flex items-start justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
