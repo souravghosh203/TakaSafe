@@ -246,7 +246,7 @@ export const DisasterResilienceSimulator: React.FC<DisasterResilienceSimulatorPr
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="mobile-card-table w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase font-semibold text-[11px] border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th className="py-3 px-4">Agent Name & Location</th>
@@ -263,22 +263,22 @@ export const DisasterResilienceSimulator: React.FC<DisasterResilienceSimulatorPr
                 const isDispatched = dispatchedMap[agent.id];
                 return (
                   <tr key={agent.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4" data-label="Agent & location">
                       <div className="font-bold text-slate-900 dark:text-white">{agent.name}</div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400">
                         {agent.district} · {agent.phone}
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-right font-mono font-semibold text-slate-700 dark:text-slate-300">
+                    <td className="py-3 px-4 text-right font-mono font-semibold text-slate-700 dark:text-slate-300" data-label="Current cash float">
                       ৳{agent.currentCashFloat.toLocaleString()}
                     </td>
-                    <td className="py-3 px-4 text-right font-mono text-amber-600 dark:text-amber-400 font-medium">
+                    <td className="py-3 px-4 text-right font-mono text-amber-600 dark:text-amber-400 font-medium" data-label="Surge need">
                       +{agent.forecastedDemandSurge}%
                     </td>
-                    <td className="py-3 px-4 text-right font-mono font-bold text-rose-600 dark:text-rose-400">
+                    <td className="py-3 px-4 text-right font-mono font-bold text-rose-600 dark:text-rose-400" data-label="Projected shortfall">
                       {agent.shortfallAmount > 0 ? `-৳${agent.shortfallAmount.toLocaleString()}` : '৳ 0'}
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-3 px-4 text-center" data-label="Runway">
                       <span
                         className={`inline-block font-mono font-bold px-2 py-0.5 rounded text-[11px] ${
                           agent.liquidityRunwayHours < 3
@@ -291,7 +291,7 @@ export const DisasterResilienceSimulator: React.FC<DisasterResilienceSimulatorPr
                         {agent.liquidityRunwayHours}h
                       </span>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4" data-label="Severity status">
                       <span
                         className={`inline-flex items-center gap-1 font-bold text-[10px] px-2 py-0.5 rounded-full ${
                           agent.riskStatus === 'CRITICAL_DEPLETION'
@@ -304,7 +304,7 @@ export const DisasterResilienceSimulator: React.FC<DisasterResilienceSimulatorPr
                         {agent.riskStatus.replace(/_/g, ' ')}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-right" data-label="Intervention order">
                       {isDispatched ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 px-3 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
                           <Check className="w-3.5 h-3.5" />
