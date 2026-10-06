@@ -92,7 +92,8 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   const answerFromCurrentHistory = async (query: string): Promise<string | null> => {
     const asksMonthlySpend = /(spend|spent|spending|expense|expenses|খরচ)/i.test(query)
       && /(this month|current month|monthly|month|এই মাস|চলতি মাস)/i.test(query);
-    const asksRecentActivity = /(recent|latest|last few|history|transactions|লেনদেন)/i.test(query);
+    const asksRecentActivity = /(recent|latest|last|show|list|history|লেনদেন)/i.test(query)
+      && /(my|transaction|activity|history|লেনদেন)/i.test(query);
     if (!asksMonthlySpend && !asksRecentActivity) return null;
     if (!customerIdentity) {
       return lang === 'BN'
