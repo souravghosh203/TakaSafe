@@ -590,7 +590,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
 
             {/* Transactions Table */}
             <div className="overflow-x-auto">
-              <table className="mobile-card-table w-full text-left text-xs">
+              <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase font-semibold text-[11px] border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="py-3 px-4">Txn ID & Time</th>
@@ -611,22 +611,22 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                         txn.riskBand === 'CRITICAL' ? 'bg-rose-50/20 dark:bg-rose-950/20' : ''
                       }`}
                     >
-                      <td className="py-3 px-4" data-label="Txn ID & time">
+                      <td className="py-3 px-4">
                         <div className="font-mono font-bold text-slate-900 dark:text-white">{txn.id}</div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400">{txn.timestamp}</div>
                       </td>
-                      <td className="py-3 px-4" data-label="Sender profile">
+                      <td className="py-3 px-4">
                         <div className="font-bold text-slate-900 dark:text-white">{txn.senderName}</div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400">{txn.senderWallet}</div>
                       </td>
-                      <td className="py-3 px-4" data-label="Recipient">
+                      <td className="py-3 px-4">
                         <div className="font-medium text-slate-800 dark:text-slate-200">{txn.receiverName}</div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">{txn.receiverWallet}</div>
                       </td>
-                      <td className="py-3 px-4 text-right font-mono font-black text-slate-900 dark:text-white text-sm" data-label="Amount (BDT)">
+                      <td className="py-3 px-4 text-right font-mono font-black text-slate-900 dark:text-white text-sm">
                         ৳{txn.amount.toLocaleString()}
                       </td>
-                      <td className="py-3 px-4 text-center" data-label="Guardian score">
+                      <td className="py-3 px-4 text-center">
                         <span
                           className={`inline-block font-mono font-black text-xs px-2.5 py-1 rounded-lg ${
                             txn.fusedRiskScore >= 80
@@ -639,7 +639,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                           {txn.fusedRiskScore}/100
                         </span>
                       </td>
-                      <td className="py-3 px-4" data-label="Risk band">
+                      <td className="py-3 px-4">
                         <span
                           className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border ${getRiskBadge(
                             txn.riskBand,
@@ -649,7 +649,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                           {txn.riskBand}
                         </span>
                       </td>
-                      <td className="py-3 px-4" data-label="Status">
+                      <td className="py-3 px-4">
                         <span
                           className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
                             txn.status === 'HELD'
@@ -662,7 +662,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                           {txn.status}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-right" data-label="Action">
+                      <td className="py-3 px-4 text-right">
                         <button
                           onClick={() => onOpenInvestigation(txn)}
                           className="inline-flex items-center gap-1.5 bg-[#0054A6] hover:bg-[#004284] text-white font-bold py-1.5 px-3 rounded-lg text-xs shadow-2xs transition-all cursor-pointer"
@@ -837,7 +837,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="mobile-card-table w-full text-left text-xs">
+            <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 uppercase font-semibold text-[11px] border-b border-slate-200 dark:border-slate-800">
                 <tr>
                   <th className="py-3 px-4">Audit ID & Time</th>
@@ -857,18 +857,18 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                 ) : (
                   filteredAuditLogs.map((log) => (
                     <tr key={log.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="py-3 px-4" data-label="Audit ID & time">
+                      <td className="py-3 px-4">
                         <div className="font-mono font-bold text-slate-900 dark:text-white">{log.id}</div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400">{log.timestamp}</div>
                       </td>
-                      <td className="py-3 px-4 font-semibold text-slate-800 dark:text-slate-200" data-label="Authorized analyst">
+                      <td className="py-3 px-4 font-semibold text-slate-800 dark:text-slate-200">
                         {log.analyst}
                       </td>
-                      <td className="py-3 px-4" data-label="Target entity">
+                      <td className="py-3 px-4">
                         <span className="font-mono font-bold text-slate-900 dark:text-white">{log.entityId}</span>
                         <span className="text-[10px] text-slate-500 dark:text-slate-400 block">{log.caseId}</span>
                       </td>
-                      <td className="py-3 px-4" data-label="Action taken">
+                      <td className="py-3 px-4">
                         <span
                           className={`inline-block font-bold text-[10px] px-2.5 py-0.5 rounded-full ${
                             log.actionTaken === 'FREEZE_WALLET'
@@ -881,7 +881,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                           {log.actionTaken.replace(/_/g, ' ')}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-slate-600 dark:text-slate-300 max-w-xs sm:truncate" data-label="Operator notes">
+                      <td className="py-3 px-4 text-slate-600 dark:text-slate-300 max-w-xs truncate">
                         {log.notes}
                       </td>
                     </tr>
