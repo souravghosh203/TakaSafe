@@ -72,7 +72,7 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
           {/* Column 2: GET IN TOUCH */}
           <div className="lg:col-span-4">
             <h4 className="mb-5 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-400">{isBn ? 'যোগাযোগ' : 'CONTACT & SUPPORT'}</h4>
-            <div className="grid gap-6 xl:grid-cols-2">
+            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-2">
               <div className="space-y-4">
             
             <button
