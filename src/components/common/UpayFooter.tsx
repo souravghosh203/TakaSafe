@@ -19,11 +19,12 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
   };
 
   return (
-    <footer className="bg-[#262626] text-slate-300 text-xs pt-8 pb-5 border-t-4 border-[#FAB915]">
+    <footer className="relative overflow-hidden border-t-4 border-[#FAB915] bg-[#1f2329] text-slate-300 text-xs">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(ellipse_at_top,rgba(250,185,21,0.08),transparent_68%)]" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-x-6 gap-y-6 mb-7">
+        <div className="relative grid grid-cols-1 gap-x-10 gap-y-9 py-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-y-10 lg:py-12">
           {/* Column 1: Brand & Purpose */}
-          <div className="lg:col-span-1">
+          <div className="sm:col-span-2 lg:col-span-3">
             {/* Brand Zone: Authentic MFS Animated Logo in Footer */}
             <button
               onClick={handleLogoClick}
@@ -63,14 +64,15 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
                 </span>
               </div>
             </button>
-            <p className="text-slate-400 text-[12px] leading-relaxed">
+            <p className="max-w-xs text-[13px] leading-6 text-slate-400">
               {isBn ? 'সহজ, নিরাপদ ও উদ্ভাবনী ডিজিটাল আর্থিক সেবার মাধ্যমে মানুষের লক্ষ্য অর্জনে TakaSafe কাজ করছে।' : 'TakaSafe is aiming to help people achieve their goals through easy, secure and innovative digital financial services.'}
             </p>
           </div>
 
           {/* Column 2: GET IN TOUCH */}
-          <div className="lg:col-span-2 space-y-2.5">
-            <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">{isBn ? 'যোগাযোগ' : 'GET IN TOUCH'}</h4>
+          <div className="lg:col-span-4">
+            <h4 className="mb-5 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-400">{isBn ? 'যোগাযোগ' : 'CONTACT & SUPPORT'}</h4>
+            <div className="space-y-4">
             
             <button
               onClick={() => onOpenModal?.('LIVE_CHAT')}
@@ -132,13 +134,14 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
                 <span className="text-amber-300">Timing: 9:30 am - 4:00 pm</span>
               </div>
             </div>
+            </div>
           </div>
 
           {/* Column 3: USEFUL LINKS & COMPANY INFO */}
-          <div>
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:col-span-3 lg:gap-6">
             <div>
-              <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">{isBn ? 'প্রয়োজনীয় লিংক' : 'USEFUL LINKS'}</h4>
-              <ul className="space-y-1.5 text-[12px] text-slate-400">
+              <h4 className="mb-5 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-400">{isBn ? 'প্রয়োজনীয় লিংক' : 'EXPLORE'}</h4>
+              <ul className="space-y-3 text-[12px] text-slate-400">
                 <li onClick={() => onOpenModal?.('ABSTRACT')} className="text-amber-300 font-bold hover:text-white cursor-pointer transition-colors flex items-center gap-1.5">
                   <Sparkles className="w-3 h-3 text-amber-400" />
                   <span>{isBn ? 'প্রকল্পের সারসংক্ষেপ ও SDG' : 'Official Project Abstract & SDGs'}</span>
@@ -151,22 +154,20 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
               </ul>
             </div>
 
-          </div>
-
-          {/* Company information gets its own column for a more balanced footer. */}
           <div>
-            <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">{isBn ? 'প্রতিষ্ঠানের তথ্য' : 'COMPANY INFO'}</h4>
-            <ul className="space-y-1.5 text-[12px] text-slate-400">
+            <h4 className="mb-5 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-400">{isBn ? 'প্রতিষ্ঠানের তথ্য' : 'COMPANY'}</h4>
+            <ul className="space-y-3 text-[12px] text-slate-400">
               <li onClick={() => onOpenModal?.('PRIVACY_POLICY')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'গোপনীয়তা নীতি' : 'Privacy Policy'}</li>
               <li onClick={() => onOpenModal?.('TERMS')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'শর্তাবলি' : 'Terms and Conditions'}</li>
               <li onClick={() => onOpenModal?.('ABOUT_US')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'আমাদের পরিচিতি' : 'Who We Are'}</li>
               <li onClick={() => onOpenModal?.('BUSINESS')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'ব্যবসায়িক সমাধান' : 'Business Solution'}</li>
             </ul>
           </div>
+          </div>
 
           {/* Column 4: STAY CONNECTED & APP DOWNLOADS */}
-          <div>
-          <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">{isBn ? 'সঙ্গে থাকুন' : 'STAY CONNECTED'}</h4>
+          <div className="lg:col-span-2">
+          <h4 className="mb-5 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-400">{isBn ? 'সঙ্গে থাকুন' : 'FOLLOW & GET THE APP'}</h4>
             
             {/* Social Icons */}
             <div className="flex items-center gap-2 mb-4">
@@ -239,8 +240,8 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
         </div>
 
         {/* Footer Bottom Bar */}
-        <div className="pt-4 border-t border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-2 text-slate-400 text-[11px]">
-          <div>
+        <div className="relative flex flex-col items-center justify-between gap-3 border-t border-white/10 py-5 text-center text-[11px] text-slate-500 sm:flex-row sm:text-left">
+          <div className="whitespace-nowrap">
             © 2026 TakaSafe. All rights reserved.
           </div>
           <div className="flex items-center gap-3">
