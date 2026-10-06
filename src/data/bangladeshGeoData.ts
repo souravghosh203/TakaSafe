@@ -5886,11 +5886,11 @@ export const DIVISION_LABEL_ANCHORS: Record<string, [number, number]> = {
   Rangpur: [89.10, 25.95],
   Rajshahi: [88.75, 24.65],
   Mymensingh: [90.45, 25.02],
-  Sylhet: [91.80, 24.50],
+  Sylhet: [91.75, 24.85],
   Dhaka: [89.95, 24.00],
   Khulna: [89.15, 22.80],
-  Barishal: [90.55, 23.00],
-  Chittagong: [91.95, 23.20],
+  Barishal: [90.45, 22.80],
+  Chittagong: [92.05, 22.45],
 };
 
 export const DISTRICT_LABEL_OFFSETS: Record<string, { dx: number; dy: number; textAnchor: 'start' | 'middle' | 'end' }> = {

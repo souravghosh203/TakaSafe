@@ -416,7 +416,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
           { id: 'MULEVISION', label: '3. MuleVision (Graph)', icon: Network },
           { id: 'GEOSPATIAL', label: '4. Geospatial Intelligence', icon: Globe },
           { id: 'RADAR', label: '5. Early-Warning Radar', icon: Radar },
-          { id: 'REGIONAL_HEATMAP', label: '6. Regional Heatmap Grid', icon: Flame },
+          { id: 'REGIONAL_HEATMAP', label: '6. Regional Heatmap (Headmap) Grid', icon: Flame },
           { id: 'RESILIENCE', label: '7. Disaster Resilience Mode', icon: CloudLightning },
           { id: 'POLICY', label: '8. Policy Weights & Action Engine', icon: Sliders },
           { id: 'AUDIT', label: '9. Audit Logs & Compliance', icon: FileCheck2 },

@@ -336,7 +336,7 @@ export const RegionalRiskHeatmapGrid: React.FC<RegionalRiskHeatmapGridProps> = (
     <div className="bg-white dark:bg-[#0B132B] rounded-3xl border border-slate-200 dark:border-slate-800/80 shadow-xl overflow-hidden font-sans text-slate-900 dark:text-slate-100 transition-all duration-200">
       {/* 1. Top Header Toolbar */}
       <div className="p-5 md:p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-[#070D1F] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
+          <div>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-rose-500/10 dark:bg-rose-950/40 border border-rose-500/30 flex items-center justify-center text-rose-600 dark:text-rose-400 shadow-sm shrink-0">
               <Compass className="w-5 h-5 animate-pulse" />
@@ -345,18 +345,18 @@ export const RegionalRiskHeatmapGrid: React.FC<RegionalRiskHeatmapGridProps> = (
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-base md:text-lg font-black tracking-tight text-slate-900 dark:text-white">
                   {isBn
-                    ? 'বাংলাদেশ জেলা ও আঞ্চলিক ঝুঁকি হিটম্যাপ ভিজ্যুয়ালাইজার'
-                    : 'Regional District Heat Map & Spatial Risk Visualizer'}
+                    ? 'বাংলাদেশ জেলা ও আঞ্চলিক ঝুঁকি হেডম্যাপ (Headmap / Heatmap) ভিজ্যুয়ালাইজার'
+                    : 'Regional District Heat Map (Headmap) & Spatial Risk Visualizer'}
                 </h3>
                 <span className="bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-800 uppercase tracking-wider flex items-center gap-1 font-mono">
                   <Radio className="w-3 h-3 text-rose-600 dark:text-rose-400 animate-pulse" />
-                  <span>D3 SPATIAL ENGINE</span>
+                  <span>HEADMAP SPATIAL ENGINE</span>
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 {isBn
-                  ? 'ভৌগোলিক মানচিত্রে RegionalRiskMetric ডেটা ও দেশের জেলাসমূহের স্থানিক জালিয়াতি ক্লাস্টার ও নদী অববাহিকা বিশ্লেষণ'
-                  : 'Interactive cartographic heat map mapping RegionalRiskMetric telemetry across Bangladesh districts and river basins.'}
+                  ? 'ভৌগোলিক জেলা হেডম্যাপ (Headmap/Heatmap) ও স্থানিক ঝুঁকি ভিজ্যুয়ালাইজার: RegionalRiskMetric টেলিমেট্রি, জেলা ক্লাস্টার ও নদী অববাহিকা বিশ্লেষণ'
+                  : 'Active Regional District Heat Map (Headmap) & Spatial Risk Visualizer: Real-time choropleth heatmap and density telemetry across Bangladesh districts and river basins.'}
               </p>
             </div>
           </div>
@@ -438,7 +438,7 @@ export const RegionalRiskHeatmapGrid: React.FC<RegionalRiskHeatmapGridProps> = (
         {/* Heat Intensity Scale */}
         <div className="flex items-center gap-2.5">
           <span className="font-semibold text-slate-500 dark:text-slate-400 text-[11px] uppercase tracking-wider">
-            {isBn ? 'ঝুঁকি তীব্রতা স্কেল:' : 'Spatial Risk Scale:'}
+            {isBn ? 'হেডম্যাপ তীব্রতা স্কেল (Heatmap Scale):' : 'Heatmap / Headmap Risk Scale:'}
           </span>
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">Low (0)</span>
@@ -506,8 +506,11 @@ export const RegionalRiskHeatmapGrid: React.FC<RegionalRiskHeatmapGridProps> = (
                   <MapPin className="w-4 h-4 text-[#0054A6] dark:text-sky-400" />
                   <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                     {isBn
-                      ? 'বাংলাদেশ জেলা ও বিভাগীয় স্থানিক হিটম্যাপ'
-                      : 'Bangladesh District & Division Spatial Heat Map'}
+                      ? 'বাংলাদেশ জেলা ও বিভাগীয় স্থানিক হেডম্যাপ / হিটম্যাপ'
+                      : 'Bangladesh District & Division Spatial Heatmap / Headmap'}
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-bold border border-rose-200 dark:border-rose-800">
+                    LIVE HEADMAP
                   </span>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold">
                     {displayedDistricts.length} Districts Mapped
@@ -529,14 +532,14 @@ export const RegionalRiskHeatmapGrid: React.FC<RegionalRiskHeatmapGridProps> = (
                   </button>
                   <button
                     onClick={() => setShowHeatGlows(!showHeatGlows)}
-                    title={isBn ? 'হিট গ্লো বৃত্ত চালু/বন্ধ করুন' : 'Toggle District Heat Halos'}
+                    title={isBn ? 'হেডম্যাপ গ্লো বৃত্ত চালু/বন্ধ করুন' : 'Toggle District Headmap Halos'}
                     className={`px-2 py-0.5 rounded-md text-[10.5px] font-bold transition-all cursor-pointer ${
                       showHeatGlows
                         ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
                         : 'text-slate-400 opacity-60'
                     }`}
                   >
-                    {isBn ? 'গ্লো' : 'Halos'}
+                    {isBn ? 'হেডম্যাপ গ্লো' : 'Headmap Halos'}
                   </button>
                   <button
                     onClick={() => setShowDisruptions(!showDisruptions)}
@@ -785,9 +788,16 @@ export const RegionalRiskHeatmapGrid: React.FC<RegionalRiskHeatmapGridProps> = (
                               strokeWidth="1.5"
                               strokeDasharray="6 4"
                               strokeOpacity="0.7"
-                              className="animate-spin"
-                              style={{ transformOrigin: 'center', animationDuration: '18s' }}
-                            />
+                            >
+                              <animateTransform
+                                attributeName="transform"
+                                type="rotate"
+                                from="0 0 0"
+                                to="360 0 0"
+                                dur="18s"
+                                repeatCount="indefinite"
+                              />
+                            </circle>
                             {/* Warning Label Badge */}
                             <rect
                               x="-56"
@@ -908,8 +918,8 @@ export const RegionalRiskHeatmapGrid: React.FC<RegionalRiskHeatmapGridProps> = (
                               stroke="#E11D48"
                               strokeWidth="1.5"
                               strokeOpacity="0.8"
-                              className="animate-ping"
-                              style={{ animationDuration: '2.5s' }}
+                              strokeDasharray="3 2"
+                              className="animate-pulse"
                             />
                           )}
 
@@ -1177,7 +1187,7 @@ export const RegionalRiskHeatmapGrid: React.FC<RegionalRiskHeatmapGridProps> = (
             <div className="flex items-start justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-[#0054A6] dark:text-sky-400 font-bold block">
-                  {isBn ? 'নির্বাচিত জেলা ও অঞ্চল পরিদর্শন' : 'DISTRICT & REGIONAL INSPECTOR'}
+                  {isBn ? 'স্থানিক হেডম্যাপ ও অঞ্চল পরিদর্শন' : 'SPATIAL HEADMAP & REGIONAL INSPECTOR'}
                 </span>
                 <h4 className="text-lg font-black text-slate-900 dark:text-white mt-0.5 flex items-center gap-2">
                   <span>{selectedDistrict?.name || selectedDivisionName}</span>
