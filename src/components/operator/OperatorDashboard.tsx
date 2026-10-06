@@ -17,6 +17,8 @@ import { LiveWebSocketTicker } from './LiveWebSocketTicker';
 import { ComplianceReportModal } from './ComplianceReportModal';
 import { RiskDistributionDonutChart } from './RiskDistributionDonutChart';
 import { PolicyWeightsActionEngine } from './PolicyWeightsActionEngine';
+import { RegionalRiskHeatmapGrid } from './RegionalRiskHeatmapGrid';
+import { DailySuspiciousRiskTrendChart } from './DailySuspiciousRiskTrendChart';
 import {
   ShieldCheck,
   AlertTriangle,
@@ -35,6 +37,8 @@ import {
   ArrowUpRight,
   Download,
   Printer,
+  Flame,
+  TrendingUp,
 } from 'lucide-react';
 
 interface OperatorDashboardProps {
@@ -75,6 +79,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   const [latestTickerTxn, setLatestTickerTxn] = useState<Transaction | null>(transactions[0] || null);
   const [isTickerFlashing, setIsTickerFlashing] = useState<boolean>(false);
   const [isComplianceModalOpen, setIsComplianceModalOpen] = useState<boolean>(false);
+  const [analyticsHorizon, setAnalyticsHorizon] = useState<'BOTH' | 'INTRADAY' | '30D'>('BOTH');
   const [alertFeedback, setAlertFeedback] = useState<Array<{ outcome: string }>>([]);
 
   useEffect(() => {
@@ -200,7 +205,9 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         txn.id.toLowerCase().includes(q) ||
         txn.senderName.toLowerCase().includes(q) ||
         txn.senderWallet.includes(q) ||
-        txn.receiverWallet.includes(q)
+        txn.receiverWallet.includes(q) ||
+        txn.senderLocation.toLowerCase().includes(q) ||
+        txn.receiverLocation.toLowerCase().includes(q)
       );
     }
     return true;
@@ -405,12 +412,14 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
       <div className="flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-800 overflow-x-auto pb-1">
         {[
           { id: 'OVERVIEW', label: '1. Transaction Guardian', icon: ShieldCheck, badge: criticalCount },
-          { id: 'MULEVISION', label: '2. MuleVision (Graph)', icon: Network },
-          { id: 'GEOSPATIAL', label: '3. Geospatial Intelligence', icon: Globe },
-          { id: 'RADAR', label: '4. Early-Warning Radar', icon: Radar },
-          { id: 'RESILIENCE', label: '5. Disaster Resilience Mode', icon: CloudLightning },
-          { id: 'POLICY', label: '6. Policy Weights & Action Engine', icon: Sliders },
-          { id: 'AUDIT', label: '7. Audit Logs & Compliance', icon: FileCheck2 },
+          { id: 'HISTORICAL_30D', label: '2. 30-Day Risk Trends (Recharts)', icon: TrendingUp },
+          { id: 'MULEVISION', label: '3. MuleVision (Graph)', icon: Network },
+          { id: 'GEOSPATIAL', label: '4. Geospatial Intelligence', icon: Globe },
+          { id: 'RADAR', label: '5. Early-Warning Radar', icon: Radar },
+          { id: 'REGIONAL_HEATMAP', label: '6. Regional Heatmap Grid', icon: Flame },
+          { id: 'RESILIENCE', label: '7. Disaster Resilience Mode', icon: CloudLightning },
+          { id: 'POLICY', label: '8. Policy Weights & Action Engine', icon: Sliders },
+          { id: 'AUDIT', label: '9. Audit Logs & Compliance', icon: FileCheck2 },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -445,22 +454,104 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         {/* Tab 1: Overview & Transaction Guardian */}
         {activeTab === 'OVERVIEW' && (
         <div className="space-y-6">
-          {/* Analytics Grid: Recharts Risk Trend Chart + Recharts Donut Distribution Chart */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch animate-slide-up stagger-1">
-            <div className="lg:col-span-7 xl:col-span-8 card-hover-lift">
-              <TransactionRiskTrendChart transactions={liveTransactions} lang={lang} />
+          {/* Analytics Horizon Switcher Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#0F172A] p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                {lang === 'BN' ? 'অ্যানালিটিক্স টাইমফ্রেম ভিউ:' : 'Analytics Timeframe Horizon:'}
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono hidden md:inline">
+                (Real-time Intraday + 30-Day Macro Risk Distribution)
+              </span>
             </div>
-            <div className="lg:col-span-5 xl:col-span-4 card-hover-lift">
-              <RiskDistributionDonutChart
-                transactions={liveTransactions}
-                activeFilter={filterBand}
-                onSelectFilter={(band) => setFilterBand(band)}
-                lang={lang}
-              />
+
+            <div className="inline-flex items-center bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl text-xs font-semibold border border-slate-200/60 dark:border-slate-700/60 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setAnalyticsHorizon('BOTH')}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  analyticsHorizon === 'BOTH'
+                    ? 'bg-white dark:bg-slate-900 text-[#0054A6] dark:text-blue-300 shadow-xs font-bold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                {lang === 'BN' ? 'উভয় ভিউ (সবগুলো)' : 'Combined (All Charts)'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAnalyticsHorizon('INTRADAY')}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  analyticsHorizon === 'INTRADAY'
+                    ? 'bg-white dark:bg-slate-900 text-[#0054A6] dark:text-blue-300 shadow-xs font-bold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                {lang === 'BN' ? '২৪ ঘণ্টা রিয়েল-টাইম' : '24-Hour Intraday'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAnalyticsHorizon('30D')}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  analyticsHorizon === '30D'
+                    ? 'bg-[#0054A6] text-white shadow-xs font-bold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                {lang === 'BN' ? '৩০ দিনের ট্রেন্ড ও বণ্টন' : '30-Day Trend & Distribution'}
+              </button>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#0F172A] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-slide-up stagger-2">
+          {/* Intraday Analytics Grid (24-Hour Trend & Donut) */}
+          {(analyticsHorizon === 'BOTH' || analyticsHorizon === 'INTRADAY') && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch animate-slide-up stagger-1">
+              <div className="lg:col-span-7 xl:col-span-8 card-hover-lift">
+                <TransactionRiskTrendChart transactions={liveTransactions} lang={lang} />
+              </div>
+              <div className="lg:col-span-5 xl:col-span-4 card-hover-lift">
+                <RiskDistributionDonutChart
+                  transactions={liveTransactions}
+                  activeFilter={filterBand}
+                  onSelectFilter={(band) => setFilterBand(band)}
+                  lang={lang}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* 30-Day Suspicious Transaction Volume & Risk Score Distribution (Recharts) */}
+          {(analyticsHorizon === 'BOTH' || analyticsHorizon === '30D') && (
+            <div id="thirty-day-trend-section" className="animate-slide-up stagger-2 card-hover-lift">
+              <DailySuspiciousRiskTrendChart transactions={liveTransactions} lang={lang} />
+            </div>
+          )}
+
+          {/* New Section: Regional Risk Levels & Fraud Cluster Grid (Map-like D3 Grid / Recharts Heatmap) */}
+          <div id="regional-risk-heatmap-section" className="animate-slide-up stagger-2">
+            <RegionalRiskHeatmapGrid
+              regionalMetrics={regionalMetrics}
+              transactions={liveTransactions}
+              agents={agents}
+              onSelectRegion={(division) => {
+                setSearchQuery(division);
+              }}
+              onActivateMonitoring={onActivateMonitoring}
+              onDispatchLiquidity={onDispatchLiquidity}
+              onOpenInvestigation={onOpenInvestigation}
+              onFilterTableToRegion={(regionName) => {
+                setSearchQuery(regionName);
+                const tableElem = document.getElementById('monitored-transactions-table');
+                tableElem?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              onNavigateTab={(tabId) => {
+                setActiveTab(tabId);
+                onTabChange?.(tabId);
+              }}
+              lang={lang}
+            />
+          </div>
+
+          <div id="monitored-transactions-table" className="bg-white dark:bg-[#0F172A] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-slide-up stagger-3">
             {/* Table Filters & Search */}
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/60">
               <div className="flex items-center gap-3">
@@ -589,9 +680,16 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         </div>
       )}
 
+      {/* Tab: 30-Day Suspicious Volume & Risk Score Distribution (Recharts) */}
+      {activeTab === 'HISTORICAL_30D' && (
+        <div className="space-y-6">
+          <DailySuspiciousRiskTrendChart transactions={liveTransactions} lang={lang} />
+        </div>
+      )}
+
       {/* Tab 2: MuleVision Graph */}
       {activeTab === 'MULEVISION' && (
-        <MuleVisionGraph cluster={muleCluster} onFreezeWallet={onFreezeWallet} />
+        <MuleVisionGraph cluster={muleCluster} onFreezeWallet={onFreezeWallet} lang={lang} />
       )}
 
       {/* Tab 3: Geospatial Intelligence (D3 Geographic Heatmap) */}
@@ -609,10 +707,39 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
 
       {/* Tab 4: Early-Warning Radar */}
       {activeTab === 'RADAR' && (
-        <EarlyWarningRadar metrics={regionalMetrics} onActivateMonitoring={onActivateMonitoring} />
+        <EarlyWarningRadar
+          metrics={regionalMetrics}
+          onActivateMonitoring={onActivateMonitoring}
+          lang={lang}
+        />
       )}
 
-      {/* Tab 5: Disaster Resilience Mode */}
+      {/* Tab 5: Regional Risk Heatmap & Fraud Cluster Grid */}
+      {activeTab === 'REGIONAL_HEATMAP' && (
+        <RegionalRiskHeatmapGrid
+          regionalMetrics={regionalMetrics}
+          transactions={liveTransactions}
+          agents={agents}
+          onSelectRegion={(division) => setSearchQuery(division)}
+          onActivateMonitoring={onActivateMonitoring}
+          onDispatchLiquidity={onDispatchLiquidity}
+          onOpenInvestigation={onOpenInvestigation}
+          onFilterTableToRegion={(regionName) => {
+            setSearchQuery(regionName);
+            setActiveTab('OVERVIEW');
+            setTimeout(() => {
+              document.getElementById('monitored-transactions-table')?.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          }}
+          onNavigateTab={(tabId) => {
+            setActiveTab(tabId);
+            onTabChange?.(tabId);
+          }}
+          lang={lang}
+        />
+      )}
+
+      {/* Tab 6: Disaster Resilience Mode */}
       {activeTab === 'RESILIENCE' && (
         <DisasterResilienceSimulator agents={agents} onDispatchLiquidity={onDispatchLiquidity} />
       )}

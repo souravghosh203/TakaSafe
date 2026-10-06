@@ -5929,5 +5929,4 @@ export const BANGLADESH_NEIGHBOR_LABELS: NeighborLabel[] = [
   { name: 'INDIA', sublabel: 'Assam', coordinates: [92.65, 25.10] },
   { name: 'INDIA', sublabel: 'Tripura', coordinates: [91.75, 23.85] },
   { name: 'MYANMAR', sublabel: 'Burma', coordinates: [92.65, 21.05] },
-  { name: 'BAY OF BENGAL', nameBn: 'বঙ্গোপসাগর', sublabel: 'Mouths of the Ganges', coordinates: [90.15, 21.25] },
 ];

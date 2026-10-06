@@ -741,8 +741,8 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
               {lang === 'BN'
-                ? 'রিয়েল-টাইম লেনদেন ঘনত্ব, জেলাভিত্তিক ফ্রড নেটওয়ার্ক, নদী চ্যানেল ও সাইক্লোন রিমাল ট্র্যাক'
-                : 'Real-time transaction density, cross-district fraud rings, waterway corridors & Cyclone Remal trajectory'}
+                ? 'রিয়েল-টাইম লেনদেন ঘনত্ব, জেলাভিত্তিক ফ্রড নেটওয়ার্ক, নদী চ্যানেল ও সাইক্লোন ট্র্যাক'
+                : 'Real-time transaction density, cross-district fraud rings, waterway corridors & Cyclone trajectory'}
             </p>
           </div>
         </div>
@@ -962,7 +962,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
             }`}
           >
             <Wind className="w-3.5 h-3.5" />
-            <span>{lang === 'BN' ? 'সাইক্লোন রিমাল' : 'Cyclone Remal'}</span>
+            <span>{lang === 'BN' ? 'ঘূর্ণিঝড়' : 'Cyclone'}</span>
           </button>
 
           <button
@@ -1217,6 +1217,31 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                 <feGaussianBlur stdDeviation="4" result="blur" />
                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
               </filter>
+
+              {/* Oceanic Depth Gradients for Bay of Bengal */}
+              <linearGradient id="bay-of-bengal-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#0284C7" stopOpacity={mapTheme === 'NAVY_CYBER' ? 0.16 : 0.22} />
+                <stop offset="35%" stopColor="#0369A1" stopOpacity={mapTheme === 'NAVY_CYBER' ? 0.26 : 0.34} />
+                <stop offset="70%" stopColor="#0C4A6E" stopOpacity={mapTheme === 'NAVY_CYBER' ? 0.42 : 0.50} />
+                <stop offset="100%" stopColor="#082F49" stopOpacity={mapTheme === 'NAVY_CYBER' ? 0.65 : 0.75} />
+              </linearGradient>
+
+              <radialGradient id="swatch-trench-grad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#0284C7" stopOpacity="0.5" />
+                <stop offset="60%" stopColor="#0369A1" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#0EA5E9" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Ocean Wave Texture Pattern */}
+              <pattern id="bay-wave-pattern" width="80" height="24" patternUnits="userSpaceOnUse">
+                <path
+                  d="M 0 12 Q 20 6 40 12 T 80 12 M 0 24 Q 20 18 40 24 T 80 24"
+                  fill="none"
+                  stroke="#38BDF8"
+                  strokeWidth="0.7"
+                  strokeOpacity="0.18"
+                />
+              </pattern>
             </defs>
 
             {/* D3 Map Zoom & Pan Group - Fully Transformed by D3 Coordinates */}
@@ -1224,31 +1249,219 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
               className="map-zoom-group"
               transform={`translate(${mapTransform.x}, ${mapTransform.y}) scale(${mapTransform.k})`}
             >
-              {/* 0. Bay of Bengal Water Area with Depth Contour */}
+              {/* 0. Enhanced Bay of Bengal Oceanic Basin (Full-Bleed Marine Bathymetry & Hydrology) */}
               <g className="pointer-events-none select-none">
+                {/* 0.1 Main Full-Width Water Basin conforming to Bangladesh Southern Coastline */}
                 <path
-                  d="M 160 510 Q 280 470 380 500 T 580 590 L 580 660 L 160 660 Z"
-                  fill={
-                    mapTheme === 'NAVY_CYBER'
-                      ? 'rgba(14, 165, 233, 0.08)'
-                      : mapTheme === 'OCEAN_BLUE'
-                      ? 'rgba(37, 99, 235, 0.14)'
-                      : 'rgba(2, 132, 199, 0.09)'
-                  }
+                  d="M -40 495 L 138 510 Q 180 518 220 514 T 275 512 Q 310 520 345 508 Q 380 475 415 470 Q 445 480 472 505 Q 492 532 512 562 Q 532 595 550 630 Q 562 655 575 670 L 720 670 L 720 720 L -40 720 Z"
+                  fill="url(#bay-of-bengal-grad)"
                 />
-                <text
-                  x="360"
-                  y="635"
-                  textAnchor="middle"
-                  fill={mapTheme === 'NAVY_CYBER' ? '#0284C7' : '#0369A1'}
-                  fillOpacity={0.45}
-                  fontSize="10"
-                  fontFamily="sans-serif"
-                  fontWeight="800"
-                  letterSpacing="4"
-                >
-                  {lang === 'BN' ? 'বঙ্গোপসাগর (BAY OF BENGAL)' : 'BAY OF BENGAL'}
+
+                {/* 0.2 Oceanic Wave Texture Overlay */}
+                <path
+                  d="M -40 495 L 138 510 Q 180 518 220 514 T 275 512 Q 310 520 345 508 Q 380 475 415 470 Q 445 480 472 505 Q 492 532 512 562 Q 532 595 550 630 Q 562 655 575 670 L 720 670 L 720 720 L -40 720 Z"
+                  fill="url(#bay-wave-pattern)"
+                />
+
+                {/* 0.3 Bathymetry Depth Contours (Isobaths) */}
+                {/* -20m Inner Continental Shelf */}
+                <path
+                  d="M -40 528 Q 170 542 265 534 T 370 528 Q 440 525 488 560 T 560 662 L 720 678"
+                  fill="none"
+                  stroke="#38BDF8"
+                  strokeWidth="1.2"
+                  strokeDasharray="4 3"
+                  strokeOpacity="0.4"
+                />
+                <text x="75" y="525" fill="#38BDF8" fontSize="6.5" fontFamily="monospace" opacity="0.6">-20m Shelf</text>
+                <text x="610" y="674" fill="#38BDF8" fontSize="6.5" fontFamily="monospace" opacity="0.6">-20m Isobath</text>
+
+                {/* -50m Mid Continental Shelf */}
+                <path
+                  d="M -40 560 Q 150 575 250 564 T 385 565 Q 460 580 520 625 T 595 695"
+                  fill="none"
+                  stroke="#0284C7"
+                  strokeWidth="1.2"
+                  strokeDasharray="6 4"
+                  strokeOpacity="0.45"
+                />
+                <text x="65" y="556" fill="#0284C7" fontSize="6.5" fontFamily="monospace" opacity="0.65">-50m Isobath</text>
+
+                {/* -100m Outer Continental Shelf Dropoff */}
+                <path
+                  d="M -40 600 Q 140 615 250 608 T 405 615 Q 495 645 555 700"
+                  fill="none"
+                  stroke="#0369A1"
+                  strokeWidth="1.2"
+                  strokeDasharray="8 5"
+                  strokeOpacity="0.45"
+                />
+                <text x="55" y="596" fill="#0369A1" fontSize="6.5" fontFamily="monospace" opacity="0.65">-100m Shelf Edge</text>
+
+                {/* -200m Deep Continental Slope */}
+                <path
+                  d="M -40 645 Q 160 658 310 652 T 510 685 L 720 710"
+                  fill="none"
+                  stroke="#075985"
+                  strokeWidth="1.2"
+                  strokeDasharray="10 6"
+                  strokeOpacity="0.45"
+                />
+                <text x="45" y="641" fill="#075985" fontSize="6.5" fontFamily="monospace" opacity="0.65">-200m Abyss</text>
+
+                {/* 0.4 Swatch of No Ground (Deep-sea Submarine Canyon Marine Sanctuary) */}
+                <g transform="translate(205, 575)">
+                  <ellipse cx="0" cy="0" rx="38" ry="18" transform="rotate(-35)" fill="url(#swatch-trench-grad)" stroke="#0284C7" strokeWidth="1.3" strokeDasharray="3 2" />
+                  <ellipse cx="0" cy="0" rx="22" ry="10" transform="rotate(-35)" fill="rgba(3, 105, 161, 0.4)" stroke="#38BDF8" strokeWidth="1" />
+                  <circle cx="0" cy="0" r="2.5" fill="#38BDF8" />
+                  <text x="0" y="24" textAnchor="middle" fill="#38BDF8" fontSize="7" fontFamily="monospace" fontWeight="bold" opacity="0.85">
+                    SWATCH OF NO GROUND
+                  </text>
+                  <text x="0" y="32" textAnchor="middle" fill="#94A3B8" fontSize="6" fontFamily="monospace" opacity="0.75">
+                    Submarine Canyon (-1,340m)
+                  </text>
+                </g>
+
+                {/* 0.5 Bangladesh Exclusive Economic Zone (EEZ / ITLOS Maritime Border) */}
+                <path
+                  d="M 138 510 L 80 690 M 550 630 L 460 705"
+                  fill="none"
+                  stroke="#38BDF8"
+                  strokeWidth="1.4"
+                  strokeDasharray="8 4 2 4"
+                  strokeOpacity="0.65"
+                />
+                <text x="95" y="660" transform="rotate(72 95 660)" fill="#38BDF8" fontSize="6.5" fontFamily="monospace" opacity="0.7" letterSpacing="1">
+                  BANGLADESH MARITIME BORDER (EEZ / ITLOS)
                 </text>
+
+                {/* 0.6 Major International Maritime Navigation Fairways */}
+                {/* Chittagong Deep Sea Fairway */}
+                <path
+                  d="M 430 670 Q 460 610 495 545"
+                  fill="none"
+                  stroke="#22D3EE"
+                  strokeWidth="1.2"
+                  strokeDasharray="3 3"
+                  strokeOpacity="0.6"
+                />
+                <circle cx="430" cy="670" r="2.5" fill="#22D3EE" />
+                <circle cx="495" cy="545" r="2.5" fill="#22D3EE" />
+                <text x="475" y="610" transform="rotate(-62 475 610)" fill="#22D3EE" fontSize="6" fontFamily="monospace" opacity="0.75">
+                  CHITTAGONG SEA APPROACH CHANNEL
+                </text>
+
+                {/* Payra / Mongla Deep Sea Channel */}
+                <path
+                  d="M 300 660 Q 315 590 328 515"
+                  fill="none"
+                  stroke="#38BDF8"
+                  strokeWidth="1"
+                  strokeDasharray="3 3"
+                  strokeOpacity="0.5"
+                />
+                <text x="320" y="595" transform="rotate(-80 320 595)" fill="#38BDF8" fontSize="6" fontFamily="monospace" opacity="0.7">
+                  PAYRA / MONGLA FAIRWAY
+                </text>
+
+                {/* 0.7 Prominent Coastal Islands & Maritime Features */}
+                {/* St. Martin's Island (Coral Atoll) */}
+                <g transform="translate(542, 638)">
+                  <circle cx="0" cy="0" r="7" fill="none" stroke="#10B981" strokeWidth="1" strokeDasharray="2 2" opacity="0.8" />
+                  <circle cx="0" cy="0" r="3.5" fill="#10B981" stroke="#FFFFFF" strokeWidth="1" />
+                  <circle cx="2" cy="4" r="1.5" fill="#34D399" />
+                  <text x="9" y="3" fill="#10B981" fontSize="7.5" fontFamily="sans-serif" fontWeight="bold">
+                    St. Martin's Island
+                  </text>
+                  <text x="9" y="10" fill="#6EE7B7" fontSize="6" fontFamily="sans-serif">
+                    (সেন্ট মার্টিন / ছেঁড়া দ্বীপ)
+                  </text>
+                </g>
+
+                {/* Nijhum Dwip */}
+                <g transform="translate(390, 508)">
+                  <circle cx="0" cy="0" r="2.5" fill="#38BDF8" stroke="#FFFFFF" strokeWidth="0.8" />
+                  <text x="5" y="2" fill="#7DD3FC" fontSize="6.5" fontFamily="sans-serif" fontWeight="bold">
+                    Nijhum Dwip (নিঝুম দ্বীপ)
+                  </text>
+                </g>
+
+                {/* Kutubdia Island with Lighthouse Symbol */}
+                <g transform="translate(480, 558)">
+                  <circle cx="0" cy="0" r="2.5" fill="#F59E0B" stroke="#FFFFFF" strokeWidth="0.8" />
+                  <text x="-5" y="2" textAnchor="end" fill="#FDE68A" fontSize="6.5" fontFamily="sans-serif" fontWeight="bold">
+                    Kutubdia ⛯
+                  </text>
+                </g>
+
+                {/* Dublar Char in Sundarbans marine edge */}
+                <g transform="translate(230, 518)">
+                  <circle cx="0" cy="0" r="2" fill="#38BDF8" />
+                  <text x="-4" y="8" textAnchor="middle" fill="#BAE6FD" fontSize="6" fontFamily="sans-serif">
+                    Dublar Char
+                  </text>
+                </g>
+
+                {/* 0.8 Nautical Latitude / Longitude Graticule Reference Crosses */}
+                <g opacity="0.35" stroke="#38BDF8" strokeWidth="0.8">
+                  {/* 21°00'N, 90°00'E */}
+                  <line x1="285" y1="585" x2="295" y2="585" />
+                  <line x1="290" y1="580" x2="290" y2="590" />
+                  <text x="295" y="582" fill="#38BDF8" fontSize="6" fontFamily="monospace" stroke="none">21°N 90°E</text>
+
+                  {/* 21°00'N, 91°00'E */}
+                  <line x1="415" y1="585" x2="425" y2="585" />
+                  <line x1="420" y1="580" x2="420" y2="590" />
+                  <text x="425" y="582" fill="#38BDF8" fontSize="6" fontFamily="monospace" stroke="none">21°N 91°E</text>
+                </g>
+
+                {/* 0.9 Animated Ocean Surface Current Drift Wave Streamlines */}
+                <g opacity="0.45" stroke="#38BDF8" strokeWidth="1" fill="none">
+                  <path d="M 120 620 Q 180 610 240 618 T 360 615" strokeDasharray="8 6" className="animate-pulse" />
+                  <path d="M 300 645 Q 360 638 420 644 T 520 640" strokeDasharray="10 8" className="animate-pulse" />
+                  <path d="M 180 660 Q 240 652 320 658 T 460 655" strokeDasharray="12 10" />
+                </g>
+
+                {/* 0.10 Grand Maritime Typography for BAY OF BENGAL */}
+                <g transform="translate(350, 638)">
+                  <text
+                    x="0"
+                    y="0"
+                    textAnchor="middle"
+                    fill={mapTheme === 'NAVY_CYBER' ? '#38BDF8' : '#0284C7'}
+                    fillOpacity="0.85"
+                    fontSize="13"
+                    fontFamily="sans-serif"
+                    fontWeight="900"
+                    letterSpacing="6"
+                  >
+                    B A Y   O F   B E N G A L
+                  </text>
+                  <text
+                    x="0"
+                    y="14"
+                    textAnchor="middle"
+                    fill={mapTheme === 'NAVY_CYBER' ? '#7DD3FC' : '#0369A1'}
+                    fillOpacity="0.75"
+                    fontSize="9.5"
+                    fontFamily="sans-serif"
+                    fontWeight="bold"
+                    letterSpacing="3"
+                  >
+                    ব ঙ্গো প সা গ র
+                  </text>
+                  <text
+                    x="0"
+                    y="24"
+                    textAnchor="middle"
+                    fill={mapTheme === 'NAVY_CYBER' ? '#64748B' : '#94A3B8'}
+                    fontSize="6.5"
+                    fontFamily="monospace"
+                    letterSpacing="1"
+                  >
+                    NORTHERN MARINE BASIN · DEPTH: 20m TO &gt;2,000m · EEZ: 118,813 km²
+                  </text>
+                </g>
               </g>
 
               {/* 0.1 Surrounding Geographic Borders & Labels */}
@@ -1564,27 +1777,52 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
               {/* 3. Climate Vector: Cyclone Remal Active Warning (Bay of Bengal to Coastal Delta) */}
               {layerDisruption && (
                 <g className="pointer-events-none">
+                  {/* Concentric Rotating Cyclone Spiral Wind Bands in Bay of Bengal */}
+                  <circle
+                    cx="325"
+                    cy="580"
+                    r="32"
+                    fill="none"
+                    stroke="rgba(239, 68, 68, 0.45)"
+                    strokeWidth="1.8"
+                    strokeDasharray="8 6"
+                    className="animate-spin"
+                    style={{ animationDuration: '6s', transformOrigin: '325px 580px' }}
+                  />
+                  <circle
+                    cx="325"
+                    cy="580"
+                    r="52"
+                    fill="none"
+                    stroke="rgba(245, 158, 11, 0.3)"
+                    strokeWidth="1.2"
+                    strokeDasharray="12 8"
+                    className="animate-spin"
+                    style={{ animationDuration: '10s', transformOrigin: '325px 580px' }}
+                  />
+
                   {/* Cyclone Center Point in Bay of Bengal */}
                   <circle
                     cx="325"
-                    cy="590"
+                    cy="580"
                     r="8"
                     fill="#DC2626"
                     stroke="#FFFFFF"
-                    strokeWidth="2"
+                    strokeWidth="2.5"
                   />
                   <circle
                     cx="325"
-                    cy="590"
-                    r="14"
+                    cy="580"
+                    r="16"
                     fill="none"
                     stroke="#EF4444"
-                    strokeWidth="1.5"
-                    opacity="0.6"
+                    strokeWidth="1.8"
+                    opacity="0.75"
+                    className="animate-ping"
                   />
                   {/* Projected Cyclone Path towards Patuakhali / Galachipa */}
                   <path
-                    d="M 325 590 Q 310 510 338 440"
+                    d="M 325 580 Q 312 505 338 440"
                     fill="none"
                     stroke="#EF4444"
                     strokeWidth="3.2"
@@ -1592,34 +1830,37 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                     className="animate-pulse"
                   />
                   <path
-                    d="M 360 605 Q 350 520 360 455"
+                    d="M 355 595 Q 348 518 360 455"
                     fill="none"
                     stroke="#F59E0B"
                     strokeWidth="2.2"
                     strokeDasharray="5 3"
                   />
-                  {/* Cyclone Alert Badge */}
-                  <g transform="translate(235, 545)">
+                  {/* Sleek Cyclone Alert Pill Badge (Positioned neatly adjacent to eye, never covering Bay of Bengal text) */}
+                  <g transform="translate(345, 568)">
                     <rect
                       x="0"
-                      y="-12"
-                      width="190"
+                      y="-11"
+                      width="180"
                       height="22"
                       rx="6"
-                      fill="rgba(15, 23, 42, 0.94)"
+                      fill="rgba(15, 23, 42, 0.95)"
                       stroke="#EF4444"
-                      strokeWidth="1"
+                      strokeWidth="1.2"
+                      className="shadow-xl"
                     />
+                    <circle cx="12" cy="0" r="3.5" fill="#EF4444" className="animate-ping" />
+                    <circle cx="12" cy="0" r="3.5" fill="#EF4444" />
                     <text
-                      x="95"
-                      y="2.5"
+                      x="96"
+                      y="3.5"
                       textAnchor="middle"
                       fill="#FDE047"
-                      fontSize="8.5"
+                      fontSize="8"
                       fontFamily="monospace"
                       fontWeight="bold"
                     >
-                      CYCLONE REMAL: 48km/h · 2.8m SURGE
+                      CYCLONE: 48km/h · 2.8m SURGE
                     </text>
                   </g>
                 </g>
@@ -1778,7 +2019,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                           stroke="#EF4444"
                           strokeWidth="1.4"
                           opacity="0.65"
-                          className="animate-ping"
+                          className="animate-pulse"
                         />
                       )}
 
@@ -1853,7 +2094,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                             stroke="#EF4444"
                             strokeWidth="1.5"
                             opacity="0.7"
-                            className="animate-ping"
+                            className="animate-pulse"
                           />
                         )}
                         <rect
@@ -1950,7 +2191,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                             stroke="#EF4444"
                             strokeWidth="1.5"
                             opacity="0.6"
-                            className="animate-ping"
+                            className="animate-pulse"
                             style={{ animationDuration: '2s' }}
                           />
                           <circle
@@ -1959,7 +2200,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                             stroke="#F59E0B"
                             strokeWidth="1"
                             opacity="0.3"
-                            className="animate-ping"
+                            className="animate-pulse"
                             style={{ animationDuration: '3s' }}
                           />
                         </>

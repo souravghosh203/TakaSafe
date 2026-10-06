@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { matchAssistantQuery } from '../../data/assistantKnowledge';
 import {
   TAKASAFE_PROJECT_ABSTRACT_BASE,
@@ -40,6 +40,7 @@ import {
 
 interface UpayInfoModalProps {
   modalType: string | null;
+  initialQuestion?: string;
   onClose: () => void;
   lang: 'EN' | 'BN';
   onNavigateView?: (view: 'OPERATOR' | 'CUSTOMER' | 'STORYLINE') => void;
@@ -58,6 +59,7 @@ interface ChatMessage {
 
 export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   modalType,
+  initialQuestion = '',
   onClose,
   lang,
   onNavigateView,
@@ -81,6 +83,29 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
     },
   ]);
   const [inputMsg, setInputMsg] = useState('');
+  const processedInitialQuestion = useRef('');
+
+  useEffect(() => {
+    if (modalType !== 'LIVE_CHAT') {
+      processedInitialQuestion.current = '';
+      return;
+    }
+    const query = initialQuestion.trim();
+    if (!query || processedInitialQuestion.current === query) return;
+    processedInitialQuestion.current = query;
+    const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setChatMessages((prev) => [...prev, { sender: 'user', text: query, time: timeNow }]);
+    window.setTimeout(() => {
+      const matchResult = matchAssistantQuery(query, lang);
+      setChatMessages((prev) => [...prev, {
+        sender: 'bot',
+        text: matchResult.answer,
+        time: 'Just now',
+        suggestedAction: matchResult.item?.suggestedAction,
+        relatedTopics: matchResult.relatedTopics,
+      }]);
+    }, 400);
+  }, [modalType, initialQuestion, lang]);
 
   if (!modalType) return null;
 
@@ -388,16 +413,25 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                 <span className="font-bold text-slate-900 block">Core Architecture</span>
-                <span className="text-slate-600 text-[11px] block mt-0.5">Dual-Head Neural Fusion + Graph Attention Network (GAT)</span>
+                <span className="text-slate-600 text-[11px] block mt-0.5">AI Risk Engine: LightGBM + Calibration + Conformal Doubt Check & Novelty · GAT Graph Defense</span>
               </div>
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <span className="font-bold text-slate-900 block">Compliance</span>
-                <span className="text-slate-600 text-[11px] block mt-0.5">Bangladesh Bank MFS Regulations & BFIU Guidelines 2026</span>
+                <span className="font-bold text-slate-900 block">Compliance & Explainability</span>
+                <span className="text-slate-600 text-[11px] block mt-0.5">Bangladesh Bank MFS Regulations & BFIU Guidelines 2026 · 95% Conformal Coverage</span>
               </div>
             </div>
-            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900">
-              <span className="font-bold block">Team 3AM Runtime:</span>
-              <span>Md. Tanvir Hasan (Chief Risk Analyst & Lead) · Md. Sadman Al Islam Shabab (Model Architecture Lead) · Sourov Kumar (SOC Operations)</span>
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <span className="font-bold block">Team 3AM Runtime:</span>
+                <span>Md. Tanvir Hasan (Chief Risk Analyst & Lead) · Md. Sadman Al Islam Shabab (Model Architecture Lead) · Sourov Kumar (SOC Operations)</span>
+              </div>
+              <a
+                href="/api/notebook/ai1"
+                download="TakaSafe_AI1_LightGBM_Conformal_DoubtCheck.ipynb"
+                className="shrink-0 px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold text-[11px] rounded-lg transition-colors flex items-center gap-1 w-fit"
+              >
+                <span>AI-1 Notebook (.ipynb)</span>
+              </a>
             </div>
           </div>
         );

@@ -38,12 +38,14 @@ interface UpayHeaderProps {
   setLang: (lang: 'EN' | 'BN') => void;
   criticalAlertCount: number;
   currentUser?: AuthUser | null;
+  onRegister?: () => void;
   onLogout?: () => void;
   onSwitchUserRole?: (role: UserRole) => void;
   onUpdateProfile?: (profile: Pick<AuthUser, 'name' | 'email' | 'phone' | 'avatar'>) => void;
   onOpenModal?: (modalType: string) => void;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
+  darkHeader?: boolean;
 }
 
 export const UpayHeader: React.FC<UpayHeaderProps> = ({
@@ -55,16 +57,19 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
   setLang,
   criticalAlertCount,
   currentUser,
+  onRegister,
   onLogout,
   onSwitchUserRole,
   onUpdateProfile,
   onOpenModal,
   theme = 'light',
   onToggleTheme,
+  darkHeader = false,
 }) => {
   const [isServicesOpen, setIsServicesOpen] = useState<boolean>(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
   const [profileDraft, setProfileDraft] = useState({ name: '', email: '', phone: '', avatar: '' });
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -72,6 +77,9 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
 
   // Close dropdown on outside click
   useEffect(() => {
+    const updateScrollState = () => setIsScrolled(window.scrollY > 24);
+    updateScrollState();
+    window.addEventListener('scroll', updateScrollState, { passive: true });
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsServicesOpen(false);
@@ -81,7 +89,10 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      window.removeEventListener('scroll', updateScrollState);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const handleLogoClick = () => {
@@ -123,7 +134,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full max-w-full bg-[#0054A6] text-white shadow-md border-b border-[#004080]">
+    <header className={`app-sticky-header sticky top-0 z-50 w-full max-w-full bg-[#0054A6] text-white shadow-md border-b border-[#004080]${isScrolled ? ' is-scrolled' : ''}`} style={activeView === 'OPERATOR' || activeView === 'CUSTOMER' || activeView === 'LOGIN' || darkHeader ? { background: 'linear-gradient(118deg, #071324 0%, #0b1d37 48%, #0d2e5e 100%)', borderBottomColor: 'rgba(219,234,254,.16)' } : undefined}>
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-2 sm:gap-3">
           {/* Brand Zone: Authentic MFS Animated Logo (Smile Spring, Dot Wink & Radiant Gold Bloom) */}
@@ -192,9 +203,9 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
                   key={mod.id}
                   onClick={() => handleModuleClick(mod.id)}
                   aria-current={isSelected ? 'page' : undefined}
-                  className={`operator-module-link relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                  className={`operator-module-link header-feature relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
                     isSelected
-                      ? 'bg-white text-[#0054A6] shadow-md border-b-2 border-amber-400'
+                      ? 'bg-white text-[#0054A6] shadow-md border-b-2 border-teal-400'
                       : 'text-blue-100 hover:text-white hover:bg-white/10'
                   }`}
                   title={isUserRole ? `${mod.label} (Admin Clearance Required)` : mod.label}
@@ -222,7 +233,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
             <div className="relative hidden md:block" ref={dropdownRef}>
               <button
                 onClick={() => setIsServicesOpen(!isServicesOpen)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+                className={`header-feature flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
                   isServicesOpen
                     ? 'bg-white text-[#0054A6] border-white shadow-sm'
                     : 'bg-white/10 hover:bg-white/20 text-blue-50 border-white/15'
@@ -304,9 +315,9 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
             {/* Customer App Switcher Pill (Tablet & Desktop) */}
             {currentUser?.role === 'ADMIN' && <button
               onClick={() => setActiveView(activeView === 'CUSTOMER' ? 'OPERATOR' : 'CUSTOMER')}
-              className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`header-feature hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 activeView === 'CUSTOMER'
-                  ? 'bg-[#FAB915] text-slate-950 shadow-md ring-2 ring-white/50'
+                  ? 'bg-[#48D1C3] text-[#083344] shadow-md ring-2 ring-white/50'
                   : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
               }`}
               title="Toggle Customer App Simulator"
@@ -319,15 +330,17 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
 
             <button
               onClick={() => onOpenModal?.('SEARCH')}
-              className="hidden md:flex p-2 rounded-xl text-blue-100 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              title="Search Directory"
+              className="header-feature header-search-control hidden md:flex items-center justify-center gap-1.5 px-2.5 lg:px-3 text-white/85 cursor-pointer"
+              title={lang === 'BN' ? 'সার্চ ডিরেক্টরি' : 'Search Directory'}
+              aria-label={lang === 'BN' ? 'সার্চ ডিরেক্টরি খুলুন' : 'Open Search Directory'}
             >
               <Search className="w-4 h-4" />
+              <span className="hidden lg:inline">{lang === 'BN' ? 'খুঁজুন' : 'Search'}</span>
             </button>
 
             <button
               onClick={() => setLang(lang === 'EN' ? 'BN' : 'EN')}
-              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10 cursor-pointer"
+              className="header-feature flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10 cursor-pointer"
               title="Toggle Language"
             >
               <Globe className="w-3.5 h-3.5" />
@@ -337,7 +350,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
             {/* Theme Toggle (Light / Dark Mode) */}
             <button
               onClick={onToggleTheme}
-              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10 cursor-pointer shadow-2xs"
+              className="header-feature flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors border border-white/10 cursor-pointer shadow-2xs"
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               aria-label="Toggle Theme Mode"
             >
@@ -359,7 +372,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
               <div className="relative hidden sm:block" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white text-[#0054A6] shadow-sm hover:bg-blue-50 transition-all cursor-pointer border border-white"
+                  className="header-feature flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white text-[#0054A6] shadow-sm hover:bg-blue-50 transition-all cursor-pointer border border-white"
                   title="Account Details"
                 >
                   <div className="w-5 h-5 rounded-full bg-[#0054A6] text-white flex items-center justify-center text-[10px] font-bold overflow-hidden">
@@ -474,16 +487,16 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
               </div>
             ) : (
               <button
-                onClick={() => setActiveView('LOGIN')}
-                className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                onClick={() => activeView === 'LOGIN' ? onRegister?.() : setActiveView('LOGIN')}
+                className={`header-feature hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   activeView === 'LOGIN'
                     ? 'bg-white text-[#0054A6] shadow-sm ring-2 ring-white/60'
                     : 'bg-white/15 hover:bg-white/25 text-white border border-white/20'
                 }`}
-                title="Sign in (Admin or User)"
+                title={activeView === 'LOGIN' ? 'Create a new account' : 'Sign in (Admin or User)'}
               >
-                <User className="w-3.5 h-3.5 text-white" />
-                <span>Login</span>
+                <User className={`w-3.5 h-3.5 ${activeView === 'LOGIN' ? 'text-[#0054A6]' : 'text-white'}`} />
+                <span>{activeView === 'LOGIN' ? 'Register' : 'Login'}</span>
               </button>
             )}
 
@@ -523,7 +536,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
             {/* Mobile Hamburger Menu Toggle Button (Visible on < XL screens) */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="flex xl:hidden p-2 rounded-xl text-white hover:bg-white/15 transition-colors cursor-pointer"
+              className="header-feature header-feature-icon flex xl:hidden p-2 rounded-xl text-white hover:bg-white/15 transition-colors cursor-pointer"
               title="Toggle Navigation Menu"
               aria-label="Toggle Navigation Menu"
             >
@@ -664,9 +677,11 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
                   onOpenModal?.('SEARCH');
                   setIsMobileMenuOpen(false);
                 }}
-                className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-left font-medium"
+                className="header-search-mobile flex w-full items-center gap-2 px-3 rounded-xl text-left font-semibold cursor-pointer"
+                aria-label={lang === 'BN' ? 'সার্চ ডিরেক্টরি খুলুন' : 'Open Search Directory'}
               >
-                🔍 Search Directory
+                <Search className="w-4 h-4" />
+                <span>{lang === 'BN' ? 'খুঁজুন' : 'Search'}</span>
               </button>
               <a
                 href="tel:16268"
@@ -729,12 +744,13 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
             <div className="pt-2 border-t border-blue-400/20">
               <button
                 onClick={() => {
-                  setActiveView('LOGIN');
+                  if (activeView === 'LOGIN') onRegister?.();
+                  else setActiveView('LOGIN');
                   setIsMobileMenuOpen(false);
                 }}
                 className="w-full py-2.5 bg-white text-[#0054A6] rounded-xl text-xs font-bold text-center shadow-md"
               >
-                Sign In to TakaSafe
+                {activeView === 'LOGIN' ? 'Create an account' : 'Sign In to TakaSafe'}
               </button>
             </div>
           )}

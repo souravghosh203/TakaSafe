@@ -138,6 +138,18 @@ export const TransactionRiskTrendChart: React.FC<TransactionRiskTrendChartProps>
             >
               Recent Window
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                const elem = document.getElementById('thirty-day-trend-section');
+                elem?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="px-2.5 py-1 rounded-lg transition-all text-slate-600 dark:text-slate-400 hover:text-[#0054A6] dark:hover:text-blue-300 flex items-center gap-1 cursor-pointer font-medium"
+              title="Jump to 30-Day Suspicious Volume & Risk Score Distribution"
+            >
+              <span>30-Day Macro</span>
+              <span className="text-[10px] text-blue-500 font-bold">↓</span>
+            </button>
           </div>
 
           {/* Metric Visibility Toggles (Enhanced Part Boxed in Red) */}

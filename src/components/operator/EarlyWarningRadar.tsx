@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { RegionalRiskMetric } from '../../types';
 import { Radar, AlertTriangle, ShieldCheck, MapPin, Activity, ArrowUpRight, ArrowDownRight, Eye } from 'lucide-react';
+import { DivisionHistoricalRiskChart } from './DivisionHistoricalRiskChart';
+import { BayOfBengalMaritimeRadar } from './BayOfBengalMaritimeRadar';
 
 interface EarlyWarningRadarProps {
   metrics: RegionalRiskMetric[];
   onActivateMonitoring: (division: string) => void;
+  lang?: 'EN' | 'BN';
 }
 
 export const EarlyWarningRadar: React.FC<EarlyWarningRadarProps> = ({
   metrics,
   onActivateMonitoring,
+  lang = 'EN',
 }) => {
   const [selectedDivision, setSelectedDivision] = useState<string>('Barishal');
   const [activatedMap, setActivatedMap] = useState<Record<string, boolean>>({ Barishal: true });
@@ -98,6 +102,13 @@ export const EarlyWarningRadar: React.FC<EarlyWarningRadarProps> = ({
           })}
         </div>
       </div>
+
+      {/* Bay of Bengal Maritime & Meteorological Doppler Radar */}
+      <BayOfBengalMaritimeRadar
+        metrics={metrics}
+        onActivateMonitoring={onActivateMonitoring}
+        lang={lang}
+      />
 
       {/* Selected Division Deep Dive */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -253,6 +264,14 @@ export const EarlyWarningRadar: React.FC<EarlyWarningRadarProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 30-Day Historical Risk Progression Line Chart for Selected Division */}
+      <DivisionHistoricalRiskChart
+        selectedDivision={selectedDivision}
+        metrics={metrics}
+        onSelectDivision={setSelectedDivision}
+        lang={lang}
+      />
     </div>
   );
 };

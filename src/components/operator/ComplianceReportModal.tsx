@@ -128,6 +128,28 @@ export const ComplianceReportModal: React.FC<ComplianceReportModalProps> = ({
             .badge-freeze { background: #fee2e2; color: #991b1b; }
             .badge-hold { background: #fef3c7; color: #92400e; }
             .badge-dispatch { background: #dbeafe; color: #1e40af; }
+            .crypto-proof {
+              background: #f8fafc;
+              border: 1px solid #cbd5e1;
+              border-radius: 6px;
+              padding: 8px 12px;
+              margin-bottom: 16px;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              font-family: monospace;
+              font-size: 10px;
+              color: #334155;
+            }
+            .crypto-verified {
+              background: #ecfdf5;
+              color: #047857;
+              border: 1px solid #a7f3d0;
+              padding: 2px 6px;
+              border-radius: 4px;
+              font-weight: bold;
+              font-size: 9px;
+            }
             .signoff-grid {
               display: grid;
               grid-template-columns: 1fr 1fr;
@@ -284,15 +306,18 @@ export const ComplianceReportModal: React.FC<ComplianceReportModalProps> = ({
             </div>
 
             {/* Cryptographic Proof Strip */}
-            <div className="mb-5 p-2.5 rounded-xl bg-slate-900 text-white flex items-center justify-between text-[10px] font-mono">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <span className="text-slate-300">Immutable Audit Chain:</span>
-                <span className="text-emerald-300 truncate max-w-md">
+            <div className="crypto-proof mb-5 p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 flex items-center justify-between text-xs font-mono">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span className="font-semibold text-slate-700 shrink-0 text-[11px]">Immutable Audit Chain:</span>
+                <span className="text-[#0054A6] font-medium truncate max-w-lg text-[10.5px]">
                   sha256:7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069
                 </span>
               </div>
-              <span className="text-emerald-400 font-bold hidden sm:inline">VERIFIED</span>
+              <span className="crypto-verified inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px] shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                VERIFIED
+              </span>
             </div>
 
             {/* Audit Log Table */}
