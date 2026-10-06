@@ -53,6 +53,7 @@ export const NotificationBell: React.FC<{ user: AuthUser }> = ({ user }) => {
       window.removeEventListener('storage', storage);
       document.removeEventListener('mousedown', onOutside);
       document.removeEventListener('keydown', onKey);
+      if (audioRef.current && audioRef.current.state !== 'closed') void audioRef.current.close();
     };
     function onOutside(event: MouseEvent) { if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false); }
     function onKey(event: KeyboardEvent) { if (event.key === 'Escape') setOpen(false); }
