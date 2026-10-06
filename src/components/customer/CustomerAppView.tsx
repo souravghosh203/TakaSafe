@@ -651,8 +651,9 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
 
   const saveSecuritySettings = (next: SecuritySettings) => {
     setSecuritySettings(next);
-    setSecuritySaveError(writeSecuritySettings(userId, next) ? '' : 'Unable to save security settings in this browser.');
-    if (!securitySaveError) createNotification(userId, { type: 'SECURITY', title: 'Security settings updated', message: 'Your transaction protection settings were changed.', relatedEntityId: `security-settings-${Date.now()}` });
+    const saved = writeSecuritySettings(userId, next);
+    setSecuritySaveError(saved ? '' : 'Unable to save security settings in this browser.');
+    if (saved) createNotification(userId, { type: 'SECURITY', title: 'Security settings updated', message: 'Your transaction protection settings were changed.', relatedEntityId: `security-settings-${Date.now()}` });
   };
 
   const toggleTrustedRecipient = (raw: string) => {
@@ -1320,6 +1321,21 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
               </div>
             </div>
           </div>
+        ) : (
+          <SecurityCenterPanel
+            settings={securitySettings}
+            events={[
+              ...transferHistory.map((transfer) => ({ at: transfer.timestamp, title: (transfer.riskScore ?? 0) >= 40 ? 'Transaction reviewed' : 'Transaction recorded', detail: `BDT ${transfer.amount.toLocaleString()} · ${transfer.recipient}`, risky: (transfer.riskScore ?? 0) >= 40 })),
+              ...loginHistory.map((login) => ({ at: login.timestamp, title: 'Login recorded', detail: login.device ? 'Browser session recorded' : 'Session activity', risky: false })),
+            ].sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).slice(0, 12)}
+            score={Math.max(0, 100 - transferHistory.filter((transfer) => (transfer.riskScore ?? 0) >= 40 && Date.now() - Date.parse(transfer.timestamp) <= 30 * 86400000).length * 20)}
+            save={saveSecuritySettings}
+            toggleTrusted={toggleTrustedRecipient}
+            addTrusted={addTrustedRecipient}
+            draft={trustedRecipientDraft}
+            setDraft={setTrustedRecipientDraft}
+            error={securitySaveError}
+          />
         )}
       </div>
 
@@ -1494,4 +1510,30 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
       />
     </div>
   );
+};
+
+interface SecurityActivityItem { at: string; title: string; detail: string; risky: boolean }
+const SecurityCenterPanel: React.FC<{
+  settings: SecuritySettings; events: SecurityActivityItem[]; score: number;
+  save: (settings: SecuritySettings) => void; toggleTrusted: (recipient: string) => void;
+  addTrusted: () => void; draft: string; setDraft: (value: string) => void; error: string;
+}> = ({ settings, events, score, save, toggleTrusted, addTrusted, draft, setDraft, error }) => {
+  const checks = [
+    { label: 'Recent transaction activity', ready: score === 100, detail: score === 100 ? 'No reviewed transactions in the last 30 days' : 'A transaction was held for risk review in the last 30 days' },
+    { label: 'Transaction limits', ready: settings.dailyLimit !== null && settings.singleTransactionLimit !== null, detail: settings.dailyLimit !== null && settings.singleTransactionLimit !== null ? 'Daily and single transaction limits configured' : 'Set daily and single transaction limits' },
+    { label: 'Trusted recipients', ready: settings.trustedRecipients.length > 0, detail: settings.trustedRecipients.length ? `${settings.trustedRecipients.length} marked trusted · risk checks still apply` : 'No recipients marked trusted' },
+    { label: 'Two-factor authentication', ready: false, detail: 'Not configured · unavailable with this demo authentication' },
+    { label: 'Email verification', ready: false, detail: 'Verification status is not available' },
+  ];
+  const changeLimit = (field: 'dailyLimit' | 'singleTransactionLimit' | 'confirmationThreshold', raw: string) => save({ ...settings, [field]: raw && Number(raw) > 0 ? Number(raw) : null });
+  return <div className="space-y-5">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#0F172A]">
+      <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-wider text-slate-500">Security Center</p><h3 className="mt-1 text-lg font-black text-slate-900 dark:text-white">Account protection overview</h3><p className="mt-1 text-xs text-slate-500">Activity score reflects risk reviewed transactions from the last 30 days.</p></div><div className="text-right"><div className="font-mono text-3xl font-black text-[#0054A6] dark:text-blue-300">{score}<span className="text-base text-slate-400">/100</span></div><div className="text-[10px] font-bold uppercase text-slate-500">Activity score</div></div></div>
+      <div className="mt-5 grid gap-2 sm:grid-cols-2">{checks.map((check) => <div key={check.label} className="flex items-start gap-2 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60"><span className={`mt-0.5 h-2 w-2 shrink-0 rounded-full ${check.ready ? 'bg-emerald-500' : 'bg-amber-500'}`} /><div><p className="text-xs font-bold text-slate-800 dark:text-slate-100">{check.label}</p><p className="mt-0.5 text-[11px] text-slate-500">{check.detail}</p></div></div>)}</div>
+      {error && <p role="alert" className="mt-3 text-xs font-semibold text-rose-700">{error}</p>}
+    </section>
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#0F172A]"><h3 className="font-bold text-slate-900 dark:text-white">Transaction limits</h3><p className="mt-1 text-xs text-slate-500">Limits are enforced before the existing risk review.</p><div className="mt-4 grid gap-3 sm:grid-cols-3">{([['dailyLimit','Daily limit'],['singleTransactionLimit','Single transaction limit'],['confirmationThreshold','Confirm above']] as const).map(([field,label]) => <label key={field} className="text-xs font-semibold text-slate-600 dark:text-slate-300">{label}<div className="mt-1 flex items-center rounded-xl border border-slate-300 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-900"><span className="mr-2 text-slate-400">৳</span><input type="number" min="1" value={settings[field] ?? ''} onChange={(event) => changeLimit(field, event.target.value)} placeholder="Not set" className="min-w-0 w-full bg-transparent py-2 text-sm outline-none" /></div></label>)}</div></section>
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#0F172A]"><h3 className="font-bold text-slate-900 dark:text-white">Trusted recipients</h3><p className="mt-1 text-xs text-slate-500">Trusted status affects one risk factor only. ScamShield checks still apply.</p><div className="mt-3 flex flex-wrap gap-2">{settings.trustedRecipients.map((item) => <button key={item} onClick={() => toggleTrusted(item)} title="Remove trusted status" className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-[#0054A6] dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200">✓ {item} ×</button>)}{settings.trustedRecipients.length === 0 && <p className="text-xs text-slate-500">No trusted recipients added.</p>}</div><div className="mt-3 flex gap-2"><input value={draft} onChange={(event) => setDraft(event.target.value)} aria-label="Recipient phone or wallet" placeholder="Recipient phone or wallet" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-900" /><button onClick={addTrusted} className="rounded-xl bg-[#0054A6] px-4 py-2 text-xs font-bold text-white">Add</button></div></section>
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#0F172A]"><h3 className="font-bold text-slate-900 dark:text-white">Recent security activity</h3>{events.length ? <div className="mt-3 divide-y divide-slate-100 dark:divide-slate-800">{events.map((item,index) => <div key={`${item.at}-${index}`} className="flex items-start justify-between gap-3 py-3"><div className="flex gap-2"><span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${item.risky ? 'bg-amber-500' : 'bg-emerald-500'}`} /><div><p className="text-xs font-bold text-slate-800 dark:text-slate-100">{item.title}</p><p className="mt-0.5 text-[11px] text-slate-500">{item.detail}</p></div></div><time className="shrink-0 text-[10px] text-slate-400">{new Date(item.at).toLocaleString()}</time></div>)}</div> : <p className="mt-3 text-xs text-slate-500">No security activity recorded yet.</p>}</section>
+  </div>;
 };
