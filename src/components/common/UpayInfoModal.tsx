@@ -42,7 +42,7 @@ import {
 interface UpayInfoModalProps {
   modalType: string | null;
   initialQuestion?: string;
-  customerIdentity?: { userId: string; wallet: string };
+  customerIdentity?: { userId: string; wallet: string; balance: number; usualLimit: number };
   onClose: () => void;
   lang: 'EN' | 'BN';
   onNavigateView?: (view: 'OPERATOR' | 'CUSTOMER' | 'STORYLINE') => void;
@@ -93,6 +93,22 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   const processedInitialQuestion = useRef('');
 
   const answerFromCurrentHistory = async (query: string): Promise<string | null> => {
+    const asksBalance = /(balance|available amount|how much.*(wallet|account)|ব্যালেন্স|জমা টাকা)/i.test(query);
+    const asksLimit = /(usual|typical|normal|average).{0,24}(limit|amount|transaction)|\b(limit|maximum|max)\b.{0,24}(usual|typical|transaction|send)|সাধারণ.{0,15}(সীমা|লেনদেন)/i.test(query);
+    const money = (amount: number) => `৳${new Intl.NumberFormat(lang === 'BN' ? 'bn-BD' : 'en-BD', { maximumFractionDigits: 0 }).format(amount)}`;
+    if ((asksBalance || asksLimit) && !customerIdentity) {
+      return lang === 'BN' ? 'আপনার ব্যক্তিগত অ্যাকাউন্টের তথ্য দেখতে গ্রাহক অ্যাকাউন্টে সাইন ইন করুন।' : 'Please sign in to your customer account to view personal account information.';
+    }
+    if (asksBalance && customerIdentity) {
+      return lang === 'BN'
+        ? `ডেমো অ্যাকাউন্টে দেখানো বর্তমান ব্যালেন্স ${money(customerIdentity.balance)}। এটি সিমুলেটেড প্রোফাইলের তথ্য, লাইভ আর্থিক ব্যালেন্স নয়।`
+        : `Your current demo account balance is ${money(customerIdentity.balance)}. This is simulated profile data, not a live financial balance.`;
+    }
+    if (asksLimit && customerIdentity) {
+      return lang === 'BN'
+        ? `আপনার সাধারণ সর্বোচ্চ লেনদেনের পরিমাণ ${money(customerIdentity.usualLimit)}। এটি প্রোফাইলের স্বাভাবিক লেনদেনের সীমা; আনুষ্ঠানিক দৈনিক/মাসিক ওয়ালেট সীমা নয়।`
+        : `Your usual maximum transaction amount is ${money(customerIdentity.usualLimit)}. This is the profile’s typical transaction size, not an official daily or monthly wallet limit.`;
+    }
     const asksMonthlySpend = /(spend|spent|spending|expense|expenses|খরচ)/i.test(query)
       && /(this month|current month|monthly|month|এই মাস|চলতি মাস)/i.test(query);
     const asksRecentActivity = /(recent|latest|last|show|list|history|লেনদেন)/i.test(query)

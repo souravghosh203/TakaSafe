@@ -559,7 +559,7 @@ export default function App() {
         <UpayInfoModal
           modalType={activeModal}
           initialQuestion={assistantQuestion}
-          customerIdentity={currentUser?.role === 'USER' ? { userId: currentUser.id, wallet: currentUser.phone } : undefined}
+          customerIdentity={currentUser?.role === 'USER' ? { userId: currentUser.id, wallet: currentUser.phone, balance: getCustomerProfile(currentUser).balance, usualLimit: getCustomerProfile(currentUser).maxAmountTypical } : undefined}
           onClose={() => { setActiveModal(null); setAssistantQuestion(''); }}
           lang={lang}
           onNavigateView={(view) => {
@@ -599,7 +599,7 @@ export default function App() {
         <UpayInfoModal
           modalType={activeModal}
           initialQuestion={assistantQuestion}
-          customerIdentity={currentUser?.role === 'USER' ? { userId: currentUser.id, wallet: currentUser.phone } : undefined}
+          customerIdentity={currentUser?.role === 'USER' ? { userId: currentUser.id, wallet: currentUser.phone, balance: getCustomerProfile(currentUser).balance, usualLimit: getCustomerProfile(currentUser).maxAmountTypical } : undefined}
           onClose={() => { setActiveModal(null); setAssistantQuestion(''); }}
           lang={lang}
           onNavigateView={(view) => {
@@ -824,7 +824,7 @@ export default function App() {
       <UpayInfoModal
         modalType={activeModal}
         initialQuestion={assistantQuestion}
-        customerIdentity={currentUser?.role === 'USER' ? { userId: currentUser.id, wallet: currentUser.phone } : undefined}
+        customerIdentity={currentUser?.role === 'USER' ? { userId: currentUser.id, wallet: currentUser.phone, balance: getCustomerProfile(currentUser).balance, usualLimit: getCustomerProfile(currentUser).maxAmountTypical } : undefined}
         onClose={() => { setActiveModal(null); setAssistantQuestion(''); }}
         lang={lang}
         onNavigateView={(v) => {

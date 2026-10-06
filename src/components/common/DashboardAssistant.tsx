@@ -9,6 +9,8 @@ interface DashboardAssistantProps {
 }
 
 const suggestions = [
+  { en: 'What is my current balance?', bn: 'আমার বর্তমান ব্যালেন্স কত?' },
+  { en: 'What is my usual transaction limit?', bn: 'আমার সাধারণ লেনদেনের সীমা কত?' },
   { en: 'How much did I spend this month?', bn: 'এই মাসে আমার খরচ কত?' },
   { en: 'Is this payment safe?', bn: 'এই পেমেন্টটি কি নিরাপদ?' },
   { en: 'Find my nearest cash-out point', bn: 'নিকটস্থ ক্যাশ-আউট পয়েন্ট খুঁজুন' },
