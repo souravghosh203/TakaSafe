@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useModalPresence } from '../../hooks/useModalPresence';
 import QRCode from 'qrcode';
 import jsQR from 'jsqr';
 import {
@@ -57,6 +58,7 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
   initialTab = 'SCANNER',
   lang,
 }) => {
+  const { isMounted, isExiting } = useModalPresence(isOpen);
   const transactionScan = scanMode !== 'LINK';
   const [modalTab, setModalTab] = useState<'SCANNER' | 'MY_QR'>('SCANNER');
   const [isTorchOn, setIsTorchOn] = useState<boolean>(false);
@@ -386,11 +388,11 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
-  if (!isOpen) return null;
+  if (!isMounted) return null;
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto modal-backdrop-enter">
-      <div className="bg-white rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden my-auto font-sans modal-panel-enter">
+    <div className={`fixed inset-0 z-[90] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto ${isExiting ? 'modal-backdrop-exit' : 'modal-backdrop-enter'}`}>
+      <div className={`bg-white rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden my-auto font-sans ${isExiting ? 'modal-panel-exit' : 'modal-panel-enter'}`}>
         {/* Header Bar */}
         <div className="px-6 py-4 bg-gradient-to-r from-[#0054A6] via-[#00478D] to-[#003875] text-white flex items-center justify-between border-b border-[#003366]">
           <div className="flex items-center gap-2.5">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useModalPresence } from '../../hooks/useModalPresence';
 import {
   X,
   FileCode2,
@@ -196,10 +197,11 @@ export const AI1NotebookModal: React.FC<AI1NotebookModalProps> = ({
   onClose,
   lang = 'EN',
 }) => {
+  const { isMounted, isExiting } = useModalPresence(isOpen);
   const [activeTab, setActiveTab] = useState<'CODE' | 'THEORY' | 'METRICS'>('CODE');
   const [copied, setCopied] = useState<boolean>(false);
 
-  if (!isOpen) return null;
+  if (!isMounted) return null;
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(PYTHON_NOTEBOOK_CODE);
@@ -252,11 +254,11 @@ export const AI1NotebookModal: React.FC<AI1NotebookModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md animate-in fade-in"
+      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md ${isExiting ? 'modal-backdrop-exit' : 'modal-backdrop-enter'}`}
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-[#0F172A] rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 overflow-hidden"
+        className={`bg-white dark:bg-[#0F172A] rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 overflow-hidden ${isExiting ? 'modal-panel-exit' : 'modal-panel-enter'}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

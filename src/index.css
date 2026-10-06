@@ -334,6 +334,13 @@ body, .bg-white, input, table, header {
 @keyframes modalPanelIn { from { opacity: 0; transform: translate3d(0, 12px, 0) scale(.98); } to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); } }
 .modal-backdrop-enter { animation: modalBackdropIn 180ms ease-out both; }
 .modal-panel-enter { animation: modalPanelIn 240ms cubic-bezier(.22, 1, .36, 1) both; }
+@keyframes modalBackdropOut { to { opacity: 0; } }
+@keyframes modalPanelOut { to { opacity: 0; transform: translate3d(0, 8px, 0) scale(.985); } }
+.modal-backdrop-exit { animation: modalBackdropOut 160ms ease-in both; pointer-events: none; }
+.modal-panel-exit { animation: modalPanelOut 180ms cubic-bezier(.4, 0, 1, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop-exit, .modal-panel-exit { animation-duration: .01ms; }
+}
 
 @keyframes alert-arrive {
   0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, .35); }

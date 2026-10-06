@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useModalPresence } from '../../hooks/useModalPresence';
 import { matchAssistantQuery } from '../../data/assistantKnowledge';
 import {
   TAKASAFE_PROJECT_ABSTRACT_BASE,
@@ -64,6 +65,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   lang,
   onNavigateView,
 }) => {
+  const { isMounted, isExiting } = useModalPresence(Boolean(modalType));
   const [searchQuery, setSearchQuery] = useState('');
   const [abstractTab, setAbstractTab] = useState<'FULL' | 'BASE' | 'CAPABILITIES' | 'SDG'>('FULL');
   const [abstractCopied, setAbstractCopied] = useState<boolean>(false);
@@ -108,7 +110,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
     }, 400);
   }, [modalType, initialQuestion, lang]);
 
-  if (!modalType) return null;
+  if (!isMounted) return null;
 
   const handleSendMessage = (e?: React.FormEvent, overrideText?: string) => {
     if (e) e.preventDefault();
@@ -841,8 +843,8 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
       : 'max-w-lg';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs modal-backdrop-enter">
-      <div className={`bg-white rounded-3xl ${modalMaxWidth} w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col modal-panel-enter`}>
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs ${isExiting ? 'modal-backdrop-exit' : 'modal-backdrop-enter'}`}>
+      <div className={`bg-white rounded-3xl ${modalMaxWidth} w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col ${isExiting ? 'modal-panel-exit' : 'modal-panel-enter'}`}>
         {/* Header */}
         <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
           <div className="flex items-center gap-2">
