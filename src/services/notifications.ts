@@ -30,7 +30,7 @@ export function createNotification(userId: string, notification: Omit<TakaSafeNo
     isRead: notification.isRead ?? false,
   };
   try { localStorage.setItem(storageKey(userId), JSON.stringify([next, ...current].slice(0, 100))); } catch { /* In-memory UI will refresh on the event. */ }
-  window.dispatchEvent(new CustomEvent('takasafe-notifications-changed', { detail: { userId } }));
+  window.dispatchEvent(new CustomEvent('takasafe-notifications-changed', { detail: { userId, action: 'created' } }));
 }
 
 export function updateNotifications(userId: string, transform: (items: TakaSafeNotification[]) => TakaSafeNotification[]) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Bell, Check, CheckCheck, CreditCard, ShieldAlert, UserRound, X } from 'lucide-react';
+import { Bell, CheckCheck, CreditCard, ShieldAlert, UserRound, Volume2, VolumeX, X } from 'lucide-react';
 import { AuthUser } from '../../types';
 import { readNotifications, TakaSafeNotification, updateNotifications } from '../../services/notifications';
 
@@ -15,13 +15,32 @@ const relativeTime = (value: string) => {
 export const NotificationBell: React.FC<{ user: AuthUser }> = ({ user }) => {
   const [items, setItems] = useState<TakaSafeNotification[]>([]);
   const [open, setOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(() => localStorage.getItem(`takasafe-notification-sound:${user.id}`) !== 'off');
   const rootRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<AudioContext | null>(null);
   const unread = useMemo(() => items.filter((item) => !item.isRead).length, [items]);
 
   useEffect(() => {
     const refresh = () => setItems(readNotifications(user.id));
     const changed = (event: Event) => {
-      if ((event as CustomEvent).detail?.userId === user.id) refresh();
+      const detail = (event as CustomEvent).detail;
+      if (detail?.userId === user.id) {
+        refresh();
+        if (detail.action === 'created' && localStorage.getItem(`takasafe-notification-sound:${user.id}`) !== 'off') {
+          try {
+            const audio = audioRef.current || new AudioContext();
+            audioRef.current = audio;
+            if (audio.state === 'suspended') void audio.resume();
+            const tone = audio.createOscillator();
+            const gain = audio.createGain();
+            tone.frequency.value = 740;
+            gain.gain.setValueAtTime(0.045, audio.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.14);
+            tone.connect(gain); gain.connect(audio.destination);
+            tone.start(); tone.stop(audio.currentTime + 0.14);
+          } catch { /* Sound is optional when browser audio is unavailable. */ }
+        }
+      }
     };
     const storage = (event: StorageEvent) => { if (event.key === `takasafe-notifications:${user.id}`) refresh(); };
     refresh();
@@ -41,6 +60,14 @@ export const NotificationBell: React.FC<{ user: AuthUser }> = ({ user }) => {
 
   const markRead = (id: string) => updateNotifications(user.id, (current) => current.map((item) => item.id === id ? { ...item, isRead: true } : item));
   const markAllRead = () => updateNotifications(user.id, (current) => current.map((item) => ({ ...item, isRead: true })));
+  const toggleSound = () => {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    localStorage.setItem(`takasafe-notification-sound:${user.id}`, next ? 'on' : 'off');
+    if (next) {
+      try { audioRef.current = new AudioContext(); void audioRef.current.resume(); } catch { /* Browser audio may be unavailable. */ }
+    }
+  };
 
   return <div ref={rootRef} className="relative">
     <button type="button" aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`} aria-expanded={open} onClick={() => setOpen((value) => !value)}
@@ -52,6 +79,7 @@ export const NotificationBell: React.FC<{ user: AuthUser }> = ({ user }) => {
       <header className="flex items-center justify-between border-b border-slate-100 px-4 py-4 dark:border-slate-800">
         <div><h2 className="text-base font-extrabold">Notifications</h2><p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{unread ? `${unread} unread` : 'You’re all caught up'}</p></div>
         <div className="flex items-center gap-1">
+          <button onClick={toggleSound} aria-label={soundEnabled ? 'Turn notification sound off' : 'Turn notification sound on'} title={soundEnabled ? 'Sound on' : 'Sound off'} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">{soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}</button>
           {unread > 0 && <button onClick={markAllRead} className="rounded-lg px-2.5 py-2 text-xs font-bold text-[#0054A6] hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-slate-800" title="Mark all as read"><CheckCheck className="mr-1 inline h-4 w-4" />All read</button>}
           <button onClick={() => setOpen(false)} aria-label="Close notifications" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><X className="h-4 w-4" /></button>
         </div>
