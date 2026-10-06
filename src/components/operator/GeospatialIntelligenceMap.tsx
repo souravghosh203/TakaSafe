@@ -1190,7 +1190,8 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
           <svg
             ref={svgRef}
             viewBox={`0 0 ${width} ${height}`}
-            className={`w-full h-full max-h-[660px] ${isMapDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            overflow="hidden"
+            className={`w-full h-full max-h-[660px] overflow-hidden ${isMapDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           >
             <defs>
               {/* Radial Heat Gradient for Patuakhali / Barishal Mule & Cyclone Cluster */}
@@ -1300,11 +1301,17 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                 <stop offset="65%" stopColor="#F59E0B" stopOpacity="0.16" />
                 <stop offset="100%" stopColor="#EF4444" stopOpacity="0" />
               </radialGradient>
+
+              {/* Strict Map Viewport Clip to contain all radar rings and climate vectors */}
+              <clipPath id="map-viewport-clip">
+                <rect x="0" y="0" width={width} height={height} rx="12" />
+              </clipPath>
             </defs>
 
             {/* D3 Map Zoom & Pan Group - Fully Transformed by D3 Coordinates */}
             <g
               className="map-zoom-group"
+              clipPath="url(#map-viewport-clip)"
               transform={`translate(${mapTransform.x}, ${mapTransform.y}) scale(${mapTransform.k})`}
             >
               {/* 0. Enhanced Bay of Bengal Oceanic Basin (Full-Bleed Marine Bathymetry & Hydrology) */}
@@ -1699,7 +1706,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                             <circle
                               cx={coords[0]}
                               cy={coords[1]}
-                              r="88"
+                              r="65"
                               fill="url(#heat-patuakhali)"
                               className="animate-pulse"
                               style={{ animationDuration: '3s' }}
@@ -1707,7 +1714,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                             <circle
                               cx={coords[0]}
                               cy={coords[1]}
-                              r="50"
+                              r="38"
                               fill="rgba(239, 68, 68, 0.45)"
                               filter="url(#glow-marker-crit)"
                             />
@@ -1835,8 +1842,8 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
               {/* 2.5 Regional Early-Warning Radar Sweep Layer (360° Azimuth Scan) */}
               {layerRadar && (
                 <g className="pointer-events-none select-none">
-                  {/* Concentric Range Rings centered on radar target */}
-                  {[35, 70, 110, 155].map((radius, idx) => (
+                  {/* Concentric Range Rings centered on radar target - Calibrated to stay comfortably within map bounds */}
+                  {[28, 56, 85, 118].map((radius, idx) => (
                     <g key={radius}>
                       <circle
                         cx={radarCenter.x}
@@ -1865,9 +1872,9 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
 
                   {/* Cardinal Radar Crosshairs */}
                   <line
-                    x1={radarCenter.x - 165}
+                    x1={radarCenter.x - 128}
                     y1={radarCenter.y}
-                    x2={radarCenter.x + 165}
+                    x2={radarCenter.x + 128}
                     y2={radarCenter.y}
                     stroke={mapTheme === 'NAVY_CYBER' ? '#38BDF8' : '#EF4444'}
                     strokeWidth="0.8"
@@ -1876,9 +1883,9 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                   />
                   <line
                     x1={radarCenter.x}
-                    y1={radarCenter.y - 165}
+                    y1={radarCenter.y - 128}
                     x2={radarCenter.x}
-                    y2={radarCenter.y + 165}
+                    y2={radarCenter.y + 128}
                     stroke={mapTheme === 'NAVY_CYBER' ? '#38BDF8' : '#EF4444'}
                     strokeWidth="0.8"
                     strokeDasharray="3 3"
@@ -1897,15 +1904,15 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                     />
                     {/* 45-degree sweeping radar sector cone */}
                     <path
-                      d={`M ${radarCenter.x} ${radarCenter.y} L ${radarCenter.x + 155} ${radarCenter.y} A 155 155 0 0 1 ${radarCenter.x + 155 * 0.707} ${radarCenter.y + 155 * 0.707} Z`}
+                      d={`M ${radarCenter.x} ${radarCenter.y} L ${radarCenter.x + 118} ${radarCenter.y} A 118 118 0 0 1 ${radarCenter.x + 118 * 0.707} ${radarCenter.y + 118 * 0.707} Z`}
                       fill="url(#radar-sweep-cone)"
                     />
                     {/* Sharp leading scanner beam line */}
                     <line
                       x1={radarCenter.x}
                       y1={radarCenter.y}
-                      x2={radarCenter.x + 155 * 0.707}
-                      y2={radarCenter.y + 155 * 0.707}
+                      x2={radarCenter.x + 118 * 0.707}
+                      y2={radarCenter.y + 118 * 0.707}
                       stroke="#EF4444"
                       strokeWidth="2.2"
                       strokeLinecap="round"
@@ -1913,7 +1920,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                     />
                   </g>
 
-                  {/* Intercepted Target Anomaly Pulse Blip at Radar Center */}
+                  {/* Intercepted Target Anomaly Pulse Blip at Radar Center - SVG native pulse preventing CSS offset drift */}
                   <circle
                     cx={radarCenter.x}
                     cy={radarCenter.y}
@@ -1924,13 +1931,14 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                   <circle
                     cx={radarCenter.x}
                     cy={radarCenter.y}
-                    r="16"
+                    r="8"
                     fill="none"
                     stroke="#EF4444"
-                    strokeWidth="1.5"
-                    className="animate-ping"
-                    style={{ animationDuration: '2.5s' }}
-                  />
+                    strokeWidth="1.6"
+                  >
+                    <animate attributeName="r" values="8; 24" dur="2.2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.85; 0" dur="2.2s" repeatCount="indefinite" />
+                  </circle>
                   <text
                     x={radarCenter.x}
                     y={radarCenter.y - 12}
@@ -1949,52 +1957,53 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
               {/* 3. Climate Vector: Cyclone Remal Active Warning (Bay of Bengal to Coastal Delta) */}
               {layerDisruption && (
                 <g className="pointer-events-none">
-                  {/* Concentric Rotating Cyclone Spiral Wind Bands in Bay of Bengal */}
+                  {/* Concentric Rotating Cyclone Spiral Wind Bands in Upper Bay of Bengal waters */}
                   <circle
-                    cx="325"
-                    cy="580"
-                    r="32"
+                    cx="320"
+                    cy="525"
+                    r="28"
                     fill="none"
                     stroke="rgba(239, 68, 68, 0.45)"
                     strokeWidth="1.8"
                     strokeDasharray="8 6"
                     className="animate-spin"
-                    style={{ animationDuration: '6s', transformOrigin: '325px 580px' }}
+                    style={{ animationDuration: '6s', transformOrigin: '320px 525px' }}
                   />
                   <circle
-                    cx="325"
-                    cy="580"
-                    r="52"
+                    cx="320"
+                    cy="525"
+                    r="46"
                     fill="none"
                     stroke="rgba(245, 158, 11, 0.3)"
                     strokeWidth="1.2"
                     strokeDasharray="12 8"
                     className="animate-spin"
-                    style={{ animationDuration: '10s', transformOrigin: '325px 580px' }}
+                    style={{ animationDuration: '10s', transformOrigin: '320px 525px' }}
                   />
 
-                  {/* Cyclone Center Point in Bay of Bengal */}
+                  {/* Cyclone Center Point in Bay of Bengal - Native SVG pulse preventing CSS scale displacement */}
                   <circle
-                    cx="325"
-                    cy="580"
-                    r="8"
+                    cx="320"
+                    cy="525"
+                    r="7.5"
                     fill="#DC2626"
                     stroke="#FFFFFF"
-                    strokeWidth="2.5"
+                    strokeWidth="2.2"
                   />
                   <circle
-                    cx="325"
-                    cy="580"
-                    r="16"
+                    cx="320"
+                    cy="525"
+                    r="10"
                     fill="none"
                     stroke="#EF4444"
                     strokeWidth="1.8"
-                    opacity="0.75"
-                    className="animate-ping"
-                  />
+                  >
+                    <animate attributeName="r" values="10; 26" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.85; 0" dur="2s" repeatCount="indefinite" />
+                  </circle>
                   {/* Projected Cyclone Path towards Patuakhali / Galachipa */}
                   <path
-                    d="M 325 580 Q 312 505 338 440"
+                    d="M 320 525 Q 314 485 328 448"
                     fill="none"
                     stroke="#EF4444"
                     strokeWidth="3.2"
@@ -2002,14 +2011,14 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                     className="animate-pulse"
                   />
                   <path
-                    d="M 355 595 Q 348 518 360 455"
+                    d="M 345 538 Q 340 495 348 458"
                     fill="none"
                     stroke="#F59E0B"
                     strokeWidth="2.2"
                     strokeDasharray="5 3"
                   />
-                  {/* Sleek Cyclone Alert Pill Badge (Positioned neatly adjacent to eye, never covering Bay of Bengal text) */}
-                  <g transform="translate(345, 568)">
+                  {/* Sleek Cyclone Alert Pill Badge (Positioned neatly adjacent to eye, never covering Bay of Bengal text or bottom HUD) */}
+                  <g transform="translate(338, 514)">
                     <rect
                       x="0"
                       y="-11"
@@ -2021,8 +2030,11 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                       strokeWidth="1.2"
                       className="shadow-xl"
                     />
-                    <circle cx="12" cy="0" r="3.5" fill="#EF4444" className="animate-ping" />
                     <circle cx="12" cy="0" r="3.5" fill="#EF4444" />
+                    <circle cx="12" cy="0" r="3.5" fill="none" stroke="#EF4444" strokeWidth="1">
+                      <animate attributeName="r" values="3.5; 8" dur="1.8s" repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="0.8; 0" dur="1.8s" repeatCount="indefinite" />
+                    </circle>
                     <text
                       x="96"
                       y="3.5"
