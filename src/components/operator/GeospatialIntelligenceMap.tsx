@@ -26,6 +26,7 @@ import {
   Zap,
   Flame,
   Radio,
+  Radar,
   Search,
   Waves,
   Navigation,
@@ -459,6 +460,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
   const [dossierTab, setDossierTab] = useState<'DISTRICT' | 'AGENTS' | 'FLOWS'>('DISTRICT');
 
   // Layer Toggles
+  const [layerRadar, setLayerRadar] = useState<boolean>(true);
   const [layerHeatmap, setLayerHeatmap] = useState<boolean>(true);
   const [layerTxnMarkers, setLayerTxnMarkers] = useState<boolean>(true);
   const [layerTxnArcs, setLayerTxnArcs] = useState<boolean>(true);
@@ -533,6 +535,18 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
       .y((d) => projection(d)?.[1] ?? 0)
       .curve(d3.curveCatmullRom.alpha(0.5));
   }, [projection]);
+
+  // Focal center for Regional Early-Warning Radar Sweep
+  const radarCenter = useMemo(() => {
+    if (selectedDistrict?.coordinates) {
+      const coords = projection(selectedDistrict.coordinates);
+      if (coords) return { x: coords[0], y: coords[1], name: selectedDistrict.name, division: selectedDistrict.division };
+    }
+    const defaultCoords = projection([90.3299, 22.3596]);
+    return defaultCoords
+      ? { x: defaultCoords[0], y: defaultCoords[1], name: 'Patuakhali', division: 'Barishal' }
+      : { x: 340, y: 330, name: 'Barishal', division: 'Barishal' };
+  }, [selectedDistrict, projection]);
 
   // Setup D3 Zoom & Drag handling
   useEffect(() => {
@@ -728,11 +742,8 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">
                 <span>{lang === 'BN' ? 'ভূ-স্থানিক বুদ্ধিমত্তা ও আঞ্চলিক রাডার' : 'Geospatial Intelligence & Regional Radar'}</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                  D3.js v7 Interactive GIS
-                </span>
               </h3>
               <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
@@ -903,6 +914,19 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
           >
             <Waves className="w-3.5 h-3.5" />
             <span>{lang === 'BN' ? 'নদীসমূহ' : 'Waterways'}</span>
+          </button>
+
+          <button
+            onClick={() => setLayerRadar(!layerRadar)}
+            className={`px-2.5 py-1 rounded-lg border font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              layerRadar
+                ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-500/40 shadow-xs'
+                : 'bg-white text-slate-500 border-slate-200 dark:bg-slate-900 dark:border-slate-800'
+            }`}
+            title={lang === 'BN' ? '৩৬০° আঞ্চলিক আর্লি-ওয়ার্নিং রাডার স্ক্যানার' : 'Toggle 360° Regional Early-Warning Radar'}
+          >
+            <Radar className={`w-3.5 h-3.5 ${layerRadar ? 'text-rose-600 dark:text-rose-400 animate-spin' : ''}`} style={{ animationDuration: '6s' }} />
+            <span>{lang === 'BN' ? 'আঞ্চলিক রাডার' : 'Regional Radar'}</span>
           </button>
 
           <button
@@ -1094,6 +1118,33 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
             <span className="text-emerald-700 dark:text-emerald-400 font-bold">22 Districts Synced</span>
           </div>
 
+          {/* Regional Radar Active HUD Card */}
+          {layerRadar && (
+            <div className="absolute top-14 left-4 z-10 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md px-3 py-2 rounded-xl border border-rose-300/80 dark:border-rose-800/80 shadow-md text-xs font-mono max-w-[240px]">
+              <div className="flex items-center justify-between gap-2 border-b border-rose-100 dark:border-rose-900/40 pb-1 mb-1">
+                <div className="flex items-center gap-1.5 font-bold text-rose-600 dark:text-rose-400 text-[10.5px]">
+                  <Radar className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '4s' }} />
+                  <span>{lang === 'BN' ? 'আঞ্চলিক রাডার ট্র্যাকার' : '360° REGIONAL RADAR'}</span>
+                </div>
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+              </div>
+              <div className="space-y-0.5 text-[9.5px] text-slate-600 dark:text-slate-300">
+                <div className="flex justify-between">
+                  <span className="text-slate-400 dark:text-slate-500">{lang === 'BN' ? 'টার্গেট লক:' : 'Target Lock:'}</span>
+                  <span className="font-bold text-rose-600 dark:text-rose-300">{radarCenter.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400 dark:text-slate-500">{lang === 'BN' ? 'রেঞ্জ / স্ক্যান:' : 'Range / Scan:'}</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">155 km · 10 RPM</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400 dark:text-slate-500">{lang === 'BN' ? 'থ্রেট ক্লাস্টার:' : 'Threat Vector:'}</span>
+                  <span className="text-amber-600 dark:text-amber-400 font-bold">{selectedDistrict.clusterType}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Float Dispatch Toast Notification */}
           {dispatchToast && (
             <div className="absolute top-14 left-4 z-30 bg-emerald-950/95 border border-emerald-500/50 backdrop-blur-md text-emerald-200 px-3.5 py-2.5 rounded-xl shadow-2xl text-xs flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
@@ -1242,6 +1293,13 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                   strokeOpacity="0.18"
                 />
               </pattern>
+
+              {/* Regional Radar Sweep Gradients */}
+              <radialGradient id="radar-sweep-cone" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#EF4444" stopOpacity="0.42" />
+                <stop offset="65%" stopColor="#F59E0B" stopOpacity="0.16" />
+                <stop offset="100%" stopColor="#EF4444" stopOpacity="0" />
+              </radialGradient>
             </defs>
 
             {/* D3 Map Zoom & Pan Group - Fully Transformed by D3 Coordinates */}
@@ -1771,6 +1829,120 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                       })()}
                     </>
                   )}
+                </g>
+              )}
+
+              {/* 2.5 Regional Early-Warning Radar Sweep Layer (360° Azimuth Scan) */}
+              {layerRadar && (
+                <g className="pointer-events-none select-none">
+                  {/* Concentric Range Rings centered on radar target */}
+                  {[35, 70, 110, 155].map((radius, idx) => (
+                    <g key={radius}>
+                      <circle
+                        cx={radarCenter.x}
+                        cy={radarCenter.y}
+                        r={radius}
+                        fill="none"
+                        stroke={mapTheme === 'NAVY_CYBER' ? '#38BDF8' : '#EF4444'}
+                        strokeWidth="1.1"
+                        strokeDasharray="4 3"
+                        strokeOpacity={0.28 + idx * 0.08}
+                      />
+                      {/* Radar Range Kilometer Annotation */}
+                      <text
+                        x={radarCenter.x + radius + 3}
+                        y={radarCenter.y - 3}
+                        fill={mapTheme === 'NAVY_CYBER' ? '#38BDF8' : '#EF4444'}
+                        fontSize="6"
+                        fontFamily="monospace"
+                        fontWeight="bold"
+                        opacity="0.65"
+                      >
+                        {`${(radius * 1.15).toFixed(0)}km`}
+                      </text>
+                    </g>
+                  ))}
+
+                  {/* Cardinal Radar Crosshairs */}
+                  <line
+                    x1={radarCenter.x - 165}
+                    y1={radarCenter.y}
+                    x2={radarCenter.x + 165}
+                    y2={radarCenter.y}
+                    stroke={mapTheme === 'NAVY_CYBER' ? '#38BDF8' : '#EF4444'}
+                    strokeWidth="0.8"
+                    strokeDasharray="3 3"
+                    strokeOpacity="0.35"
+                  />
+                  <line
+                    x1={radarCenter.x}
+                    y1={radarCenter.y - 165}
+                    x2={radarCenter.x}
+                    y2={radarCenter.y + 165}
+                    stroke={mapTheme === 'NAVY_CYBER' ? '#38BDF8' : '#EF4444'}
+                    strokeWidth="0.8"
+                    strokeDasharray="3 3"
+                    strokeOpacity="0.35"
+                  />
+
+                  {/* 360-Degree Continuous Rotating Radar Beam with trailing sector */}
+                  <g>
+                    <animateTransform
+                      attributeName="transform"
+                      type="rotate"
+                      from={`0 ${radarCenter.x} ${radarCenter.y}`}
+                      to={`360 ${radarCenter.x} ${radarCenter.y}`}
+                      dur="6s"
+                      repeatCount="indefinite"
+                    />
+                    {/* 45-degree sweeping radar sector cone */}
+                    <path
+                      d={`M ${radarCenter.x} ${radarCenter.y} L ${radarCenter.x + 155} ${radarCenter.y} A 155 155 0 0 1 ${radarCenter.x + 155 * 0.707} ${radarCenter.y + 155 * 0.707} Z`}
+                      fill="url(#radar-sweep-cone)"
+                    />
+                    {/* Sharp leading scanner beam line */}
+                    <line
+                      x1={radarCenter.x}
+                      y1={radarCenter.y}
+                      x2={radarCenter.x + 155 * 0.707}
+                      y2={radarCenter.y + 155 * 0.707}
+                      stroke="#EF4444"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      filter="url(#glow-marker-crit)"
+                    />
+                  </g>
+
+                  {/* Intercepted Target Anomaly Pulse Blip at Radar Center */}
+                  <circle
+                    cx={radarCenter.x}
+                    cy={radarCenter.y}
+                    r="4"
+                    fill="#EF4444"
+                    filter="url(#glow-marker-crit)"
+                  />
+                  <circle
+                    cx={radarCenter.x}
+                    cy={radarCenter.y}
+                    r="16"
+                    fill="none"
+                    stroke="#EF4444"
+                    strokeWidth="1.5"
+                    className="animate-ping"
+                    style={{ animationDuration: '2.5s' }}
+                  />
+                  <text
+                    x={radarCenter.x}
+                    y={radarCenter.y - 12}
+                    textAnchor="middle"
+                    fill="#EF4444"
+                    fontSize="7"
+                    fontFamily="monospace"
+                    fontWeight="bold"
+                    filter="url(#glow-marker-crit)"
+                  >
+                    RADAR LOCK: {radarCenter.name.toUpperCase()}
+                  </text>
                 </g>
               )}
 
@@ -2452,25 +2624,38 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                         ৳{(selectedDistrict.hourlyVolumeBDT / 1000000).toFixed(2)}M
                       </span>
                     </div>
-                    {mapTransform.k > 1.35 ? (
+                    <div className="flex items-center gap-1.5">
                       <button
-                        onClick={handleResetZoom}
-                        className="px-2.5 py-1.5 bg-slate-700 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
-                        title={lang === 'BN' ? 'সমগ্র বাংলাদেশ ভিউতে ফিরে যান' : 'Zoom out to entire Bangladesh view'}
+                        onClick={() => {
+                          setLayerRadar(true);
+                          flyToCoordinates(selectedDistrict.coordinates[0], selectedDistrict.coordinates[1], 2.4);
+                        }}
+                        className="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        title={lang === 'BN' ? 'এই জেলায় রাডার ফোকাস ও লক করুন' : 'Lock 360° Regional Radar on this district'}
                       >
-                        <ZoomOut className="w-3.5 h-3.5" />
-                        <span>{lang === 'BN' ? 'জুম আউট' : 'Zoom Out'}</span>
+                        <Radar className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '5s' }} />
+                        <span>{lang === 'BN' ? 'রাডার লক' : 'Radar Lock'}</span>
                       </button>
-                    ) : (
-                      <button
-                        onClick={() => flyToCoordinates(selectedDistrict.coordinates[0], selectedDistrict.coordinates[1], 2.8)}
-                        className="px-2.5 py-1.5 bg-[#0054A6] hover:bg-[#004284] text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
-                        title={lang === 'BN' ? 'এই জেলাটি জুম করুন' : 'Zoom in to this district'}
-                      >
-                        <Crosshair className="w-3.5 h-3.5" />
-                        <span>{lang === 'BN' ? 'জুম ইন' : 'Zoom In'}</span>
-                      </button>
-                    )}
+                      {mapTransform.k > 1.35 ? (
+                        <button
+                          onClick={handleResetZoom}
+                          className="px-2.5 py-1.5 bg-slate-700 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                          title={lang === 'BN' ? 'সমগ্র বাংলাদেশ ভিউতে ফিরে যান' : 'Zoom out to entire Bangladesh view'}
+                        >
+                          <ZoomOut className="w-3.5 h-3.5" />
+                          <span>{lang === 'BN' ? 'জুম আউট' : 'Zoom Out'}</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => flyToCoordinates(selectedDistrict.coordinates[0], selectedDistrict.coordinates[1], 2.8)}
+                          className="px-2.5 py-1.5 bg-[#0054A6] hover:bg-[#004284] text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                          title={lang === 'BN' ? 'এই জেলাটি জুম করুন' : 'Zoom in to this district'}
+                        >
+                          <Crosshair className="w-3.5 h-3.5" />
+                          <span>{lang === 'BN' ? 'জুম ইন' : 'Zoom In'}</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
