@@ -73,6 +73,30 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+:root {
+  color-scheme: light;
+  --page-bg: #f6f5f1;
+  --surface-bg: #ffffff;
+  --surface-muted: #f8f8f5;
+  --surface-border: #e6e5df;
+  --text-primary: #172536;
+  --text-muted: #647184;
+  --accent-primary: #087e78;
+}
+
+html.dark {
+  color-scheme: dark;
+  --page-bg: #090d16;
+  --surface-bg: #0f172a;
+  --surface-muted: #0b1120;
+  --surface-border: #1e293b;
+  --text-primary: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent-primary: #48d1c3;
+}
+
+.app-shell { background: var(--page-bg); color: var(--text-primary); transition: background-color .2s ease, color .2s ease; }
+
 @layer base {
   html, body {
     width: 100%;
@@ -103,10 +127,6 @@
 /* =========================================================
    DARK MODE COLOR SYSTEM (Active when .dark is on <html>)
    ========================================================= */
-html.dark {
-  color-scheme: dark;
-}
-
 html.dark body {
   background-color: #090D16;
   color: #E2E8F0;
@@ -377,6 +397,44 @@ button:not(:disabled):active { transform: scale(.98); }
   }
   .page-enter, .modal-backdrop-enter, .modal-panel-enter, .alert-arrive, .metric-change, .skeleton-shimmer, .scroll-reveal { animation: none !important; }
   .interactive-lift:hover, .interactive-lift:active, button:not(:disabled):active { transform: none; }
+}
+
+/* Compact, readable operator tables on narrow screens. */
+@media (max-width: 640px) {
+  .mobile-card-table thead { display: none; }
+  .mobile-card-table,
+  .mobile-card-table tbody,
+  .mobile-card-table tr,
+  .mobile-card-table td { display: block; width: 100%; }
+  .mobile-card-table tbody tr {
+    margin: .65rem 0;
+    padding: .35rem .75rem;
+    border: 1px solid var(--surface-border);
+    border-radius: 1rem;
+    background: var(--surface-bg);
+    box-shadow: 0 2px 8px rgba(23, 37, 54, .045);
+  }
+  .mobile-card-table tbody td {
+    display: grid;
+    grid-template-columns: minmax(6.5rem, .8fr) minmax(0, 1.4fr);
+    align-items: center;
+    gap: .6rem;
+    padding: .55rem .15rem;
+    border-bottom: 1px solid var(--surface-border);
+    text-align: left !important;
+    overflow-wrap: anywhere;
+  }
+  .mobile-card-table tbody td:last-child { border-bottom: 0; }
+  .mobile-card-table tbody td::before {
+    content: attr(data-label);
+    color: var(--text-muted);
+    font-size: .66rem;
+    font-weight: 700;
+    line-height: 1.25;
+    text-transform: uppercase;
+    letter-spacing: .035em;
+  }
+  .mobile-card-table tbody td > * { min-width: 0; }
 }
 
 /* =========================================================
