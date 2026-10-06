@@ -24,3 +24,5 @@ user_id,wallet,amount,recipient,timestamp,reference,status,risk_score,service_ty
 "USR-ADM-02","+880 1812-402921","2000","Linked Bank Account","2026-10-06T10:10:53.492Z","","COMPLETED","0","ADD_MONEY","IN","0","","",""
 "USR-CUST-88","01711-239481","1500","01819-440129","2026-10-06T12:43:04.449Z","","COMPLETED","20","SEND_MONEY","OUT","0","","",""
 "USR-CUST-88","01711-239481","1500","01711-239481","2026-10-06T14:47:02.397Z","Transfer to Personal Secondary MFS","COMPLETED","25","SEND_MONEY","OUT","0","","",""
+"USR-CUST-88","01711-239481","50000","Linked Bank Account","2026-10-06T15:06:42.617Z","","COMPLETED","0","ADD_MONEY","IN","0","","",""
+"USR-CUST-88","01711-239481","50000","01819-440129","2026-10-06T15:07:03.369Z","","PROCEEDED","51","SEND_MONEY","OUT","0","","",""
