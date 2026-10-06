@@ -107,6 +107,31 @@
   .assistant-art { height: 136px; flex: 0 0 auto; }
   .assistant-content { padding: 4px 16px 16px; }
 }
+@media (max-width: 1100px) {
+  .dashboard-assistant[data-open='true'] {
+    inset: 0;
+    z-index: 1000;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) calc(82px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    background: rgba(8, 28, 52, .38);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+  }
+  .dashboard-assistant[data-open='true'] .assistant-card {
+    width: min(520px, 100%);
+    height: min(720px, calc(100dvh - 112px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+    max-height: 100%;
+    flex: 0 1 auto;
+  }
+  .dashboard-assistant[data-open='true'] .assistant-launcher {
+    position: absolute;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
 @media (max-width: 480px) {
   .dashboard-assistant { right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); gap: clamp(6px, 1.5dvh, 10px); }
   .assistant-card { width: min(376px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right))); height: min(540px, 68vh, calc(100vh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); height: min(540px, 68dvh, calc(100dvh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); max-height: min(540px, 68vh, calc(100vh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); max-height: min(540px, 68dvh, calc(100dvh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); border-radius: clamp(18px, 5vw, 23px); }
@@ -117,7 +142,7 @@
   .assistant-suggestions button { padding: 8px 11px; font-size: 10.5px; }
   .assistant-launcher { width: 54px; height: 54px; }
 }
-@media (max-height: 700px) {
+@media (min-width: 1101px) and (max-height: 700px) {
   .assistant-card { height: min(560px, 58vh, calc(100vh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); height: min(560px, 58dvh, calc(100dvh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); max-height: min(560px, 58vh, calc(100vh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); max-height: min(560px, 58dvh, calc(100dvh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); }
   .assistant-art { height: clamp(64px, 12dvh, 96px); }
 }
