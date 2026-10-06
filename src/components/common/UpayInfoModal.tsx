@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useModalPresence } from '../../hooks/useModalPresence';
+import './UpayInfoModal.css';
 import { matchAssistantQuery } from '../../data/assistantKnowledge';
 import {
   TAKASAFE_PROJECT_ABSTRACT_BASE,
@@ -702,9 +703,9 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
         ];
 
         return (
-          <div className="flex flex-col h-full min-h-0">
+          <div className="assistant-chat-content flex flex-col h-full min-h-0">
             {/* Quick Suggestion Chips Carousel */}
-            <div className="pb-2.5 mb-2 border-b border-slate-200">
+              <div className="assistant-chat-topics pb-2.5 mb-2 border-b border-slate-200">
               <span className="text-[10px] font-bold text-slate-600 tracking-wider uppercase block mb-1.5">
                 {lang === 'BN' ? 'প্রস্তাবিত বিষয়সমূহ:' : 'SUGGESTED TOPICS:'}
               </span>
@@ -723,7 +724,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
             </div>
 
             {/* Chat Messages Stream */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50/80 rounded-xl border border-slate-200">
+            <div className="assistant-chat-messages flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50/80 rounded-xl border border-slate-200">
               {chatMessages.map((m, idx) => (
                 <div
                   key={idx}
@@ -785,7 +786,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
             </div>
 
             {/* Input Form */}
-            <form onSubmit={(e) => handleSendMessage(e)} className="mt-3 flex items-center gap-2">
+            <form onSubmit={(e) => handleSendMessage(e)} className="assistant-chat-form mt-3 flex items-center gap-2">
               <input
                 type="text"
                 value={inputMsg}
@@ -795,7 +796,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
                     ? 'TakaSafe বা ফ্রড প্রোটেকশন সম্পর্কে যেকোনো প্রশ্ন লিখুন...'
                     : 'Ask anything about TakaSafe, ScamShield, ML models, BFIU...'
                 }
-                className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0054A6]"
+                className="assistant-chat-input flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0054A6]"
               />
               <button
                 type="submit"
@@ -974,15 +975,15 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
       ? 'fixed inset-0 z-50 pointer-events-none'
       : `fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs ${isExiting ? 'modal-backdrop-exit' : 'modal-backdrop-enter'}`}>
       <div className={isLiveChat
-        ? `pointer-events-auto fixed bottom-4 right-4 flex h-[min(680px,calc(100dvh-2rem))] w-[min(420px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ${isExiting ? 'modal-panel-exit' : 'modal-panel-enter'}`
+        ? `assistant-chat-panel pointer-events-auto fixed bottom-4 right-4 flex h-[min(680px,calc(100dvh-2rem))] w-[min(420px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ${isExiting ? 'modal-panel-exit' : 'modal-panel-enter'}`
         : `bg-white rounded-3xl ${modalMaxWidth} w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col ${isExiting ? 'modal-panel-exit' : 'modal-panel-enter'}`}>
         {/* Header */}
-        <div className={`${isLiveChat ? 'p-3.5' : 'p-5'} border-b border-slate-200 flex items-center justify-between bg-slate-50/80 shrink-0`}>
+        <div className={`${isLiveChat ? 'assistant-chat-header p-3.5' : 'p-5'} border-b border-slate-200 flex items-center justify-between bg-slate-50/80 shrink-0`}>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-[#0054A6] text-white flex items-center justify-center shadow-xs">
               <Sparkles className="w-4 h-4 text-amber-300" />
             </div>
-            <h3 className="font-bold text-slate-900 text-base">{getTitle()}</h3>
+            <h3 className="assistant-chat-title font-bold text-slate-900 text-base">{getTitle()}</h3>
           </div>
           <button
             onClick={onClose}
@@ -993,7 +994,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className={isLiveChat ? 'min-h-0 flex-1 overflow-hidden p-3' : 'p-5 overflow-y-auto max-h-[70vh]'}>
+        <div className={isLiveChat ? 'assistant-chat-body min-h-0 flex-1 overflow-hidden p-3' : 'p-5 overflow-y-auto max-h-[70vh]'}>
           {renderContent()}
         </div>
 
