@@ -838,7 +838,7 @@ export default function App() {
       {/* Upay Official Footer (Matching user wireframe photo 5) */}
       <UpayFooter
         lang={lang}
-        lang={lang}
+
         onOpenModal={(modal) => setActiveModal(modal)}
         onNavigateHome={() => {
           navigateToView('OPERATOR');
