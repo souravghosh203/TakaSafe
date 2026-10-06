@@ -8,6 +8,7 @@ import { formatLocalizedNumber } from '../../utils/formatCurrency';
 import { AI1NotebookModal } from '../common/ML1NotebookModal';
 import { AnalysisTimeline } from '../scamshield/AnalysisTimeline';
 import { evaluateAI1AndDoubtCheck, AI1EvaluationResult } from '../../services/ai1ScoringEngine';
+import { createNotification } from '../../services/notifications';
 import {
   Send,
   ArrowUpRight,
@@ -338,6 +339,12 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
       ...transferHistory,
       record,
     ].slice(-500);
+    createNotification(userId, {
+      type: 'TRANSACTION',
+      title: status === 'COMPLETED' ? 'Transaction completed' : 'Transaction proceeded',
+      message: `BDT ${transferAmount.toLocaleString()} ${direction === 'IN' ? 'received' : 'sent'}${transferRecipient ? ` ${direction === 'IN' ? 'from' : 'to'} ${transferRecipient}` : ''}.`,
+      relatedEntityId: `${userId}-${record.timestamp}`,
+    });
     const nextBalance = Math.max(0, availableBalance + (direction === 'IN' ? transferAmount : -(transferAmount + fee)));
     setAvailableBalance(nextBalance);
     setBalanceError(null);
@@ -611,6 +618,12 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
 
     // Trigger ScamShield if finalScore >= 40 or AI-1 doubt/risk policy flags it
     if (finalScore >= 40 || evalResult.scamShieldTriggered) {
+      createNotification(userId, {
+        type: 'SECURITY',
+        title: 'Security review recommended',
+        message: `A transfer of BDT ${num.toLocaleString()} was flagged for additional review. No funds moved yet.`,
+        relatedEntityId: `${userId}-risk-${Date.now()}`,
+      });
       setShowScamModal(true);
       onSimulateRiskyPayment();
     } else {

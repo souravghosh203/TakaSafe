@@ -28,6 +28,7 @@ import {
   X,
 } from 'lucide-react';
 import { AuthUser, UserRole } from '../../types';
+import { NotificationBell } from './NotificationBell';
 
 interface UpayHeaderProps {
   activeView: 'OPERATOR' | 'CUSTOMER' | 'STORYLINE' | 'LOGIN';
@@ -229,6 +230,7 @@ export const UpayHeader: React.FC<UpayHeaderProps> = ({
 
           {/* Right Action Utilities & Clean Services Dropdown */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {currentUser && <NotificationBell user={currentUser} />}
             {/* Clean Services & Info Dropdown */}
             <div className="relative hidden md:block" ref={dropdownRef}>
               <button
