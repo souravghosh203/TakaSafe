@@ -120,6 +120,20 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
     const asksSavings = /\b(save|saving|savings|set aside)\b/i.test(query);
     const requestedSavings = query.match(/(?:\u09f3|৳|tk\.?\s*)\s*(\d[\d,]*(?:\.\d+)?)/i)
       ?? query.match(/\b(\d[\d,]*(?:\.\d+)?)\s*(?:taka|tk)\b/i);
+    const asksPaymentSafety = /\b(payment|transfer|payee|recipient)\b/i.test(query)
+      && /\b(safe|safely|secure|legit|legitimate|scam|fraud)\b/i.test(query);
+    const asksNearestCashout = /\b(nearest|closest)\b/i.test(query)
+      && /\b(cash[ -]?out|atm|agent|withdrawal)\b/i.test(query);
+    if (asksPaymentSafety) {
+      return lang === 'BN'
+        ? 'এই প্রশ্নে নির্দিষ্ট পেমেন্টের তথ্য নেই, তাই এটিকে নিরাপদ বলে নিশ্চিত করা যাবে না। প্রাপকের নাম ও নম্বর যাচাই করুন, OTP বা PIN শেয়ার করবেন না, এবং পেমেন্ট নিশ্চিত করার আগে অ্যাপে ScamShield-এর সতর্কতা দেখুন। প্রাপক, পরিমাণ ও পেমেন্টের ধরন দিলে আমি আরও নির্দিষ্টভাবে সাহায্য করতে পারি।'
+        : 'I can’t verify a specific payment without its details, so I can’t label it safe. Check the recipient’s name and number, never share your PIN or OTP, and review the ScamShield warning in the app before confirming. Share the recipient, amount, and payment method if you want more specific guidance.';
+    }
+    if (asksNearestCashout) {
+      return lang === 'BN'
+        ? 'আপনার কাছের ক্যাশ-আউট পয়েন্ট খুঁজতে আপনার শহর বা এলাকার নাম লিখুন। এই ডেমোতে GPS বা লাইভ পয়েন্টের অবস্থান নেই, তাই সেগুলো ছাড়া নিকটতম স্থান নির্ভরযোগ্যভাবে নির্ধারণ করতে পারি না।'
+        : 'I can’t reliably identify the nearest cash-out point yet: this demo has no GPS location or geocoded facility directory. The Service Locations panel shows sample points, but they are not enough to calculate which one is nearest.';
+    }
     if (asksSavings && requestedSavings && !customerIdentity) {
       return 'Please sign in to your customer account so I can calculate this using your current balance.';
     }
