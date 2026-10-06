@@ -1,0 +1,127 @@
+/* Live chat has its own responsive layout because it is a docked panel on
+   desktop and a focused, keyboard-safe experience on touch screens. */
+.assistant-chat-panel {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+}
+
+.assistant-chat-header {
+  gap: 12px;
+  padding-top: max(0.875rem, env(safe-area-inset-top));
+}
+
+.assistant-chat-header > div:first-child {
+  min-width: 0;
+}
+
+.assistant-chat-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.assistant-chat-panel .assistant-chat-body,
+.assistant-chat-content,
+.assistant-chat-messages {
+  min-width: 0;
+  min-height: 0;
+}
+
+.assistant-chat-messages {
+  overscroll-behavior: contain;
+  overflow-wrap: anywhere;
+  -webkit-overflow-scrolling: touch;
+}
+
+.assistant-chat-form {
+  flex: 0 0 auto;
+}
+
+.assistant-chat-input {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .assistant-chat-panel {
+    inset: 0;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    width: 100vw;
+    width: 100dvw;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding-right: env(safe-area-inset-right);
+    padding-left: env(safe-area-inset-left);
+    border: 0;
+    border-radius: 0;
+  }
+
+  .assistant-chat-header {
+    gap: 8px;
+    padding: 12px 14px;
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+
+  .assistant-chat-header > div:first-child {
+    gap: 8px;
+  }
+
+  .assistant-chat-title {
+    font-size: 0.9375rem;
+    line-height: 1.25;
+  }
+
+  .assistant-chat-panel .assistant-chat-body {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+
+  .assistant-chat-topics {
+    flex: 0 0 auto;
+  }
+
+  .assistant-chat-messages {
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .assistant-chat-messages > div > div {
+    max-width: 92%;
+    padding: 10px 12px;
+    font-size: 0.8125rem;
+  }
+
+  .assistant-chat-form {
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .assistant-chat-input {
+    min-height: 44px;
+    padding: 10px 12px;
+    /* 16px prevents iOS Safari from zooming the page when the field focuses. */
+    font-size: 16px;
+  }
+
+  .assistant-chat-form button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 360px) {
+  .assistant-chat-header { padding-right: 10px; padding-left: 10px; }
+  .assistant-chat-title { font-size: 0.875rem; }
+  .assistant-chat-body { padding-right: 8px; padding-left: 8px; }
+  .assistant-chat-messages > div > div { max-width: 96%; }
+}
+
+@media (max-height: 520px) and (max-width: 640px) {
+  .assistant-chat-topics { padding-bottom: 6px; margin-bottom: 6px; }
+  .assistant-chat-topics > span { display: none; }
+  .assistant-chat-body { padding-top: 6px; }
+}
