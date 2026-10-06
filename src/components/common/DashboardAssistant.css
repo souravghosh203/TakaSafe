@@ -1,6 +1,6 @@
 .dashboard-assistant {
   position: fixed;
-  z-index: 40;
+  z-index: 60;
   right: max(22px, env(safe-area-inset-right));
   bottom: max(22px, env(safe-area-inset-bottom));
   display: flex;
@@ -11,12 +11,16 @@
 }
 .assistant-launcher {
   position: relative;
-  display: grid;
-  width: 58px;
+  display: inline-flex;
+  min-width: 58px;
   height: 58px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 19px;
   place-items: center;
   border: 1px solid rgba(255,255,255,.66);
-  border-radius: 50%;
+  border-radius: 999px;
   background: linear-gradient(145deg, #52d9ce, #1487d7);
   color: #fff;
   box-shadow: 0 12px 32px rgba(8, 67, 119, .3), inset 0 1px 0 rgba(255,255,255,.5);
@@ -35,6 +39,8 @@
 .assistant-launcher:active { transform: scale(.93); }
 .assistant-launcher:focus-visible,.assistant-reset:focus-visible,.assistant-suggestions button:focus-visible,.assistant-input button:focus-visible { outline: 3px solid #79e4db; outline-offset: 3px; }
 .assistant-launcher-spark { position: absolute; top: 7px; right: 7px; display: grid; width: 19px; height: 19px; place-items: center; border: 1px solid white; border-radius: 50%; background: #f5ffff; color: #087f9d; }
+.assistant-launcher-label { font-size: 14px; font-weight: 750; letter-spacing: .01em; white-space: nowrap; }
+.dashboard-assistant[data-open='true'] .assistant-launcher { width: 58px; min-width: 58px; padding: 0; }
 .assistant-card {
   box-sizing: border-box;
   width: min(376px, calc(100vw - 28px - env(safe-area-inset-left) - env(safe-area-inset-right)));
@@ -133,21 +139,21 @@
   }
 }
 @media (max-width: 480px) {
-  .dashboard-assistant { right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); gap: clamp(6px, 1.5dvh, 10px); }
+  .dashboard-assistant { right: max(16px, env(safe-area-inset-right)); bottom: max(24px, calc(env(safe-area-inset-bottom) + 12px)); gap: clamp(6px, 1.5dvh, 10px); }
   .assistant-card { width: min(376px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right))); height: min(540px, 68vh, calc(100vh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); height: min(540px, 68dvh, calc(100dvh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); max-height: min(540px, 68vh, calc(100vh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); max-height: min(540px, 68dvh, calc(100dvh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); border-radius: clamp(18px, 5vw, 23px); }
   .assistant-art { height: clamp(76px, 15dvh, 120px); flex: 0 0 auto; }
   .assistant-content { padding: 2px 16px max(15px, env(safe-area-inset-bottom)); }
   .assistant-content h2 { font-size: 19px; }
   .assistant-suggestions { gap: 7px; }
   .assistant-suggestions button { padding: 8px 11px; font-size: 10.5px; }
-  .assistant-launcher { width: 54px; height: 54px; }
+  .assistant-launcher { min-width: 108px; height: 56px; padding: 0 20px; }
 }
 @media (min-width: 1101px) and (max-height: 700px) {
   .assistant-card { height: min(560px, 58vh, calc(100vh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); height: min(560px, 58dvh, calc(100dvh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); max-height: min(560px, 58vh, calc(100vh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); max-height: min(560px, 58dvh, calc(100dvh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom))); }
   .assistant-art { height: clamp(64px, 12dvh, 96px); }
 }
 @media (max-width: 360px) {
-  .dashboard-assistant { right: max(8px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom)); }
+  .dashboard-assistant { right: max(12px, env(safe-area-inset-right)); bottom: max(24px, calc(env(safe-area-inset-bottom) + 12px)); }
   .assistant-card { width: calc(100vw - 16px - env(safe-area-inset-left) - env(safe-area-inset-right)); }
   .assistant-content { padding-right: 12px; padding-left: 12px; }
   .assistant-content h2 { font-size: clamp(16px, 5vw, 19px); }

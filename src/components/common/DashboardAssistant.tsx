@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { FormEvent } from 'react';
 import { Bot, MessageCircle, RotateCw, Send, Sparkles, X } from 'lucide-react';
 import './DashboardAssistant.css';
@@ -36,7 +37,7 @@ export const DashboardAssistant: React.FC<DashboardAssistantProps> = ({ lang, on
     setIsOpen(false);
   };
 
-  return (
+  return createPortal((
     <div className="dashboard-assistant" data-open={isOpen}>
       {isOpen && (
         <section className="assistant-card" aria-label={isBn ? 'টাকা সেফ এআই সহকারী' : 'TakaSafe AI assistant'}>
@@ -97,8 +98,8 @@ export const DashboardAssistant: React.FC<DashboardAssistantProps> = ({ lang, on
         aria-expanded={isOpen}
         aria-label={isOpen ? (isBn ? 'সহকারী বন্ধ করুন' : 'Close assistant') : (isBn ? 'টাকা সেফ এআই খুলুন' : 'Open TakaSafe AI assistant')}
       >
-        {isOpen ? <X size={21} /> : <><MessageCircle size={20} /><span className="assistant-launcher-spark"><Sparkles size={11} /></span></>}
+        {isOpen ? <X size={21} /> : <><MessageCircle size={20} /><span className="assistant-launcher-label">{isBn ? 'AI সহায়তা' : 'Ask AI'}</span><span className="assistant-launcher-spark"><Sparkles size={11} /></span></>}
       </button>
     </div>
-  );
+  ), document.body);
 };
