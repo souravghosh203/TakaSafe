@@ -1,12 +1,14 @@
-﻿import React from 'react';
+import React from 'react';
 import { MessageSquare, Mail, Phone, MapPin, Clock, Sparkles } from 'lucide-react';
 
 interface UpayFooterProps {
+  lang?: 'EN' | 'BN';
   onOpenModal?: (modalType: string) => void;
   onNavigateHome?: () => void;
 }
 
 export const UpayFooter: React.FC<UpayFooterProps> = ({
+  lang = 'EN',
   onOpenModal,
   onNavigateHome,
 }) => {
