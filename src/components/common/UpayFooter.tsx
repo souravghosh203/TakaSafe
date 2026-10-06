@@ -1,34 +1,30 @@
-import React from 'react';
+﻿import React from 'react';
 import { MessageSquare, Mail, Phone, MapPin, Clock, Sparkles } from 'lucide-react';
 
 interface UpayFooterProps {
-  lang?: 'EN' | 'BN';
   onOpenModal?: (modalType: string) => void;
   onNavigateHome?: () => void;
 }
 
 export const UpayFooter: React.FC<UpayFooterProps> = ({
-  lang = 'EN',
   onOpenModal,
   onNavigateHome,
 }) => {
-  const isBn = lang === 'BN';
   const handleLogoClick = () => {
     if (onNavigateHome) onNavigateHome();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <footer className="relative overflow-hidden border-t-4 border-[#FAB915] bg-[#1f2329] text-slate-300 text-xs">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(ellipse_at_top,rgba(250,185,21,0.08),transparent_68%)]" />
+    <footer className="bg-[#262626] text-slate-300 text-xs pt-12 pb-8 border-t-4 border-[#FAB915]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative grid grid-cols-1 gap-x-10 gap-y-9 py-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-y-10 lg:py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-10">
           {/* Column 1: Brand & Purpose */}
-          <div className="sm:col-span-2 lg:col-span-3">
+          <div className="lg:col-span-1">
             {/* Brand Zone: Authentic MFS Animated Logo in Footer */}
             <button
               onClick={handleLogoClick}
-              className="inline-flex items-center gap-2.5 mb-3 cursor-pointer text-left group shrink-0 focus:outline-none select-none transition-transform duration-300 ease-out active:scale-[0.97]"
+              className="inline-flex items-center gap-2.5 mb-4 cursor-pointer text-left group shrink-0 focus:outline-none select-none transition-transform duration-300 ease-out active:scale-[0.97]"
               title="TakaSafe Home"
             >
               <div className="relative w-9 h-9 shrink-0">
@@ -64,16 +60,14 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
                 </span>
               </div>
             </button>
-            <p className="max-w-xs text-[13px] leading-6 text-slate-400">
-              {isBn ? 'সহজ, নিরাপদ ও উদ্ভাবনী ডিজিটাল আর্থিক সেবার মাধ্যমে মানুষের লক্ষ্য অর্জনে TakaSafe কাজ করছে।' : 'TakaSafe is aiming to help people achieve their goals through easy, secure and innovative digital financial services.'}
+            <p className="text-slate-400 text-[12px] leading-relaxed">
+              TakaSafe is aiming to help aspirers achieve their goals through easy, secure and innovative Digital Financial Solutions.
             </p>
           </div>
 
           {/* Column 2: GET IN TOUCH */}
-          <div className="lg:col-span-4">
-            <h4 className="mb-5 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-400">{isBn ? 'যোগাযোগ' : 'CONTACT & SUPPORT'}</h4>
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-2">
-              <div className="space-y-4">
+          <div className="lg:col-span-2 space-y-3">
+            <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">GET IN TOUCH</h4>
             
             <button
               onClick={() => onOpenModal?.('LIVE_CHAT')}
@@ -81,7 +75,7 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
             >
               <MessageSquare className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <span className="font-semibold underline decoration-amber-400/50 underline-offset-2">
-                {isBn ? 'লাইভ চ্যাট সহায়তা (২৪/৭)' : 'Live Chat Support (24/7 Assistant)'}
+                Live Chat Support (24/7 Assistant)
               </span>
             </button>
 
@@ -115,9 +109,7 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
                 09610916268
               </a>
             </div>
-              </div>
 
-              <div className="space-y-4">
             <div
               onClick={() => onOpenModal?.('SERVICE_LOCATIONS')}
               className="flex items-start gap-2.5 text-[11px] text-slate-400 hover:text-white cursor-pointer transition-colors"
@@ -137,44 +129,42 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
                 <span className="text-amber-300">Timing: 9:30 am - 4:00 pm</span>
               </div>
             </div>
-              </div>
-            </div>
           </div>
 
           {/* Column 3: USEFUL LINKS & COMPANY INFO */}
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:col-span-3 lg:gap-6">
+          <div className="space-y-6">
             <div>
-              <h4 className="mb-5 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-400">{isBn ? 'প্রয়োজনীয় লিংক' : 'EXPLORE'}</h4>
-              <ul className="space-y-3 text-[12px] text-slate-400">
+              <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">USEFUL LINKS</h4>
+              <ul className="space-y-1.5 text-[12px] text-slate-400">
                 <li onClick={() => onOpenModal?.('ABSTRACT')} className="text-amber-300 font-bold hover:text-white cursor-pointer transition-colors flex items-center gap-1.5">
                   <Sparkles className="w-3 h-3 text-amber-400" />
-                  <span>{isBn ? 'প্রকল্পের সারসংক্ষেপ ও SDG' : 'Official Project Abstract & SDGs'}</span>
+                  <span>Official Project Abstract & SDGs</span>
                 </li>
-                <li onClick={() => onOpenModal?.('LIMITS_CHARGES')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'সীমা ও চার্জ' : 'Limits and Charges'}</li>
-                <li onClick={() => onOpenModal?.('MEDIA')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'সংবাদ বিজ্ঞপ্তি' : 'Press Release'}</li>
-                <li onClick={() => onOpenModal?.('NEED_HELP')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'সহায়তা' : 'Need Help?'}</li>
-                <li onClick={() => onOpenModal?.('PARTNER')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'অংশীদার' : 'Partner'}</li>
-                <li onClick={() => onOpenModal?.('DISCONTINUED_AGENTS')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'বন্ধ এজেন্ট' : 'Discontinued Agents'}</li>
+                <li onClick={() => onOpenModal?.('LIMITS_CHARGES')} className="hover:text-white cursor-pointer transition-colors">Limits and Charges</li>
+                <li onClick={() => onOpenModal?.('MEDIA')} className="hover:text-white cursor-pointer transition-colors">Press Release</li>
+                <li onClick={() => onOpenModal?.('NEED_HELP')} className="hover:text-white cursor-pointer transition-colors">Need Help?</li>
+                <li onClick={() => onOpenModal?.('PARTNER')} className="hover:text-white cursor-pointer transition-colors">Partner</li>
+                <li onClick={() => onOpenModal?.('DISCONTINUED_AGENTS')} className="hover:text-white cursor-pointer transition-colors">Discontinued Agents</li>
               </ul>
             </div>
 
-          <div>
-            <h4 className="mb-5 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-400">{isBn ? 'প্রতিষ্ঠানের তথ্য' : 'COMPANY'}</h4>
-            <ul className="space-y-3 text-[12px] text-slate-400">
-              <li onClick={() => onOpenModal?.('PRIVACY_POLICY')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'গোপনীয়তা নীতি' : 'Privacy Policy'}</li>
-              <li onClick={() => onOpenModal?.('TERMS')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'শর্তাবলি' : 'Terms and Conditions'}</li>
-              <li onClick={() => onOpenModal?.('ABOUT_US')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'আমাদের পরিচিতি' : 'Who We Are'}</li>
-              <li onClick={() => onOpenModal?.('BUSINESS')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'ব্যবসায়িক সমাধান' : 'Business Solution'}</li>
-            </ul>
-          </div>
+            <div>
+              <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-2">COMPANY INFO</h4>
+              <ul className="space-y-1.5 text-[12px] text-slate-400">
+                <li onClick={() => onOpenModal?.('PRIVACY_POLICY')} className="hover:text-white cursor-pointer transition-colors">Privacy Policy</li>
+                <li onClick={() => onOpenModal?.('TERMS')} className="hover:text-white cursor-pointer transition-colors">Terms and Conditions</li>
+                <li onClick={() => onOpenModal?.('ABOUT_US')} className="hover:text-white cursor-pointer transition-colors">Who We Are</li>
+                <li onClick={() => onOpenModal?.('BUSINESS')} className="hover:text-white cursor-pointer transition-colors">Business Solution</li>
+              </ul>
+            </div>
           </div>
 
           {/* Column 4: STAY CONNECTED & APP DOWNLOADS */}
-          <div className="lg:col-span-2">
-          <h4 className="mb-5 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-400">{isBn ? 'সঙ্গে থাকুন' : 'FOLLOW & GET THE APP'}</h4>
+          <div>
+            <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">STAY CONNECTED</h4>
             
             {/* Social Icons */}
-            <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2 mb-4">
               <button
                 onClick={() => onOpenModal?.('MEDIA')}
                 className="w-7 h-7 rounded-full bg-slate-800 hover:bg-blue-600 text-white flex items-center justify-center font-bold text-xs cursor-pointer transition-colors"
@@ -244,11 +234,11 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
         </div>
 
         {/* Footer Bottom Bar */}
-        <div className="relative flex flex-col items-center justify-between gap-3 border-t border-white/10 py-5 text-center text-[11px] text-slate-500 sm:flex-row sm:text-left">
-          <div className="whitespace-nowrap">
+        <div className="pt-6 border-t border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-400 text-[11px]">
+          <div>
             © 2026 TakaSafe. All rights reserved.
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:justify-end">
+          <div className="flex items-center gap-3">
             <span className="text-amber-400 font-semibold">TakaSafe MFS Platform</span>
             <span>·</span>
             <span>DIU CPC × upay AI DEV FEST 2026</span>
