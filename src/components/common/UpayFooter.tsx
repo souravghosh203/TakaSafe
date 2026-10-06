@@ -72,7 +72,8 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
           {/* Column 2: GET IN TOUCH */}
           <div className="lg:col-span-4">
             <h4 className="mb-5 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-400">{isBn ? 'যোগাযোগ' : 'CONTACT & SUPPORT'}</h4>
-            <div className="space-y-4">
+            <div className="grid gap-6 xl:grid-cols-2">
+              <div className="space-y-4">
             
             <button
               onClick={() => onOpenModal?.('LIVE_CHAT')}
@@ -114,7 +115,9 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
                 09610916268
               </a>
             </div>
+              </div>
 
+              <div className="space-y-4">
             <div
               onClick={() => onOpenModal?.('SERVICE_LOCATIONS')}
               className="flex items-start gap-2.5 text-[11px] text-slate-400 hover:text-white cursor-pointer transition-colors"
@@ -134,6 +137,7 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
                 <span className="text-amber-300">Timing: 9:30 am - 4:00 pm</span>
               </div>
             </div>
+              </div>
             </div>
           </div>
 
@@ -170,7 +174,7 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
           <h4 className="mb-5 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-400">{isBn ? 'সঙ্গে থাকুন' : 'FOLLOW & GET THE APP'}</h4>
             
             {/* Social Icons */}
-            <div className="flex items-center gap-2 mb-4">
+            <div className="mb-4 flex flex-wrap items-center gap-2">
               <button
                 onClick={() => onOpenModal?.('MEDIA')}
                 className="w-7 h-7 rounded-full bg-slate-800 hover:bg-blue-600 text-white flex items-center justify-center font-bold text-xs cursor-pointer transition-colors"
@@ -244,7 +248,7 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
           <div className="whitespace-nowrap">
             © 2026 TakaSafe. All rights reserved.
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:justify-end">
             <span className="text-amber-400 font-semibold">TakaSafe MFS Platform</span>
             <span>·</span>
             <span>DIU CPC × upay AI DEV FEST 2026</span>
