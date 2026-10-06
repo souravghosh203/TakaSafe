@@ -414,6 +414,19 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     const value = Number(serviceAmount);
     const fee = getServiceFee(activeWalletService, serviceTarget, value);
     const totalDebit = value + fee;
+    if (config.direction === 'OUT' && securitySettings.singleTransactionLimit !== null && value > securitySettings.singleTransactionLimit) {
+      setIsServiceReview(false);
+      setServiceError(`Security limit exceeded. Your single transaction limit is BDT ${securitySettings.singleTransactionLimit.toLocaleString()}.`);
+      return;
+    }
+    const serviceDayStart = new Date(); serviceDayStart.setHours(0, 0, 0, 0);
+    const serviceSpentToday = transferHistory.filter((item) => (item.direction || 'OUT') === 'OUT' && Date.parse(item.timestamp) >= serviceDayStart.getTime()).reduce((sum, item) => sum + item.amount, 0);
+    if (config.direction === 'OUT' && securitySettings.dailyLimit !== null && serviceSpentToday + value > securitySettings.dailyLimit) {
+      setIsServiceReview(false);
+      setServiceError(`Daily transaction limit exceeded. BDT ${Math.max(0, securitySettings.dailyLimit - serviceSpentToday).toLocaleString()} remains today.`);
+      return;
+    }
+    if (config.direction === 'OUT' && securitySettings.confirmationThreshold !== null && value >= securitySettings.confirmationThreshold && !window.confirm(`Security confirmation: this payment is at or above your BDT ${securitySettings.confirmationThreshold.toLocaleString()} threshold. Continue?`)) return;
     if (!Number.isFinite(value) || value <= 0 || (config.direction === 'OUT' && totalDebit > availableBalance)) {
       setIsServiceReview(false);
       setServiceError('Your available balance changed. Check the amount and try again.');
@@ -817,7 +830,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
             <span>{lang === 'BN' ? 'কিউআর স্ক্যান / ওয়ালেট লিঙ্ক' : 'Scan QR & Link Wallet'}</span>
           </button>
 
-          <div className="customer-view-tabs flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+          <div className="customer-view-tabs flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
             <button
               onClick={() => setActiveTab('WALLET')}
               aria-pressed={activeTab === 'WALLET'}
