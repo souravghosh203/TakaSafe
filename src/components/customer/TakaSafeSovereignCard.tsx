@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CustomerBaseline } from '../../types';
 import { Eye, EyeOff } from 'lucide-react';
+import { formatLocalizedNumber } from '../../utils/formatCurrency';
 
 interface TakaSafeSovereignCardProps {
   customer: CustomerBaseline;
@@ -167,7 +168,7 @@ export const TakaSafeSovereignCard: React.FC<TakaSafeSovereignCardProps> = ({
                 ৳
               </span>
               <span className="text-3xl sm:text-4xl font-black font-mono tracking-tight text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">
-                {isBalanceVisible ? customer.balance.toLocaleString() : '••••••••'}
+                {isBalanceVisible ? formatLocalizedNumber(customer.balance, lang) : '••••••••'}
               </span>
             </div>
           </div>

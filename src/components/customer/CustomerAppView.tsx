@@ -4,6 +4,7 @@ import { MOCK_LINKED_WALLETS } from '../../data/mockData';
 import { QRCodeScannerModal } from './QRCodeScannerModal';
 import { TakaSafeSovereignCard } from './TakaSafeSovereignCard';
 import { AI1PipelineVisualizer } from './ML1PipelineVisualizer';
+import { formatLocalizedNumber } from '../../utils/formatCurrency';
 import { AI1NotebookModal } from '../common/ML1NotebookModal';
 import { AnalysisTimeline } from '../scamshield/AnalysisTimeline';
 import { evaluateAI1AndDoubtCheck, AI1EvaluationResult } from '../../services/ai1ScoringEngine';
@@ -358,7 +359,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     const fee = getServiceFee(activeWalletService, serviceTarget, value);
     const totalDebit = value + fee;
     if (config.direction === 'OUT' && totalDebit > availableBalance) {
-      setServiceError(`Insufficient balance. This service needs ৳${totalDebit.toLocaleString()} including fees; ৳${availableBalance.toLocaleString()} is available.`);
+      setServiceError(lang === 'BN' ? `পর্যাপ্ত ব্যালেন্স নেই। ফিসহ ৳${formatLocalizedNumber(totalDebit, lang)} প্রয়োজন; আপনার কাছে ৳${formatLocalizedNumber(availableBalance, lang)} আছে।` : `Insufficient balance. This service needs ৳${formatLocalizedNumber(totalDebit, lang)} including fees; ৳${formatLocalizedNumber(availableBalance, lang)} is available.`);
       return;
     }
     if (!serviceTarget.trim()) {
@@ -399,7 +400,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     const historyReference = isAgentTransaction ? `${serviceTarget} · ${serviceNote.trim()}` : serviceNote.trim();
     recordTransfer(value, historyCounterparty, 0, 'COMPLETED', config.type, config.direction, fee, historyReference);
     const balanceAfter = availableBalance + (config.direction === 'IN' ? value : -totalDebit);
-    setServiceReceipt(`Simulated ${config.title} completed for BDT ${value.toLocaleString()}${fee ? ` (BDT ${fee.toLocaleString()} fee)` : ''}. Demo balance: BDT ${balanceAfter.toLocaleString()}. No real payment was made.`);
+    setServiceReceipt(lang === 'BN' ? `ডেমো ${config.title} সম্পন্ন হয়েছে: ৳${formatLocalizedNumber(value, lang)}${fee ? ` (ফি ৳${formatLocalizedNumber(fee, lang)})` : ''}। ডেমো ব্যালেন্স: ৳${formatLocalizedNumber(balanceAfter, lang)}। প্রকৃত অর্থ লেনদেন হয়নি।` : `Simulated ${config.title} completed for ৳${formatLocalizedNumber(value, lang)}${fee ? ` (৳${formatLocalizedNumber(fee, lang)} fee)` : ''}. Demo balance: ৳${formatLocalizedNumber(balanceAfter, lang)}. No real payment was made.`);
     setIsServiceReview(false);
   };
 
@@ -426,7 +427,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
       return;
     }
     if (num > availableBalance) {
-      setBalanceError(`Insufficient balance. You have ৳${availableBalance.toLocaleString()} available.`);
+      setBalanceError(lang === 'BN' ? `পর্যাপ্ত ব্যালেন্স নেই। আপনার কাছে ৳${formatLocalizedNumber(availableBalance, lang)} আছে।` : `Insufficient balance. You have ৳${formatLocalizedNumber(availableBalance, lang)} available.`);
       return;
     }
     setBalanceError(null);
@@ -497,7 +498,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     let score = 0;
     if (amountIsUnusual) {
       score += Math.min(40, 20 + Math.round((amountRatio - 3) * 3));
-      reasons.push(`Unusual amount: ৳${num.toLocaleString()} is ${amountRatio.toFixed(1)}× your recent average of ৳${Math.round(observedAverage).toLocaleString()}.`);
+      reasons.push(lang === 'BN' ? `অস্বাভাবিক পরিমাণ: ৳${formatLocalizedNumber(num, lang)} আপনার সাম্প্রতিক গড় ৳${formatLocalizedNumber(Math.round(observedAverage), lang)}-এর তুলনায় ${formatLocalizedNumber(amountRatio, lang)} গুণ।` : `Unusual amount: ৳${formatLocalizedNumber(num, lang)} is ${amountRatio.toFixed(1)}× your recent average of ৳${formatLocalizedNumber(Math.round(observedAverage), lang)}.`);
     }
     if (outsideUsualHours) {
       score += amountIsUnusual ? 25 : 8;
@@ -798,7 +799,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                       </div>
                       <button type="button" onClick={closeWalletService} className="text-xs font-bold text-[#0054A6] hover:underline">Back to Send Money</button>
                     </div>
-                    <p className="text-xs text-slate-500 mt-3">Account: {customer.name} · Available ৳{availableBalance.toLocaleString()}</p>
+                    <p className="text-xs text-slate-500 mt-3">{lang === 'BN' ? 'অ্যাকাউন্ট' : 'Account'}: {customer.name} · {lang === 'BN' ? 'উপলব্ধ' : 'Available'} ৳{formatLocalizedNumber(availableBalance, lang)}</p>
                     <div className="flex-1 pt-4">
                       {serviceReceipt ? (
                         <div className="space-y-4"><div role="status" className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-sm font-semibold text-emerald-800">{serviceReceipt}</div><button type="button" onClick={closeWalletService} className="w-full py-3 rounded-xl bg-[#FAB915] text-slate-950 font-black text-sm">Done</button></div>
@@ -808,8 +809,8 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                             <div className="p-3 flex justify-between gap-4"><span className="text-slate-500">Service</span><strong>{WALLET_SERVICES[activeWalletService].title}</strong></div>
                             <div className="p-3 flex justify-between gap-4"><span className="text-slate-500">{WALLET_SERVICES[activeWalletService].targetLabel}</span><strong>{serviceTarget}</strong></div>
                             {serviceNote && <div className="p-3 flex justify-between gap-4"><span className="text-slate-500">Reference</span><strong className="break-all">{serviceNote}</strong></div>}
-                            <div className="p-3 flex justify-between gap-4"><span>Amount</span><strong>BDT {Number(serviceAmount).toLocaleString()}</strong></div>
-                            <div className="p-3 flex justify-between gap-4"><span>Fee</span><strong>BDT {getServiceFee(activeWalletService, serviceTarget, Number(serviceAmount)).toLocaleString()}</strong></div>
+                            <div className="p-3 flex justify-between gap-4"><span>{lang === 'BN' ? 'পরিমাণ' : 'Amount'}</span><strong>{lang === 'BN' ? 'পরিমাণ' : '৳'}{lang === 'BN' ? ' ৳' : ''}{formatLocalizedNumber(Number(serviceAmount), lang)}</strong></div>
+                            <div className="p-3 flex justify-between gap-4"><span>{lang === 'BN' ? 'চার্জ' : 'Fee'}</span><strong>৳{formatLocalizedNumber(getServiceFee(activeWalletService, serviceTarget, Number(serviceAmount)), lang)}</strong></div>
                           </div>
                           <div className="grid grid-cols-2 gap-3"><button type="button" onClick={() => setIsServiceReview(false)} className="py-3 rounded-xl border border-slate-300 text-slate-700 font-bold text-sm">Edit details</button><button type="button" onClick={confirmWalletService} className="py-3 rounded-xl bg-[#FAB915] text-slate-950 font-black text-sm">Confirm</button></div>
                         </div>
@@ -820,7 +821,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                           {(activeWalletService === 'Cash In' || activeWalletService === 'Cash Out' || activeWalletService === 'Make Payment' || activeWalletService === 'Pay Bill' || activeWalletService === 'Mobile Recharge' || activeWalletService === 'Education' || activeWalletService === 'Insurance' || activeWalletService === 'Business' || activeWalletService === 'Add Money' || activeWalletService === 'Remittance' || activeWalletService === 'Savings') && <label className="block text-xs font-semibold text-slate-700">Reference / account number (optional)<input value={serviceNote} onChange={(event) => setServiceNote(event.target.value)} placeholder="Enter a reference" className="mt-1.5 w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm" /></label>}
                           <label className="block text-xs font-semibold text-slate-700">Amount (BDT ৳)<input type="number" min="1" step="1" required value={serviceAmount} onChange={(event) => { setServiceAmount(event.target.value); setServiceError(null); }} placeholder="Enter amount" className="mt-1.5 w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-base font-bold" /></label>
                           {serviceError && <p role="alert" className="text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-3">{serviceError}</p>}
-                          <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600 flex justify-between"><span>Estimated charge</span><strong>৳{getServiceFee(activeWalletService, serviceTarget, Number(serviceAmount) || 0).toLocaleString()}</strong></div>
+                          <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600 flex justify-between"><span>{lang === 'BN' ? 'আনুমানিক চার্জ' : 'Estimated charge'}</span><strong>৳{formatLocalizedNumber(getServiceFee(activeWalletService, serviceTarget, Number(serviceAmount) || 0), lang)}</strong></div>
                           <button type="submit" className="w-full bg-[#FAB915] hover:bg-[#e5a80f] text-slate-950 font-black py-3 rounded-xl shadow-md text-sm">Review Transaction</button>
                         </form>
                       )}
@@ -849,7 +850,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                     <div>
                       <div className="font-bold">Simulated payment completed</div>
-                      <div>Demo transfer of ৳{Number(amount).toLocaleString()} to {recipient}. No real payment was made.</div>
+                      <div>{lang === 'BN' ? `৳${formatLocalizedNumber(Number(amount), lang)} ${recipient}-কে ডেমো অর্থ পাঠানো হয়েছে। প্রকৃত অর্থ লেনদেন হয়নি।` : `Demo transfer of ৳${formatLocalizedNumber(Number(amount), lang)} to ${recipient}. No real payment was made.`}</div>
                     </div>
                   </div>
                 )}
@@ -915,7 +916,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                       />
                     </div>
                     <span className="text-[11px] text-slate-500 mt-1 block">
-                      Your recent 90-day transfer average is <strong>৳{Math.round(observedAverage).toLocaleString()}</strong> ({recentTransfers.length} recorded transfers).
+                      {lang === 'BN' ? <>গত ৯০ দিনে আপনার গড় স্থানান্তর <strong>৳{formatLocalizedNumber(Math.round(observedAverage), lang)}</strong> ({formatLocalizedNumber(recentTransfers.length, lang)}টি লেনদেন)।</> : <>Your recent 90-day transfer average is <strong>৳{formatLocalizedNumber(Math.round(observedAverage), lang)}</strong> ({recentTransfers.length} recorded transfers).</>}
                     </span>
                   </div>
 
@@ -1037,7 +1038,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
 
                       <div className="mt-3 pt-2 border-t border-slate-200/80 flex items-center justify-between text-[10px] text-slate-500">
                         <span>Daily Limit:</span>
-                        <span className="font-mono font-bold text-slate-800">৳{wallet.dailyLimitBDT.toLocaleString()}</span>
+                        <span className="font-mono font-bold text-slate-800">৳{formatLocalizedNumber(wallet.dailyLimitBDT, lang)}</span>
                       </div>
 
                       <div className="flex items-center justify-between text-[10px] text-slate-500 mt-0.5">
@@ -1107,9 +1108,9 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                         </div>
                         <div className="text-right shrink-0">
                           <p className={`text-xs font-black ${isCredit ? 'text-emerald-700' : 'text-slate-900'}`}>
-                            {isCredit ? '+' : '−'}৳{transfer.amount.toLocaleString()}
+                            {isCredit ? '+' : '−'}৳{formatLocalizedNumber(transfer.amount, lang)}
                           </p>
-                          {Boolean(transfer.fee) && <p className="text-[10px] text-slate-500">Fee ৳{transfer.fee!.toLocaleString()}</p>}
+                          {Boolean(transfer.fee) && <p className="text-[10px] text-slate-500">{lang === 'BN' ? 'চার্জ' : 'Fee'} ৳{formatLocalizedNumber(transfer.fee!, lang)}</p>}
                         </div>
                       </div>
                     );
