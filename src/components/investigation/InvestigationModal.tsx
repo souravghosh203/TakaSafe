@@ -156,7 +156,7 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-6 text-xs text-slate-700 flex-1">
+        <div className="p-6 overflow-y-auto space-y-6 text-xs text-slate-700 dark:text-slate-200 flex-1">
           {/* Section 1: Transaction Guardian Anomaly Detection & Baseline */}
           <div className="space-y-3">
             <div className="flex items-center justify-between pb-1">
@@ -168,7 +168,7 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
                     1. Transaction Guardian: Behavioral Anomaly & Fraud Baseline
                   </h3>
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-[10px] text-slate-500 dark:text-slate-300">
                     Dual-Engine Detection: XGBoost Gradient-Boosted Classifier + Isolation Forest
                   </p>
                 </div>
@@ -186,27 +186,27 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
                   <span className="font-bold text-slate-800 uppercase tracking-wide text-[11px]">
                     Customer Historical Baseline
                   </span>
-                  <span className="text-[11px] text-slate-500">Learned via Isolation Forest</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-300">Learned via Isolation Forest</span>
                 </div>
                 <div className="space-y-1.5 text-slate-600">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Account Owner:</span>
+                  <span className="text-slate-500 dark:text-slate-300">Account Owner:</span>
                     <span className="font-semibold text-slate-800">{customerProfile.name} ({customerProfile.wallet})</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">90-Day Avg Amount:</span>
+                  <span className="text-slate-500 dark:text-slate-300">90-Day Avg Amount:</span>
                     <span className="font-mono font-semibold text-slate-800">৳{customerProfile.avgAmount.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Normal Transacting Window:</span>
+                  <span className="text-slate-500 dark:text-slate-300">Normal Transacting Window:</span>
                     <span className="font-medium text-slate-800">{customerProfile.usualHours}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Usual Geolocation:</span>
+                  <span className="text-slate-500 dark:text-slate-300">Usual Geolocation:</span>
                     <span className="font-medium text-slate-800">{customerProfile.homeDistrict}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Registered Device:</span>
+                  <span className="text-slate-500 dark:text-slate-300">Registered Device:</span>
                     <span className="font-medium text-slate-800">{customerProfile.knownDevices[0]}</span>
                   </div>
                 </div>
@@ -222,27 +222,27 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
                 </div>
                 <div className="space-y-1.5 text-slate-700">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Amount Attempted:</span>
+                  <span className="text-slate-500 dark:text-slate-300">Amount Attempted:</span>
                     <span className="font-mono font-black text-rose-700 text-sm">
                       ৳{transaction.amount.toLocaleString()} (53.3x baseline)
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Recipient Target:</span>
+                  <span className="text-slate-500 dark:text-slate-300">Recipient Target:</span>
                     <span className="font-semibold text-rose-800">
                       {transaction.receiverName} ({transaction.receiverWallet})
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Execution Time:</span>
+                  <span className="text-slate-500 dark:text-slate-300">Execution Time:</span>
                     <span className="font-mono font-semibold text-rose-700">03:20 AM (Nocturnal anomaly)</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Originating IP Location:</span>
+                  <span className="text-slate-500 dark:text-slate-300">Originating IP Location:</span>
                     <span className="font-semibold text-rose-800">{transaction.senderLocation}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Hardware Fingerprint:</span>
+                  <span className="text-slate-500 dark:text-slate-300">Hardware Fingerprint:</span>
                     <span className="font-semibold text-rose-800">{transaction.senderDevice}</span>
                   </div>
                 </div>
@@ -261,7 +261,7 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
                     Investigate: Money Paths & Agent Network Flow
                   </h3>
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-[10px] text-slate-500 dark:text-slate-300">
                     Forensic fund-tracing graph linking source victim to intermediate relays, aggregator hub, and physical OTC cash-out agents
                   </p>
                 </div>
@@ -282,7 +282,7 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
                 <h4 className="font-bold text-slate-900 text-sm">
                   SHAP Explainable Feature Attribution
                 </h4>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-slate-500 dark:text-slate-300">
                   Mathematical breakdown showing how each feature shifted the XGBoost baseline towards Critical Risk.
                 </p>
               </div>
@@ -300,7 +300,7 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
                       {feat.name}
                     </span>
                     <div className="flex items-center gap-3">
-                      <span className="text-slate-500 font-mono text-[11px]">
+                      <span className="text-slate-500 dark:text-slate-300 font-mono text-[11px]">
                         {feat.actualValue} vs {feat.expectedValue}
                       </span>
                       <span className="font-mono font-bold text-rose-600">
@@ -314,7 +314,7 @@ All predictions are probabilistic decision-support signals. Final freezing or bl
                       style={{ width: `${feat.contribution * 2.8}%` }}
                     />
                   </div>
-                  <p className="text-[10px] text-slate-500">{feat.description}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-300">{feat.description}</p>
                 </div>
               ))}
             </div>

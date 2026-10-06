@@ -233,7 +233,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, onRegis
             <span className="login-kicker-dot w-1.5 h-1.5 rounded-full bg-[#0054A6]"></span>
             <span>{t('Account Access', 'অ্যাকাউন্টে প্রবেশ')}</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-serif font-black text-slate-900 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
             {t('Sign in', 'লগইন')}
           </h1>
           <p className="text-xs text-slate-500 mt-2 max-w-xs mx-auto leading-relaxed">

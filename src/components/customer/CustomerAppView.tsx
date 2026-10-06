@@ -711,7 +711,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'WALLET'
                   ? 'bg-white text-[#0054A6] shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               {lang === 'BN' ? 'টাকা সেফ ওয়ালেট' : 'Wallet & Transfers'}
@@ -722,7 +722,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'RESILIENCE'
                   ? 'bg-white text-[#0054A6] shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               {lang === 'BN' ? 'আর্থিক সুরক্ষা সূচক' : 'Resilience Score'}

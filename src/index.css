@@ -157,11 +157,11 @@ html.dark .text-slate-600 {
 }
 
 html.dark .text-slate-500 {
-  color: #64748B !important;
+  color: #94A3B8 !important;
 }
 
 html.dark .text-slate-400 {
-  color: #64748B !important;
+  color: #A8B6C8 !important;
 }
 
 /* Inputs & Form Fields in Dark Mode */
@@ -178,7 +178,7 @@ html.dark textarea {
 
 html.dark input::placeholder,
 html.dark textarea::placeholder {
-  color: #64748B !important;
+  color: #94A3B8 !important;
 }
 
 /* Table styling in Dark Mode */
