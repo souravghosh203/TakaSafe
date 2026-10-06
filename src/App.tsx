@@ -822,6 +822,7 @@ export default function App() {
       <UpayInfoModal
         modalType={activeModal}
         initialQuestion={assistantQuestion}
+        customerIdentity={currentUser?.role === 'USER' ? { userId: currentUser.id, wallet: currentUser.phone } : undefined}
         onClose={() => { setActiveModal(null); setAssistantQuestion(''); }}
         lang={lang}
         onNavigateView={(v) => {

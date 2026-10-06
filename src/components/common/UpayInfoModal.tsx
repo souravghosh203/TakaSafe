@@ -42,6 +42,7 @@ import {
 interface UpayInfoModalProps {
   modalType: string | null;
   initialQuestion?: string;
+  customerIdentity?: { userId: string; wallet: string };
   onClose: () => void;
   lang: 'EN' | 'BN';
   onNavigateView?: (view: 'OPERATOR' | 'CUSTOMER' | 'STORYLINE') => void;
@@ -61,6 +62,7 @@ interface ChatMessage {
 export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   modalType,
   initialQuestion = '',
+  customerIdentity,
   onClose,
   lang,
   onNavigateView,
@@ -87,6 +89,53 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   const [inputMsg, setInputMsg] = useState('');
   const processedInitialQuestion = useRef('');
 
+  const answerFromCurrentHistory = async (query: string): Promise<string | null> => {
+    const asksMonthlySpend = /(spend|spent|spending|expense|expenses|খরচ)/i.test(query)
+      && /(this month|current month|monthly|month|এই মাস|চলতি মাস)/i.test(query);
+    const asksRecentActivity = /(recent|latest|last few|history|transactions|লেনদেন)/i.test(query);
+    if (!asksMonthlySpend && !asksRecentActivity) return null;
+    if (!customerIdentity) {
+      return lang === 'BN'
+        ? 'আপনার ব্যক্তিগত লেনদেনের তথ্য দেখতে গ্রাহক অ্যাকাউন্টে সাইন ইন করুন।'
+        : 'Please sign in to your customer account so I can look up your personal transaction history.';
+    }
+
+    try {
+      const response = await fetch(`/api/customer-history/${encodeURIComponent(customerIdentity.userId)}`, { cache: 'no-store' });
+      if (!response.ok) throw new Error('History refresh failed');
+      const payload: { history?: Array<{ amount: number; timestamp: string; status?: string; direction?: string; recipient?: string }> } = await response.json();
+      const history = Array.isArray(payload.history) ? payload.history : [];
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+      const outgoing = history.filter((entry) => (entry.direction || 'OUT') === 'OUT'
+        && Number.isFinite(Number(entry.amount)) && Number.isFinite(Date.parse(entry.timestamp))
+        && ['COMPLETED', 'PROCEEDED'].includes((entry.status || 'COMPLETED').toUpperCase()));
+      const money = (amount: number) => `৳${new Intl.NumberFormat(lang === 'BN' ? 'bn-BD' : 'en-BD', { maximumFractionDigits: 0 }).format(amount)}`;
+      const refreshedAt = now.toLocaleTimeString(lang === 'BN' ? 'bn-BD' : 'en-BD', { hour: 'numeric', minute: '2-digit' });
+
+      if (asksMonthlySpend) {
+        const monthEntries = outgoing.filter((entry) => Date.parse(entry.timestamp) >= monthStart && Date.parse(entry.timestamp) <= now.getTime());
+        const total = monthEntries.reduce((sum, entry) => sum + Number(entry.amount), 0);
+        return lang === 'BN'
+          ? `আপনার সংরক্ষিত লেনদেনের হিসাবে এই মাসে ${monthEntries.length}টি সম্পন্ন বহির্গামী লেনদেন, মোট ${money(total)}। হালনাগাদ: ${refreshedAt}।`
+          : `Your saved transaction history shows ${monthEntries.length} completed outgoing transaction${monthEntries.length === 1 ? '' : 's'} this month, totaling ${money(total)}. Refreshed at ${refreshedAt}.`;
+      }
+
+      const latest = [...outgoing].sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp)).slice(0, 5);
+      if (!latest.length) return lang === 'BN'
+        ? 'আপনার সংরক্ষিত হিসাবে এখনো কোনো সম্পন্ন বহির্গামী লেনদেন নেই।'
+        : 'I found no completed outgoing transactions in your saved history.';
+      const rows = latest.map((entry) => `${new Date(entry.timestamp).toLocaleString(lang === 'BN' ? 'bn-BD' : 'en-BD')} · ${money(Number(entry.amount))}${entry.recipient ? ` · ${entry.recipient}` : ''}`);
+      return lang === 'BN'
+        ? `আপনার সর্বশেষ ${latest.length}টি সংরক্ষিত বহির্গামী লেনদেন (হালনাগাদ ${refreshedAt}):\n${rows.join('\n')}`
+        : `Your ${latest.length} latest saved outgoing transactions (refreshed at ${refreshedAt}):\n${rows.join('\n')}`;
+    } catch {
+      return lang === 'BN'
+        ? 'এই মুহূর্তে আপনার লেনদেনের তথ্য হালনাগাদ করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।'
+        : 'I can’t refresh your transaction history right now. Please try again shortly.';
+    }
+  };
+
 
   useEffect(() => {
     if (modalType !== 'LIVE_CHAT') {
@@ -98,14 +147,15 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
     processedInitialQuestion.current = query;
     const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setChatMessages((prev) => [...prev, { sender: 'user', text: query, time: timeNow }]);
-    window.setTimeout(() => {
-      const matchResult = matchAssistantQuery(query, lang);
+    window.setTimeout(async () => {
+      const liveAnswer = await answerFromCurrentHistory(query);
+      const matchResult = liveAnswer ? null : matchAssistantQuery(query, lang);
       setChatMessages((prev) => [...prev, {
         sender: 'bot',
-        text: matchResult.answer,
+        text: liveAnswer || matchResult!.answer,
         time: 'Just now',
-        suggestedAction: matchResult.item?.suggestedAction,
-        relatedTopics: matchResult.relatedTopics,
+        suggestedAction: matchResult?.item?.suggestedAction,
+        relatedTopics: matchResult?.relatedTopics,
       }]);
     }, 400);
   }, [modalType, initialQuestion, lang]);
@@ -124,16 +174,17 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
       setInputMsg('');
     }
 
-    setTimeout(() => {
-      const matchResult = matchAssistantQuery(query, lang);
+    setTimeout(async () => {
+      const liveAnswer = await answerFromCurrentHistory(query);
+      const matchResult = liveAnswer ? null : matchAssistantQuery(query, lang);
       setChatMessages((prev) => [
         ...prev,
         {
           sender: 'bot',
-          text: matchResult.answer,
+          text: liveAnswer || matchResult!.answer,
           time: 'Just now',
-          suggestedAction: matchResult.item?.suggestedAction,
-          relatedTopics: matchResult.relatedTopics,
+          suggestedAction: matchResult?.item?.suggestedAction,
+          relatedTopics: matchResult?.relatedTopics,
         },
       ]);
     }, 400);
