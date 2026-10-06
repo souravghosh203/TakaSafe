@@ -5,7 +5,7 @@
 }
 .app-sticky-header.is-scrolled {
   border-bottom-color: rgba(219, 234, 254, .24);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, .22);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .16);
 }
 
 .app-sticky-header .header-feature {
@@ -297,9 +297,9 @@ body, .bg-white, input, table, header {
   top: 0;
   left: 0;
   height: 3.5px;
-  background: linear-gradient(90deg, #FAB915, #00C2FF, #10B981);
+  background: linear-gradient(90deg, #0054A6, #FAB915);
   z-index: 9999;
-  box-shadow: 0 0 12px rgba(250, 185, 21, 0.9);
+  box-shadow: none;
   animation: pageLoadProgress 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   pointer-events: none;
 }
@@ -344,8 +344,8 @@ body, .bg-white, input, table, header {
 .customer-view-tabs button[aria-pressed='true']::after { transform: scaleX(1); opacity: 1; }
 .operator-module-link::after { content: ''; position: absolute; left: .75rem; right: .75rem; bottom: 2px; height: 2px; border-radius: 999px; background: #fab915; transform: scaleX(.4); opacity: 0; transition: transform 220ms cubic-bezier(.22, 1, .36, 1), opacity 180ms ease; }
 .operator-module-link[aria-current='page']::after { transform: scaleX(1); opacity: 1; }
-.metric-change { animation: metric-change 500ms ease-out; }
-@keyframes metric-change { 0% { transform: translateY(-2px) scale(1.06); text-shadow: 0 0 12px rgba(250,185,21,.7); } 100% { transform: translateY(0) scale(1); text-shadow: 0 0 0 transparent; } }
+.metric-change { animation: metric-change 260ms ease-out; }
+@keyframes metric-change { 0% { opacity: .72; transform: translateY(1px); } 100% { opacity: 1; transform: translateY(0); } }
 
 .skeleton-shimmer { background: linear-gradient(100deg, rgba(148,163,184,.12) 20%, rgba(148,163,184,.28) 38%, rgba(148,163,184,.12) 56%); background-size: 220% 100%; animation: skeleton-shimmer 1.4s ease-in-out infinite; }
 @keyframes skeleton-shimmer { to { background-position-x: -220%; } }
