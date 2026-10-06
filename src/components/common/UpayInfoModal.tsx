@@ -104,7 +104,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
     try {
       const response = await fetch(`/api/customer-history/${encodeURIComponent(customerIdentity.userId)}`, { cache: 'no-store' });
       if (!response.ok) throw new Error('History refresh failed');
-      const payload: { history?: Array<{ amount: number; timestamp: string; status?: string; direction?: string; recipient?: string }> } = await response.json();
+      const payload: { history?: Array<{ amount: number; fee?: number; timestamp: string; status?: string; direction?: string; recipient?: string }> } = await response.json();
       const history = Array.isArray(payload.history) ? payload.history : [];
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
@@ -116,7 +116,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
 
       if (asksMonthlySpend) {
         const monthEntries = outgoing.filter((entry) => Date.parse(entry.timestamp) >= monthStart && Date.parse(entry.timestamp) <= now.getTime());
-        const total = monthEntries.reduce((sum, entry) => sum + Number(entry.amount), 0);
+        const total = monthEntries.reduce((sum, entry) => sum + Number(entry.amount) + Number(entry.fee || 0), 0);
         return lang === 'BN'
           ? `আপনার সংরক্ষিত লেনদেনের হিসাবে এই মাসে ${monthEntries.length}টি সম্পন্ন বহির্গামী লেনদেন, মোট ${money(total)}। হালনাগাদ: ${refreshedAt}।`
           : `Your saved transaction history shows ${monthEntries.length} completed outgoing transaction${monthEntries.length === 1 ? '' : 's'} this month, totaling ${money(total)}. Refreshed at ${refreshedAt}.`;
@@ -126,7 +126,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
       if (!latest.length) return lang === 'BN'
         ? 'আপনার সংরক্ষিত হিসাবে এখনো কোনো সম্পন্ন বহির্গামী লেনদেন নেই।'
         : 'I found no completed outgoing transactions in your saved history.';
-      const rows = latest.map((entry) => `${new Date(entry.timestamp).toLocaleString(lang === 'BN' ? 'bn-BD' : 'en-BD')} · ${money(Number(entry.amount))}${entry.recipient ? ` · ${entry.recipient}` : ''}`);
+      const rows = latest.map((entry) => `${new Date(entry.timestamp).toLocaleString(lang === 'BN' ? 'bn-BD' : 'en-BD')} · ${money(Number(entry.amount) + Number(entry.fee || 0))}${entry.recipient ? ` · ${entry.recipient}` : ''}`);
       return lang === 'BN'
         ? `আপনার সর্বশেষ ${latest.length}টি সংরক্ষিত বহির্গামী লেনদেন (হালনাগাদ ${refreshedAt}):\n${rows.join('\n')}`
         : `Your ${latest.length} latest saved outgoing transactions (refreshed at ${refreshedAt}):\n${rows.join('\n')}`;
