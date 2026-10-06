@@ -15,9 +15,11 @@ const relativeTime = (value: string) => {
 export const NotificationBell: React.FC<{ user: AuthUser }> = ({ user }) => {
   const [items, setItems] = useState<TakaSafeNotification[]>([]);
   const [open, setOpen] = useState(false);
+  const [bellPulse, setBellPulse] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(() => localStorage.getItem(`takasafe-notification-sound:${user.id}`) !== 'off');
   const rootRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<AudioContext | null>(null);
+  const pulseTimerRef = useRef<number | null>(null);
   const unread = useMemo(() => items.filter((item) => !item.isRead).length, [items]);
 
   useEffect(() => {
@@ -26,6 +28,11 @@ export const NotificationBell: React.FC<{ user: AuthUser }> = ({ user }) => {
       const detail = (event as CustomEvent).detail;
       if (detail?.userId === user.id) {
         refresh();
+        if (detail.action === 'created') {
+          setBellPulse(true);
+          if (pulseTimerRef.current !== null) window.clearTimeout(pulseTimerRef.current);
+          pulseTimerRef.current = window.setTimeout(() => setBellPulse(false), 500);
+        }
         if (detail.action === 'created' && localStorage.getItem(`takasafe-notification-sound:${user.id}`) !== 'off') {
           try {
             const audio = audioRef.current || new AudioContext();
@@ -53,6 +60,7 @@ export const NotificationBell: React.FC<{ user: AuthUser }> = ({ user }) => {
       window.removeEventListener('storage', storage);
       document.removeEventListener('mousedown', onOutside);
       document.removeEventListener('keydown', onKey);
+      if (pulseTimerRef.current !== null) window.clearTimeout(pulseTimerRef.current);
       if (audioRef.current && audioRef.current.state !== 'closed') void audioRef.current.close();
     };
     function onOutside(event: MouseEvent) { if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false); }
@@ -73,7 +81,7 @@ export const NotificationBell: React.FC<{ user: AuthUser }> = ({ user }) => {
   return <div ref={rootRef} className="relative">
     <button type="button" aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`} aria-expanded={open} onClick={() => setOpen((value) => !value)}
       className="relative flex h-10 w-10 items-center justify-center rounded-xl text-blue-50 transition hover:bg-white/10 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
-      <Bell className={`h-5 w-5 ${unread ? 'notification-bell-active' : ''}`} />
+      <Bell className={`h-5 w-5 ${bellPulse ? 'notification-bell-active' : ''}`} />
       {unread > 0 && <span className="absolute right-0.5 top-0.5 flex min-h-[17px] min-w-[17px] items-center justify-center rounded-full border-2 border-[#0b1d37] bg-rose-500 px-1 text-[9px] font-black leading-none text-white">{unread > 99 ? '99+' : unread}</span>}
     </button>
     {open && <section aria-label="Notifications" className="notification-panel absolute right-0 top-[calc(100%+12px)] z-[70] flex max-h-[min(560px,calc(100vh-88px))] w-[min(390px,calc(100vw-24px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-800 shadow-2xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
