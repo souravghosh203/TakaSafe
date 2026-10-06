@@ -36,9 +36,13 @@
 .assistant-launcher:focus-visible,.assistant-reset:focus-visible,.assistant-suggestions button:focus-visible,.assistant-input button:focus-visible { outline: 3px solid #79e4db; outline-offset: 3px; }
 .assistant-launcher-spark { position: absolute; top: 7px; right: 7px; display: grid; width: 19px; height: 19px; place-items: center; border: 1px solid white; border-radius: 50%; background: #f5ffff; color: #087f9d; }
 .assistant-card {
-  width: min(376px, calc(100vw - 28px));
-  max-height: calc(100vh - 108px);
+  box-sizing: border-box;
+  width: min(376px, calc(100vw - 28px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+  max-height: min(720px, calc(100vh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+  max-height: min(720px, calc(100dvh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   border: 1px solid rgba(190,215,242,.72);
   border-radius: 27px;
   background: linear-gradient(160deg, rgba(255,255,255,.98), rgba(246,250,255,.98));
@@ -77,6 +81,7 @@
 .assistant-reset { position: absolute; z-index: 2; top: 15px; right: 16px; display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid #d9e9fa; border-radius: 50%; background: rgba(255,255,255,.86); color: #286197; box-shadow: 0 4px 12px rgba(24,78,132,.08); transition: transform .2s ease, color .2s ease, border-color .2s ease; cursor: pointer; }
 .assistant-reset:hover { transform: rotate(-35deg); border-color: #8dded7; color: #0b918f; }
 .assistant-content { padding: 4px 20px 19px; }
+.assistant-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 .assistant-content h2 { margin: 0; color: #0b3765; font-size: 20px; font-weight: 780; letter-spacing: -.045em; }
 .assistant-content > p { margin: 8px 0 16px; color: #55718f; font-size: 13px; line-height: 1.55; }
 .assistant-suggestions { display: grid; gap: 8px; padding-bottom: 15px; border-bottom: 1px solid #e4eef8; }
@@ -95,17 +100,24 @@
 @keyframes assistant-eye { 0%,47%,53%,100% { transform: scaleY(1); } 50% { transform: scaleY(.12); } }
 @keyframes assistant-launcher-pulse { 0% { opacity: .7; transform: scale(.88); } 85%,100% { opacity: 0; transform: scale(1.28); } }
 @media (max-width: 480px) {
-  .dashboard-assistant { right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); gap: 10px; }
-  .assistant-card { border-radius: 23px; }
-  .assistant-art { height: 151px; }
-  .assistant-content { padding: 2px 16px 15px; }
+  .dashboard-assistant { right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); gap: clamp(6px, 1.5dvh, 10px); }
+  .assistant-card { width: min(376px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right))); max-height: calc(100dvh - 88px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); border-radius: clamp(18px, 5vw, 23px); }
+  .assistant-art { height: clamp(92px, 19dvh, 151px); flex: 0 0 auto; }
+  .assistant-content { padding: 2px 16px max(15px, env(safe-area-inset-bottom)); }
   .assistant-content h2 { font-size: 19px; }
   .assistant-suggestions { gap: 7px; }
   .assistant-suggestions button { padding: 8px 11px; font-size: 10.5px; }
   .assistant-launcher { width: 54px; height: 54px; }
 }
 @media (max-height: 700px) {
-  .assistant-card { max-height: calc(100vh - 92px); overflow-y: auto; overscroll-behavior: contain; }
+  .assistant-card { max-height: calc(100vh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); max-height: calc(100dvh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+  .assistant-art { height: clamp(76px, 17dvh, 120px); }
+}
+@media (max-width: 360px) {
+  .dashboard-assistant { right: max(8px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom)); }
+  .assistant-card { width: calc(100vw - 16px - env(safe-area-inset-left) - env(safe-area-inset-right)); }
+  .assistant-content { padding-right: 12px; padding-left: 12px; }
+  .assistant-content h2 { font-size: clamp(16px, 5vw, 19px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .dashboard-assistant *, .dashboard-assistant *::before, .dashboard-assistant *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
