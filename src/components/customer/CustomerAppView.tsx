@@ -9,6 +9,7 @@ import { AI1NotebookModal } from '../common/ML1NotebookModal';
 import { AnalysisTimeline } from '../scamshield/AnalysisTimeline';
 import { evaluateAI1AndDoubtCheck, AI1EvaluationResult } from '../../services/ai1ScoringEngine';
 import { createNotification } from '../../services/notifications';
+import { readSecuritySettings, writeSecuritySettings, SecuritySettings } from '../../services/securitySettings';
 import {
   Send,
   ArrowUpRight,
@@ -133,7 +134,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
   onBalanceChange,
   lang,
 }) => {
-  const [activeTab, setActiveTab] = useState<'WALLET' | 'RESILIENCE'>('WALLET');
+  const [activeTab, setActiveTab] = useState<'WALLET' | 'RESILIENCE' | 'SECURITY'>('WALLET');
   const [recipient, setRecipient] = useState<string>(customer.frequentRecipients[0]?.split(' ')[0] || '');
   const [amount, setAmount] = useState<string>(String(Math.round(customer.avgAmount)));
   const [note, setNote] = useState<string>('');
@@ -173,6 +174,9 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
   }, [availableBalance, onBalanceChange]);
   const [transferHistory, setTransferHistory] = useState<CustomerTransfer[]>(() => loadTransferHistory(userId, customer.wallet));
   const [loginHistory, setLoginHistory] = useState<CustomerLogin[]>(() => loadLoginHistory(userId, customer.wallet));
+  const [securitySettings, setSecuritySettings] = useState<SecuritySettings>(() => readSecuritySettings(userId));
+  const [trustedRecipientDraft, setTrustedRecipientDraft] = useState('');
+  const [securitySaveError, setSecuritySaveError] = useState('');
 
   useEffect(() => {
     if (!initialService || !WALLET_SERVICES[initialService]) return;
@@ -451,6 +455,17 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
       setBalanceError(lang === 'BN' ? `পর্যাপ্ত ব্যালেন্স নেই। আপনার কাছে ৳${formatLocalizedNumber(availableBalance, lang)} আছে।` : `Insufficient balance. You have ৳${formatLocalizedNumber(availableBalance, lang)} available.`);
       return;
     }
+    if (securitySettings.singleTransactionLimit !== null && num > securitySettings.singleTransactionLimit) {
+      setBalanceError(`Security limit exceeded. Your single transaction limit is BDT ${securitySettings.singleTransactionLimit.toLocaleString()}. Update it in Security Center to continue.`);
+      return;
+    }
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const spentToday = transferHistory.filter((item) => (item.direction || 'OUT') === 'OUT' && Date.parse(item.timestamp) >= todayStart.getTime()).reduce((sum, item) => sum + item.amount, 0);
+    if (securitySettings.dailyLimit !== null && spentToday + num > securitySettings.dailyLimit) {
+      setBalanceError(`Daily transaction limit exceeded. BDT ${Math.max(0, securitySettings.dailyLimit - spentToday).toLocaleString()} remains today.`);
+      return;
+    }
+    if (securitySettings.confirmationThreshold !== null && num >= securitySettings.confirmationThreshold && !window.confirm(`Security confirmation: this transfer is at or above your BDT ${securitySettings.confirmationThreshold.toLocaleString()} confirmation threshold. Continue to risk review?`)) return;
     setBalanceError(null);
     setIsScoring(true);
 
@@ -475,7 +490,8 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     await new Promise((r) => setTimeout(r, 260));
 
     const normalizedRecipient = recipient.trim().replace(/\D/g, '');
-    const recipientIsKnown = knownRecipients.has(normalizedRecipient);
+    const isTrustedRecipient = securitySettings.trustedRecipients.includes(normalizedRecipient);
+    const recipientIsKnown = knownRecipients.has(normalizedRecipient) || isTrustedRecipient;
     const isKnownMule = recipient.trim().includes('510294');
     let recipientNetworkRisk = { score: 0, reasons: [] as string[] };
     try {
@@ -631,6 +647,28 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
       setNormalSuccess(true);
       setTimeout(() => setNormalSuccess(false), 4000);
     }
+  };
+
+  const saveSecuritySettings = (next: SecuritySettings) => {
+    setSecuritySettings(next);
+    setSecuritySaveError(writeSecuritySettings(userId, next) ? '' : 'Unable to save security settings in this browser.');
+    if (!securitySaveError) createNotification(userId, { type: 'SECURITY', title: 'Security settings updated', message: 'Your transaction protection settings were changed.', relatedEntityId: `security-settings-${Date.now()}` });
+  };
+
+  const toggleTrustedRecipient = (raw: string) => {
+    const normalized = raw.trim().replace(/\D/g, '');
+    if (!normalized) return;
+    const trustedRecipients = securitySettings.trustedRecipients.includes(normalized)
+      ? securitySettings.trustedRecipients.filter((item) => item !== normalized)
+      : [...securitySettings.trustedRecipients, normalized];
+    saveSecuritySettings({ ...securitySettings, trustedRecipients });
+  };
+
+  const addTrustedRecipient = () => {
+    const normalized = trustedRecipientDraft.trim().replace(/\D/g, '');
+    if (normalized.length < 6 || securitySettings.trustedRecipients.includes(normalized)) return;
+    saveSecuritySettings({ ...securitySettings, trustedRecipients: [...securitySettings.trustedRecipients, normalized] });
+    setTrustedRecipientDraft('');
   };
 
   const handlePreFill = (type: 'NORMAL' | 'RISKY') => {
