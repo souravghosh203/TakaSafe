@@ -19,15 +19,15 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
   };
 
   return (
-    <footer className="bg-[#262626] text-slate-300 text-xs pt-12 pb-8 border-t-4 border-[#FAB915]">
+    <footer className="bg-[#262626] text-slate-300 text-xs pt-8 pb-5 border-t-4 border-[#FAB915]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-x-6 gap-y-6 mb-7">
           {/* Column 1: Brand & Purpose */}
           <div className="lg:col-span-1">
             {/* Brand Zone: Authentic MFS Animated Logo in Footer */}
             <button
               onClick={handleLogoClick}
-              className="inline-flex items-center gap-2.5 mb-4 cursor-pointer text-left group shrink-0 focus:outline-none select-none transition-transform duration-300 ease-out active:scale-[0.97]"
+              className="inline-flex items-center gap-2.5 mb-3 cursor-pointer text-left group shrink-0 focus:outline-none select-none transition-transform duration-300 ease-out active:scale-[0.97]"
               title="TakaSafe Home"
             >
               <div className="relative w-9 h-9 shrink-0">
@@ -69,7 +69,7 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
           </div>
 
           {/* Column 2: GET IN TOUCH */}
-          <div className="lg:col-span-2 space-y-3">
+          <div className="lg:col-span-2 space-y-2.5">
             <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">{isBn ? 'যোগাযোগ' : 'GET IN TOUCH'}</h4>
             
             <button
@@ -135,7 +135,7 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
           </div>
 
           {/* Column 3: USEFUL LINKS & COMPANY INFO */}
-          <div className="space-y-6">
+          <div>
             <div>
               <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">{isBn ? 'প্রয়োজনীয় লিংক' : 'USEFUL LINKS'}</h4>
               <ul className="space-y-1.5 text-[12px] text-slate-400">
@@ -151,15 +151,17 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
               </ul>
             </div>
 
-            <div>
-              <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-2">{isBn ? 'প্রতিষ্ঠানের তথ্য' : 'COMPANY INFO'}</h4>
-              <ul className="space-y-1.5 text-[12px] text-slate-400">
-                <li onClick={() => onOpenModal?.('PRIVACY_POLICY')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'গোপনীয়তা নীতি' : 'Privacy Policy'}</li>
-                <li onClick={() => onOpenModal?.('TERMS')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'শর্তাবলি' : 'Terms and Conditions'}</li>
-                <li onClick={() => onOpenModal?.('ABOUT_US')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'আমাদের পরিচিতি' : 'Who We Are'}</li>
-                <li onClick={() => onOpenModal?.('BUSINESS')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'ব্যবসায়িক সমাধান' : 'Business Solution'}</li>
-              </ul>
-            </div>
+          </div>
+
+          {/* Company information gets its own column for a more balanced footer. */}
+          <div>
+            <h4 className="text-amber-400 font-bold tracking-wider uppercase text-xs mb-3">{isBn ? 'প্রতিষ্ঠানের তথ্য' : 'COMPANY INFO'}</h4>
+            <ul className="space-y-1.5 text-[12px] text-slate-400">
+              <li onClick={() => onOpenModal?.('PRIVACY_POLICY')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'গোপনীয়তা নীতি' : 'Privacy Policy'}</li>
+              <li onClick={() => onOpenModal?.('TERMS')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'শর্তাবলি' : 'Terms and Conditions'}</li>
+              <li onClick={() => onOpenModal?.('ABOUT_US')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'আমাদের পরিচিতি' : 'Who We Are'}</li>
+              <li onClick={() => onOpenModal?.('BUSINESS')} className="hover:text-white cursor-pointer transition-colors">{isBn ? 'ব্যবসায়িক সমাধান' : 'Business Solution'}</li>
+            </ul>
           </div>
 
           {/* Column 4: STAY CONNECTED & APP DOWNLOADS */}
@@ -237,7 +239,7 @@ export const UpayFooter: React.FC<UpayFooterProps> = ({
         </div>
 
         {/* Footer Bottom Bar */}
-        <div className="pt-6 border-t border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-400 text-[11px]">
+        <div className="pt-4 border-t border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-2 text-slate-400 text-[11px]">
           <div>
             © 2026 TakaSafe. All rights reserved.
           </div>
