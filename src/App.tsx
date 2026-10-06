@@ -184,6 +184,7 @@ export default function App() {
   const [selectedTxnForInvestigation, setSelectedTxnForInvestigation] = useState<Transaction | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [requestedWalletService, setRequestedWalletService] = useState<string | null>(null);
+  const [showcaseInfoTopic, setShowcaseInfoTopic] = useState<string | null>(null);
 
   const recordCustomerLogin = (user: AuthUser) => {
     if (user.role !== 'USER') return;
@@ -666,19 +667,16 @@ export default function App() {
       {activeView !== 'LOGIN' && (
         <UpayHeroServices
           onServiceSelect={(svc) => {
-            if (svc === 'Cash In' && currentUser?.role === 'USER') return;
-            setRequestedWalletService(svc === 'Send Money' ? null : svc);
-            navigateToView('CUSTOMER');
+            setShowcaseInfoTopic(svc);
+            setActiveModal('SERVICE_INFO');
           }}
-          onOpenModal={(modal) => setActiveModal(modal)}
+          onOpenModal={(modal) => {
+            setShowcaseInfoTopic(null);
+            setActiveModal(modal);
+          }}
           onExploreGeospatial={() => {
-            if (currentUser?.role === 'ADMIN') {
-              setActiveView('OPERATOR');
-              setOperatorTab('GEOSPATIAL');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-              setActiveModal('ABSTRACT');
-            }
+            setShowcaseInfoTopic('Geospatial Intelligence');
+            setActiveModal('SERVICE_INFO');
           }}
           showCashIn={currentUser?.role !== 'USER'}
           lang={lang}
@@ -820,8 +818,9 @@ export default function App() {
       {/* Upay Info & Feature Modals */}
       <UpayInfoModal
         modalType={activeModal}
+        serviceInfoTopic={showcaseInfoTopic}
         initialQuestion={assistantQuestion}
-        onClose={() => { setActiveModal(null); setAssistantQuestion(''); }}
+        onClose={() => { setActiveModal(null); setAssistantQuestion(''); setShowcaseInfoTopic(null); }}
         lang={lang}
         onNavigateView={(v) => {
           navigateToView(v);
