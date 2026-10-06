@@ -44,6 +44,7 @@ interface CustomerAppViewProps {
   initialService?: string | null;
   allowCashIn?: boolean;
   onServiceDismiss?: () => void;
+  onBalanceChange?: (balance: number) => void;
   lang: 'EN' | 'BN';
 }
 
@@ -128,6 +129,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
   initialService = null,
   allowCashIn = true,
   onServiceDismiss,
+  onBalanceChange,
   lang,
 }) => {
   const [activeTab, setActiveTab] = useState<'WALLET' | 'RESILIENCE'>('WALLET');
@@ -165,6 +167,9 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
       return customer.balance;
     }
   });
+  useEffect(() => {
+    onBalanceChange?.(availableBalance);
+  }, [availableBalance, onBalanceChange]);
   const [transferHistory, setTransferHistory] = useState<CustomerTransfer[]>(() => loadTransferHistory(userId, customer.wallet));
   const [loginHistory, setLoginHistory] = useState<CustomerLogin[]>(() => loadLoginHistory(userId, customer.wallet));
 
