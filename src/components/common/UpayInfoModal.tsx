@@ -670,7 +670,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
         ];
 
         return (
-          <div className="flex flex-col h-[430px]">
+          <div className="flex flex-col h-full min-h-0">
             {/* Quick Suggestion Chips Carousel */}
             <div className="pb-2.5 mb-2 border-b border-slate-200">
               <span className="text-[10px] font-bold text-slate-600 tracking-wider uppercase block mb-1.5">
@@ -935,11 +935,17 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
       ? 'max-w-xl'
       : 'max-w-lg';
 
+  const isLiveChat = displayedModalType === 'LIVE_CHAT';
+
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs ${isExiting ? 'modal-backdrop-exit' : 'modal-backdrop-enter'}`}>
-      <div className={`bg-white rounded-3xl ${modalMaxWidth} w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col ${isExiting ? 'modal-panel-exit' : 'modal-panel-enter'}`}>
+    <div className={isLiveChat
+      ? 'fixed inset-0 z-50 pointer-events-none'
+      : `fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs ${isExiting ? 'modal-backdrop-exit' : 'modal-backdrop-enter'}`}>
+      <div className={isLiveChat
+        ? `pointer-events-auto fixed bottom-4 right-4 flex h-[min(680px,calc(100dvh-2rem))] w-[min(420px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl ${isExiting ? 'modal-panel-exit' : 'modal-panel-enter'}`
+        : `bg-white rounded-3xl ${modalMaxWidth} w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col ${isExiting ? 'modal-panel-exit' : 'modal-panel-enter'}`}>
         {/* Header */}
-        <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+        <div className={`${isLiveChat ? 'p-3.5' : 'p-5'} border-b border-slate-200 flex items-center justify-between bg-slate-50/80 shrink-0`}>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-[#0054A6] text-white flex items-center justify-center shadow-xs">
               <Sparkles className="w-4 h-4 text-amber-300" />
@@ -955,12 +961,12 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 overflow-y-auto max-h-[70vh]">
+        <div className={isLiveChat ? 'min-h-0 flex-1 overflow-hidden p-3' : 'p-5 overflow-y-auto max-h-[70vh]'}>
           {renderContent()}
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
+        {!isLiveChat && <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
           <span>TakaSafe · DIU CPC × upay AI DEV FEST 2026</span>
           <button
             onClick={onClose}
@@ -968,7 +974,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
           >
             Close
           </button>
-        </div>
+        </div>}
       </div>
     </div>
   );
