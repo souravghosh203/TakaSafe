@@ -820,3 +820,13 @@ html.dark {
   .login-card:hover, .login-role-option:hover, .login-role-option:active,
   .login-submit:hover:not(:disabled), .login-submit:active:not(:disabled), .login-profile:hover { transform: none; }
 }
+
+@keyframes notification-bell-nudge {
+  0%, 100% { transform: rotate(0); }
+  18%, 54% { transform: rotate(11deg); }
+  36%, 72% { transform: rotate(-11deg); }
+}
+.notification-bell-active { animation: notification-bell-nudge 1.8s ease-in-out infinite; transform-origin: 50% 12%; }
+.notification-panel { animation: notification-panel-in 150ms ease-out both; transform-origin: top right; }
+@keyframes notification-panel-in { from { opacity: 0; transform: translateY(-5px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .notification-bell-active, .notification-panel { animation: none !important; } }

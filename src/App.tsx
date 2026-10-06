@@ -28,6 +28,7 @@ import {
 } from './data/mockData';
 import { Transaction, MuleCluster, AgentLiquidityNode, RegionalRiskMetric, StorylineStep, AuthUser, CustomerBaseline } from './types';
 import { ShieldCheck, Info } from 'lucide-react';
+import { createNotification } from './services/notifications';
 
 // Bump the key so the old prototype's automatically seeded admin session is
 // discarded after upgrade. New sessions are saved only after explicit sign-in.
@@ -265,6 +266,12 @@ export default function App() {
       }
       if (detail.kind === 'alert-feedback') window.dispatchEvent(new Event('takasafe-alert-feedback'));
       if (detail.kind === 'suspicious-transaction') {
+        if (detail.userId) createNotification(detail.userId, {
+          type: 'SECURITY',
+          title: 'Unusual account activity detected',
+          message: 'TakaSafe detected activity outside your usual transaction pattern. Review your recent activity.',
+          relatedEntityId: `security-${detail.userId}-${detail.entityId || detail.kind}`,
+        });
         fetch('/api/suspicious-transactions', { cache: 'no-store' }).then((response) => response.ok ? response.json() : null).then((feed) => {
           const rows = Array.isArray(feed?.transactions) ? feed.transactions : [];
           const flagged = rows.map((row: any) => ({
@@ -650,6 +657,12 @@ export default function App() {
           if (!currentUser) return;
           const updatedUser = { ...currentUser, ...profile };
           setCurrentUser(updatedUser);
+          createNotification(currentUser.id, {
+            type: 'ACCOUNT',
+            title: 'Profile updated',
+            message: 'Your profile information was updated successfully.',
+            relatedEntityId: `profile-${Date.now()}`,
+          });
           try {
             localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${currentUser.id}`, JSON.stringify(profile));
             showToast('Profile saved in this browser.');
