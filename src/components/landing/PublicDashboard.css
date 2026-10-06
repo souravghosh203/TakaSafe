@@ -366,7 +366,7 @@
   .public-hero-content { width: min(100% - 48px, 920px); }
   .public-nav-links { gap: 15px; }
   .services-trigger { font-size: 11px; }
-  .public-hero-content { grid-template-columns: minmax(350px,.9fr) minmax(430px,1.1fr); gap: 0; }
+  .public-hero-content { grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); gap: 0; }
   .hero-copy h1 { font-size: clamp(50px,6.2vw,68px); }
   .booth-scene { scale: .88; transform-origin: center; margin: -23px -32px; }
   .flow-card { scale: .9; }
@@ -374,6 +374,10 @@
   .nearby-services-card { grid-template-columns: 1fr auto; gap: 17px; }
   .nearby-services-options { grid-column: 1 / -1; grid-row: 2; }
   .nearby-services-link { grid-column: 2; grid-row: 1; }
+}
+@media (min-width: 761px) and (max-width: 900px) {
+  .public-product-strip { grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 18px 24px; padding-inline: 24px; }
+  .public-product-strip button { grid-column: 1 / -1; justify-self: start; }
 }
 @media (max-width: 760px) {
   .public-hero-shell { min-height: initial; }
