@@ -100,9 +100,18 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
       return lang === 'BN' ? 'আপনার ব্যক্তিগত অ্যাকাউন্টের তথ্য দেখতে গ্রাহক অ্যাকাউন্টে সাইন ইন করুন।' : 'Please sign in to your customer account to view personal account information.';
     }
     if (asksBalance && customerIdentity) {
+      let currentBalance = customerIdentity.balance;
+      try {
+        const savedBalance = window.localStorage.getItem(`takasafe-balance:${customerIdentity.userId}:${customerIdentity.wallet}`);
+        if (savedBalance !== null && Number.isFinite(Number(savedBalance)) && Number(savedBalance) >= 0) {
+          currentBalance = Number(savedBalance);
+        }
+      } catch {
+        // Fall back to the profile's simulated starting balance if storage is unavailable.
+      }
       return lang === 'BN'
-        ? `ডেমো অ্যাকাউন্টে দেখানো বর্তমান ব্যালেন্স ${money(customerIdentity.balance)}। এটি সিমুলেটেড প্রোফাইলের তথ্য, লাইভ আর্থিক ব্যালেন্স নয়।`
-        : `Your current demo account balance is ${money(customerIdentity.balance)}. This is simulated profile data, not a live financial balance.`;
+        ? `ডেমো অ্যাকাউন্টে দেখানো বর্তমান ব্যালেন্স ${money(currentBalance)}। এটি সিমুলেটেড প্রোফাইলের তথ্য, লাইভ আর্থিক ব্যালেন্স নয়।`
+        : `Your current demo account balance is ${money(currentBalance)}. This is simulated profile data, not a live financial balance.`;
     }
     if (asksLimit && customerIdentity) {
       return lang === 'BN'
