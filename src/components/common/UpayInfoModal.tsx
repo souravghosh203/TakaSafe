@@ -117,6 +117,24 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
     const asksBalance = /(balance|available amount|how much.*(wallet|account)|ব্যালেন্স|জমা টাকা)/i.test(query);
     const asksLimit = /(usual|typical|normal|average).{0,24}(limit|amount|transaction)|\b(limit|maximum|max)\b.{0,24}(usual|typical|transaction|send)|সাধারণ.{0,15}(সীমা|লেনদেন)/i.test(query);
     const money = (amount: number) => `৳${new Intl.NumberFormat(lang === 'BN' ? 'bn-BD' : 'en-BD', { maximumFractionDigits: 0 }).format(amount)}`;
+    const asksSavings = /\b(save|saving|savings|set aside)\b/i.test(query);
+    const requestedSavings = query.match(/(?:\u09f3|৳|tk\.?\s*)\s*(\d[\d,]*(?:\.\d+)?)/i)
+      ?? query.match(/\b(\d[\d,]*(?:\.\d+)?)\s*(?:taka|tk)\b/i);
+    if (asksSavings && requestedSavings && !customerIdentity) {
+      return 'Please sign in to your customer account so I can calculate this using your current balance.';
+    }
+    if (asksSavings && requestedSavings && customerIdentity) {
+      const target = Number(requestedSavings[1].replace(/,/g, ''));
+      const currentBalance = customerIdentity.balance;
+      if (Number.isFinite(target) && target > 0) {
+        if (currentBalance >= target) {
+          const remaining = currentBalance - target;
+          return `Your current demo balance is ${money(currentBalance)}. If you set aside ${money(target)} for this month's savings, you would have ${money(remaining)} left. Put the savings aside when you receive income, then plan your monthly spending around the remainder.`;
+        }
+        const shortfall = target - currentBalance;
+        return `Your current demo balance is ${money(currentBalance)}. You are ${money(shortfall)} short of setting aside ${money(target)} now. To reach the goal this month, save at least ${money(shortfall)} from upcoming income and reduce discretionary spending by that amount.`;
+      }
+    }
     if ((asksBalance || asksLimit) && !customerIdentity) {
       return lang === 'BN' ? 'আপনার ব্যক্তিগত অ্যাকাউন্টের তথ্য দেখতে গ্রাহক অ্যাকাউন্টে সাইন ইন করুন।' : 'Please sign in to your customer account to view personal account information.';
     }
