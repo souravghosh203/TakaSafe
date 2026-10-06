@@ -40,7 +40,6 @@ import {
 
 interface UpayInfoModalProps {
   modalType: string | null;
-  serviceInfoTopic?: string | null;
   initialQuestion?: string;
   onClose: () => void;
   lang: 'EN' | 'BN';
@@ -60,7 +59,6 @@ interface ChatMessage {
 
 export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   modalType,
-  serviceInfoTopic = null,
   initialQuestion = '',
   onClose,
   lang,
@@ -87,22 +85,6 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   const [inputMsg, setInputMsg] = useState('');
   const processedInitialQuestion = useRef('');
 
-  const showcaseTopics: Record<string, { summary: string; details: string[] }> = {
-    'Cash In': { summary: 'Add funds to a TakaSafe wallet through an authorized agent or supported bank channel.', details: ['The showcase presents agent cash-in as free.', 'Confirm the amount and recipient wallet before completing a deposit.'] },
-    'Cash Out': { summary: 'Withdraw wallet funds through supported agents and partner ATM locations.', details: ['The campaign highlights zero-fee ATM cash-out; agent charges may differ.', 'Review the current limits and charge schedule before a withdrawal.'] },
-    'Send Money': { summary: 'Transfer money to another wallet and review recipient details before confirming.', details: ['ScamShield is presented as a pre-payment review step.', 'Check the recipient number and amount carefully before sending.'] },
-    'Make Payment': { summary: 'Pay participating merchants by scanning their payment QR code.', details: ['Check the merchant name and amount shown before approving.', 'Keep the payment confirmation for your records.'] },
-    'Add Money': { summary: 'Add funds using supported bank or card options.', details: ['Available funding methods depend on the connected provider.', 'Review any provider fees and limits before confirming.'] },
-    'Pay Bill': { summary: 'Pay supported utility and service bills from your wallet.', details: ['The showcase lists DESCO, WASA, and Titas as examples.', 'Verify the biller and account reference before submitting payment.'] },
-    'Mobile Recharge': { summary: 'Top up a supported mobile number from your wallet.', details: ['The showcase lists Grameenphone, Banglalink, Robi, and Airtel.', 'Confirm the phone number and recharge amount before purchase.'] },
-    Remittance: { summary: 'Receive eligible international remittances through supported channels.', details: ['Eligibility and government incentives depend on current rules.', 'Check the applicable rate and required recipient details before proceeding.'] },
-    Savings: { summary: 'Explore wallet-linked savings options, including the showcased DPS concept.', details: ['Products are provided through participating financial partners.', 'Review the provider’s terms, returns, and withdrawal conditions.'] },
-    Education: { summary: 'Pay education fees to supported colleges and universities.', details: ['Confirm the institution and student reference number.', 'Keep the transaction receipt for your records.'] },
-    Insurance: { summary: 'Explore life and health Takaful options through participating providers.', details: ['Coverage and eligibility are set by the provider.', 'Review policy documents and exclusions before enrollment.'] },
-    Business: { summary: 'Support business collections, payroll, and bulk wallet payments.', details: ['Settlement timing and limits depend on the business arrangement.', 'Partner onboarding is required for enterprise services.'] },
-    ScamShield: { summary: 'ScamShield demonstrates a safety review before a payment is sent.', details: ['The concept combines recipient checks and transaction risk signals.', 'A warning is intended to help a customer pause and review a risky transfer.'] },
-    'Geospatial Intelligence': { summary: 'Explore a map-based view of regional risk signals and service coverage.', details: ['The showcase visualizes regional activity and emerging risk clusters.', 'Displayed map signals are for demonstration and decision support.'] },
-  };
 
   useEffect(() => {
     if (modalType !== 'LIVE_CHAT') {
@@ -157,23 +139,6 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
 
   const renderContent = () => {
     switch (modalType) {
-      case 'SERVICE_INFO': {
-        const topic = serviceInfoTopic ? showcaseTopics[serviceInfoTopic] : null;
-        return topic ? (
-          <div className="space-y-4">
-            <p className="text-sm leading-relaxed text-slate-700">{topic.summary}</p>
-            <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-4">
-              <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-[#0054A6]">What to know</h4>
-              <ul className="space-y-2 text-sm text-slate-700">
-                {topic.details.map((detail) => <li key={detail} className="flex gap-2"><span className="font-bold text-teal-700">•</span><span>{detail}</span></li>)}
-              </ul>
-            </div>
-            <p className="text-[11px] text-slate-500">Showcase information only. Availability, fees, and limits depend on the selected provider and current terms.</p>
-          </div>
-        ) : (
-          <p className="text-sm text-slate-600">Select a service to view its information.</p>
-        );
-      }
       case 'ABSTRACT':
       case 'RESEARCH_NOTE':
         return (
@@ -849,7 +814,6 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
 
   const getTitle = () => {
     switch (modalType) {
-      case 'SERVICE_INFO': return serviceInfoTopic || 'Service Information';
       case 'ABSTRACT':
       case 'RESEARCH_NOTE': return lang === 'BN' ? 'অফিসিয়াল রিসার্চ অ্যাবস্ট্রাক্ট ও SDG' : 'Official Project Abstract & UN SDGs';
       case 'ABOUT_US': return 'About TakaSafe';

@@ -342,7 +342,7 @@ export const UpayHeroServices: React.FC<UpayHeroServicesProps> = ({ onServiceSel
 
                 <div className="mt-6 flex items-center justify-center md:justify-start gap-4">
                   <button
-                    onClick={() => onServiceSelect?.('ScamShield')}
+                    onClick={() => onServiceSelect?.('Send Money')}
                     className="flex items-center gap-2 bg-[#48D1C3] hover:bg-[#2BBCAF] text-[#083344] px-6 py-2.5 rounded-full font-bold text-sm shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 border border-teal-300"
                   >
                     <span>{lang === 'BN' ? 'সুরক্ষা যাচাই করুন' : 'Test ScamShield'}</span>
