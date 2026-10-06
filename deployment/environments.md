@@ -1,6 +1,6 @@
 # Environments and configuration
 
-[← Deployment guide](README.md) · [Build →](build.md)
+[← Deployment](deployment.md) · [Build →](build.md)
 
 > [!NOTE]
 > This page describes what the repository defines. It does not confirm which environments are currently hosted or in use.
@@ -41,4 +41,3 @@
 | **Database** | `mongodb` is a declared Node dependency. | A production database connection, endpoint, schema, and migrations are not established. **UNKNOWN / NEEDS CONFIRMATION.** |
 
 No staging-specific configuration, production variable set, secret-management setup, or service orchestration configuration was found.
-

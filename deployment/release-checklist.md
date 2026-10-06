@@ -1,6 +1,6 @@
 # Release checklist
 
-[← Rollback](rollback.md) · [Deployment guide →](README.md)
+[← Rollback](rollback.md) · [Deployment →](deployment.md)
 
 Work through the relevant items for each release. A checked-in script or workflow does not replace checking the target host and live service.
 
