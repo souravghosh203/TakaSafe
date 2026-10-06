@@ -92,6 +92,27 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   const [inputMsg, setInputMsg] = useState('');
   const processedInitialQuestion = useRef('');
 
+  const getLiveFollowUps = (query: string): string[] => {
+    if (/(balance|available amount|wallet|account|ব্যালেন্স)/i.test(query)) {
+      return lang === 'BN'
+        ? ['এই মাসে কত খরচ করেছি?', 'আমার সাধারণ লেনদেনের সীমা কত?', 'সাম্প্রতিক লেনদেন দেখান']
+        : ['How much have I spent this month?', 'What is my usual transaction amount?', 'Show my recent transactions'];
+    }
+    if (/(usual|typical|normal|average|limit|maximum|max|সাধারণ|সীমা)/i.test(query)) {
+      return lang === 'BN'
+        ? ['আমার বর্তমান ব্যালেন্স কত?', 'এই মাসে কত খরচ করেছি?', 'সাম্প্রতিক লেনদেন দেখান']
+        : ['What is my current balance?', 'How much have I spent this month?', 'Show my recent transactions'];
+    }
+    if (/(spend|spent|spending|expense|খরচ)/i.test(query)) {
+      return lang === 'BN'
+        ? ['আমার বর্তমান ব্যালেন্স কত?', 'সাম্প্রতিক লেনদেন দেখান', 'আমার সাধারণ লেনদেনের সীমা কত?']
+        : ['What is my current balance?', 'Show my recent transactions', 'What is my usual transaction amount?'];
+    }
+    return lang === 'BN'
+      ? ['আমার বর্তমান ব্যালেন্স কত?', 'এই মাসে কত খরচ করেছি?', 'সাম্প্রতিক লেনদেন দেখান']
+      : ['What is my current balance?', 'How much have I spent this month?', 'Show my recent transactions'];
+  };
+
   const answerFromCurrentHistory = async (query: string): Promise<string | null> => {
     const asksBalance = /(balance|available amount|how much.*(wallet|account)|ব্যালেন্স|জমা টাকা)/i.test(query);
     const asksLimit = /(usual|typical|normal|average).{0,24}(limit|amount|transaction)|\b(limit|maximum|max)\b.{0,24}(usual|typical|transaction|send)|সাধারণ.{0,15}(সীমা|লেনদেন)/i.test(query);
@@ -176,7 +197,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
         text: liveAnswer || matchResult!.answer,
         time: 'Just now',
         suggestedAction: matchResult?.item?.suggestedAction,
-        relatedTopics: matchResult?.relatedTopics,
+        relatedTopics: liveAnswer ? getLiveFollowUps(query) : matchResult?.relatedTopics,
       }]);
     }, 400);
   }, [modalType, initialQuestion, lang]);
@@ -205,7 +226,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
           text: liveAnswer || matchResult!.answer,
           time: 'Just now',
           suggestedAction: matchResult?.item?.suggestedAction,
-          relatedTopics: matchResult?.relatedTopics,
+          relatedTopics: liveAnswer ? getLiveFollowUps(query) : matchResult?.relatedTopics,
         },
       ]);
     }, 400);
