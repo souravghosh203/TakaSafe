@@ -158,6 +158,46 @@
   .assistant-content { padding-right: 12px; padding-left: 12px; }
   .assistant-content h2 { font-size: clamp(16px, 5vw, 19px); }
 }
+/* Give tablets and compact laptop viewports a centered, fully visible assistant
+   panel. The safe-area-aware gutters keep it clear of rounded screens and
+   browser overlays while preserving a usable launcher target. */
+@media (max-width: 1200px) {
+  .dashboard-assistant[data-open='true'] {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    width: 100dvw;
+    height: 100vh;
+    height: 100dvh;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-bottom: max(84px, calc(68px + env(safe-area-inset-bottom)));
+    padding-left: max(16px, env(safe-area-inset-left));
+    overflow-y: auto;
+  }
+
+  .dashboard-assistant[data-open='true'] .assistant-card {
+    width: min(520px, 100%);
+    height: min(720px, calc(100dvh - 120px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+    max-height: calc(100dvh - 120px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    min-height: 0;
+    flex: 0 1 auto;
+  }
+
+  .dashboard-assistant[data-open='true'] .assistant-art {
+    height: clamp(88px, 15dvh, 140px);
+    flex: 0 0 auto;
+  }
+
+  .dashboard-assistant[data-open='true'] .assistant-launcher {
+    position: absolute;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .dashboard-assistant *, .dashboard-assistant *::before, .dashboard-assistant *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
