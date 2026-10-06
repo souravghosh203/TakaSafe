@@ -68,6 +68,9 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   onNavigateView,
 }) => {
   const { isMounted, isExiting } = useModalPresence(Boolean(modalType));
+  const lastModalType = useRef<string | null>(modalType);
+  if (modalType) lastModalType.current = modalType;
+  const displayedModalType = modalType ?? lastModalType.current ?? 'LIVE_CHAT';
   const [searchQuery, setSearchQuery] = useState('');
   const [abstractTab, setAbstractTab] = useState<'FULL' | 'BASE' | 'CAPABILITIES' | 'SDG'>('FULL');
   const [abstractCopied, setAbstractCopied] = useState<boolean>(false);
@@ -192,7 +195,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   };
 
   const renderContent = () => {
-    switch (modalType) {
+    switch (displayedModalType) {
       case 'ABSTRACT':
       case 'RESEARCH_NOTE':
         return (
@@ -855,7 +858,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
         return (
           <div className="space-y-3 text-xs text-slate-700">
             <p>
-              Information for <strong className="text-slate-900">{modalType.replace(/_/g, ' ')}</strong> is fully compliant with Bangladesh Bank BFIU MFS Regulatory Guidelines 2026.
+              Information for <strong className="text-slate-900">{displayedModalType.replace(/_/g, ' ')}</strong> is fully compliant with Bangladesh Bank BFIU MFS Regulatory Guidelines 2026.
             </p>
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
               <span className="font-bold block text-slate-900">Need specific assistance?</span>
@@ -867,7 +870,7 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   };
 
   const getTitle = () => {
-    switch (modalType) {
+    switch (displayedModalType) {
       case 'ABSTRACT':
       case 'RESEARCH_NOTE': return lang === 'BN' ? 'অফিসিয়াল রিসার্চ অ্যাবস্ট্রাক্ট ও SDG' : 'Official Project Abstract & UN SDGs';
       case 'ABOUT_US': return 'About TakaSafe';
@@ -883,14 +886,14 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
       case 'PRIVACY_POLICY': return 'Privacy & Data Protection Policy';
       case 'TERMS': return 'Terms & Conditions';
       case 'BUSINESS': return 'TakaSafe Enterprise Solutions';
-      default: return modalType.replace(/_/g, ' ');
+      default: return displayedModalType.replace(/_/g, ' ');
     }
   };
 
   const modalMaxWidth =
-    modalType === 'ABSTRACT' || modalType === 'RESEARCH_NOTE'
+    displayedModalType === 'ABSTRACT' || displayedModalType === 'RESEARCH_NOTE'
       ? 'max-w-3xl'
-      : modalType === 'LIVE_CHAT'
+      : displayedModalType === 'LIVE_CHAT'
       ? 'max-w-xl'
       : 'max-w-lg';
 
