@@ -41,6 +41,8 @@ import {
   Printer,
   Flame,
   TrendingUp,
+  Target,
+  Clock,
 } from 'lucide-react';
 
 interface OperatorDashboardProps {
@@ -85,7 +87,12 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   const [isStreamPaused, setIsStreamPaused] = useState(false);
   const [isComplianceModalOpen, setIsComplianceModalOpen] = useState<boolean>(false);
   const [analyticsHorizon, setAnalyticsHorizon] = useState<'BOTH' | 'INTRADAY' | '30D'>('BOTH');
-  const [alertFeedback, setAlertFeedback] = useState<Array<{ outcome: string }>>([]);
+  const [alertFeedback, setAlertFeedback] = useState<Array<{
+    outcome: string;
+    timestamp?: string;
+    transaction_id?: string;
+    transactionId?: string;
+  }>>([]);
 
   useEffect(() => {
     const refreshFeedback = () => fetch('/api/alert-feedback')
@@ -230,6 +237,28 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   });
 
   const criticalCount = liveTransactions.filter((t) => t.riskBand === 'CRITICAL' || t.riskBand === 'HIGH').length;
+
+  // Holdout operating point from MLNotebookResultsView.tsx: TP=52, FN=3, FP=4, TN=1141.
+  const modelFraudDetectionRate = 52 / (52 + 3);
+  const modelFalsePositiveRate = 4 / (4 + 1141);
+  const recordedFloatDispatch = auditLogs.reduce((total, log) => {
+    if (log.actionTaken !== 'DISPATCH_FLOAT') return total;
+    const match = String(log.notes || '').match(/dispatched BDT\s*([\d,]+(?:\.\d+)?)/i);
+    return total + (match ? Number(match[1].replace(/,/g, '')) : 0);
+  }, 0);
+  const alertResponseDurations = alertFeedback.flatMap((feedback) => {
+    const transactionId = feedback.transaction_id || feedback.transactionId;
+    if (!transactionId || !feedback.timestamp) return [];
+    const transaction = liveTransactions.find((item) => item.id === transactionId);
+    if (!transaction) return [];
+    const startedAt = new Date(transaction.timestamp).getTime();
+    const respondedAt = new Date(feedback.timestamp).getTime();
+    const seconds = (respondedAt - startedAt) / 1000;
+    return Number.isFinite(seconds) && seconds >= 0 && seconds <= 24 * 60 * 60 ? [seconds] : [];
+  });
+  const averageAlertResponseSeconds = alertResponseDurations.length
+    ? Math.round(alertResponseDurations.reduce((sum, seconds) => sum + seconds, 0) / alertResponseDurations.length)
+    : null;
 
   const filteredTxns = liveTransactions.filter((txn) => {
     if (filterBand !== 'ALL' && txn.riskBand !== filterBand) return false;
@@ -445,6 +474,54 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
           </span>
         </div>
       </div>
+
+      {/* Business impact metrics: model rates are held-out benchmarks; operational
+          values come from recorded demo dispatches and analyst feedback. */}
+      <section className="space-y-3" aria-labelledby="business-metrics-title">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 id="business-metrics-title" className="text-sm font-black uppercase tracking-wide text-slate-700 dark:text-slate-200">Business Impact Metrics</h2>
+          <span className="text-[10px] text-slate-500 dark:text-slate-400">Model holdout benchmark · operational demo data</span>
+        </div>
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+          <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900/70 bg-white dark:bg-[#0F172A] p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Fraud Detection Rate</span>
+              <Target className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div className="mt-2 text-2xl font-black font-mono text-emerald-700 dark:text-emerald-300">{(modelFraudDetectionRate * 100).toFixed(1)}%</div>
+            <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">Recall at the notebook’s selected holdout threshold</p>
+          </div>
+
+          <div className="rounded-2xl border border-amber-200 dark:border-amber-900/70 bg-white dark:bg-[#0F172A] p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">False Positive Rate</span>
+              <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="mt-2 text-2xl font-black font-mono text-amber-700 dark:text-amber-300">{(modelFalsePositiveRate * 100).toFixed(2)}%</div>
+            <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">False alerts / legitimate holdout transactions</p>
+          </div>
+
+          <div className="rounded-2xl border border-blue-200 dark:border-blue-900/70 bg-white dark:bg-[#0F172A] p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Agent Float Saved During Disaster</span>
+              <CloudLightning className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="mt-2 text-2xl font-black font-mono text-blue-700 dark:text-blue-300">BDT {recordedFloatDispatch.toLocaleString()}</div>
+            <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">Recorded replenishment dispatches; demo proxy for safeguarded float</p>
+          </div>
+
+          <div className="rounded-2xl border border-purple-200 dark:border-purple-900/70 bg-white dark:bg-[#0F172A] p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Avg. Scam Alert Response Time</span>
+              <Clock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div className="mt-2 text-2xl font-black font-mono text-purple-700 dark:text-purple-300">{averageAlertResponseSeconds === null ? '—' : `${averageAlertResponseSeconds}s`}</div>
+            <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
+              {averageAlertResponseSeconds === null ? 'Awaiting a reviewed alert linked to a transaction' : `Measured across ${alertResponseDurations.length} reviewed alert${alertResponseDurations.length === 1 ? '' : 's'}`}
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* Main Tabbed Navigation */}
       <div className="flex items-center gap-1.5 border-b border-slate-200 dark:border-slate-800 overflow-x-auto pb-1">
