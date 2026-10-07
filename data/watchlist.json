@@ -1,0 +1,20 @@
+{
+  "label": "Synthetic Demo Watchlist — not an official sanctions database.",
+  "source": "SYNTHETIC_DEMO_WATCHLIST",
+  "entries": [
+    {
+      "id": "DEMO-WL-001",
+      "aliases": ["01988-510294", "01988510294", "W302"],
+      "match_type": "DEMO_MULE_NETWORK",
+      "confidence": 0.94,
+      "note": "Synthetic training scenario only."
+    },
+    {
+      "id": "DEMO-WL-002",
+      "aliases": ["01899-771122", "01899771122", "AGT-881"],
+      "match_type": "DEMO_HIGH_RISK_COUNTERPARTY",
+      "confidence": 0.87,
+      "note": "Synthetic training scenario only."
+    }
+  ]
+}

@@ -60,6 +60,8 @@ class DecisionResponse(BaseModel):
     decision_id: str
     logged_at: str
     action_recorded: str
+    audit_recorded: bool = True
+    audit_persistence_available: bool = True
 
 class HealthResponse(BaseModel):
     status: str

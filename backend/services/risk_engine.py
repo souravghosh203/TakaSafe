@@ -73,11 +73,11 @@ class RiskEngine:
             signals = [
                 "New recipient not in your contact ledger",
                 "Multiple rapid inbound transfers detected within 15 minutes",
-                "Flagged in BFIU Suspicious Mule Network #17 cluster",
-                "High cash-out velocity terminal in coastal division"
+                "Linked to Synthetic Demo Network #17 (training scenario)",
+                "Synthetic high cash-out velocity scenario in a coastal division"
             ]
             receiver_name = "Md. Al-Amin (Node W302)" if "302" in clean_id or "510294" in clean_id else "Unverified High-Risk Wallet"
-            mule_id = "Suspicious Network #17"
+            mule_id = "Synthetic Demo Network #17"
         elif receiver_id.startswith("01710") or receiver_id.startswith("01825"):
             status = "SAFE"
             reputation_score = 96

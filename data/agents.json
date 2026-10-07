@@ -1,0 +1,15 @@
+{
+  "label": "Synthetic Demo Data",
+  "source": "SYNTHETIC",
+  "agents": [
+    {
+      "id": "AGT-DEMO-101",
+      "name": "Barishal Demo Agent",
+      "region": "Barishal",
+      "current_liquidity": 180000,
+      "projected_demand": 310000,
+      "projected_shortage": 130000,
+      "priority_score": 88
+    }
+  ]
+}

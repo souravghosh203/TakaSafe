@@ -1,8 +1,13 @@
 import os
+import time
 import uvicorn
-from fastapi import FastAPI
+from collections import defaultdict, deque
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from backend.api.scamshield import router as scamshield_router, model_service
+from backend.api.demo import router as demo_router
+from backend.services.demo_state import demo_state
 
 app = FastAPI(
     title="TakaSafe ScamShield Real-Time ML Service",
@@ -10,15 +15,46 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Enable CORS for frontend integration
+# The deployed frontend is configured with VITE_API_BASE_URL.  Keep origins
+# explicit: this demo does not use credentialed cross-origin browser requests.
+default_origins = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,https://takasafe-diu.surge.sh"
+allowed_origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", default_origins).split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=allowed_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Last-Event-ID"],
 )
 
+app.state.demo_state = demo_state
+app.state.model_service = model_service
+
+# Small in-process limiter for the public demo. It deliberately has no Redis or
+# external state; each process maintains a bounded, one-minute request window.
+request_windows = defaultdict(deque)
+
+@app.middleware("http")
+async def add_security_controls(request: Request, call_next):
+    client = request.client.host if request.client else "unknown"
+    now = time.monotonic()
+    window = request_windows[client]
+    while window and now - window[0] > 60:
+        window.popleft()
+    if request.url.path.startswith("/api/") and request.url.path not in {"/api/health", "/api/events"}:
+        if len(window) >= 120:
+            return JSONResponse({"detail": "Demo API rate limit exceeded. Try again shortly."}, status_code=429)
+        window.append(now)
+
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Cache-Control"] = "no-store" if request.url.path.startswith("/api/") else response.headers.get("Cache-Control", "")
+    return response
+
+app.include_router(demo_router)
 app.include_router(scamshield_router)
 
 @app.on_event("startup")
@@ -39,8 +75,11 @@ def root():
     return {
         "service": "TakaSafe ScamShield ML Backend",
         "status": "ONLINE",
+        "storage_mode": "Database-Free Demo",
+        "data_source": "Synthetic JSON + Runtime Memory",
+        "authentication": "Demo Authentication",
         "docs": "/docs",
-        "health": "/api/scamshield/health"
+        "health": "/api/health"
     }
 
 if __name__ == "__main__":

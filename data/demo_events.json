@@ -1,0 +1,11 @@
+{
+  "label": "Demo/Sandbox Event Stream",
+  "source": "SYNTHETIC",
+  "events": [
+    {
+      "event_type": "demo_ready",
+      "transaction_id": "TXN-DEMO-1001",
+      "risk_level": "HIGH"
+    }
+  ]
+}
