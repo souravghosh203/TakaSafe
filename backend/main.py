@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import uvicorn
 from collections import defaultdict, deque
@@ -78,6 +79,9 @@ app.include_router(scamshield_router)
 
 @app.on_event("startup")
 def startup_event():
+    # Windows terminals may use cp1252, which cannot encode the status emojis.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(errors="replace")
     print("=" * 60)
     print("🚀 Initializing TakaSafe ScamShield ML Backend...")
     print(f"📁 Expected Model Path: {model_service.model_path}")

@@ -216,10 +216,12 @@ export default function App() {
     const timestamp = new Date().toISOString();
     const storageKey = `takasafe-logins:${user.id}`;
     try {
-      localStorage.removeItem(`takasafe-logins:${user.id}:${user.phone}`);
-      const prior = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const legacyStorageKey = `takasafe-logins:${user.id}:${user.phone}`;
+      const savedLogins = localStorage.getItem(storageKey) || localStorage.getItem(legacyStorageKey) || '[]';
+      const prior = JSON.parse(savedLogins);
       const logins = [...(Array.isArray(prior) ? prior : []), { timestamp, device: navigator.userAgent }].slice(-200);
       localStorage.setItem(storageKey, JSON.stringify(logins));
+      localStorage.removeItem(legacyStorageKey);
     } catch {
       // Server logging below remains available if browser storage is unavailable.
     }

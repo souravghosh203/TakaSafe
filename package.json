@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
+    "dev:gateway": "node --experimental-strip-types server.ts",
     "build": "vite build && node --input-type=module -e \"import { copyFileSync } from 'node:fs'; copyFileSync('dist/index.html', 'dist/200.html')\"",
     "deploy": "npm run build && surge ./dist takasafe-diu.surge.sh",
     "start": "vite preview --host 0.0.0.0",

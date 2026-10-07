@@ -104,13 +104,22 @@ const getServiceFee = (service: string, target: string, amount: number): number 
 
 const loadTransferHistory = (userId: string, wallet: string): CustomerTransfer[] => {
   try {
-    window.localStorage.removeItem(`takasafe-transfers:${userId}:${wallet}`);
-    window.localStorage.removeItem(`takasafe-transfers:${wallet}`);
-    const saved = window.localStorage.getItem(`takasafe-transfers:${userId}`);
+    const safeKey = `takasafe-transfers:${userId}`;
+    const legacyKeys = [`takasafe-transfers:${userId}:${wallet}`, `takasafe-transfers:${wallet}`];
+    let saved = window.localStorage.getItem(safeKey);
+    if (!saved) {
+      for (const legacyKey of legacyKeys) {
+        saved = window.localStorage.getItem(legacyKey);
+        if (saved) break;
+      }
+    }
     const parsed: unknown = saved ? JSON.parse(saved) : [];
-    return Array.isArray(parsed) ? parsed.filter((item): item is CustomerTransfer =>
+    const history = Array.isArray(parsed) ? parsed.filter((item): item is CustomerTransfer =>
       typeof item?.amount === 'number' && typeof item?.recipient === 'string' && typeof item?.timestamp === 'string'
     ) : [];
+    window.localStorage.setItem(safeKey, JSON.stringify(history.map((item) => ({ ...item, recipient: maskPhoneInText(item.recipient), reference: maskPhoneInText(item.reference) }))));
+    legacyKeys.forEach((legacyKey) => window.localStorage.removeItem(legacyKey));
+    return history;
   } catch {
     return [];
   }
@@ -118,10 +127,14 @@ const loadTransferHistory = (userId: string, wallet: string): CustomerTransfer[]
 
 const loadLoginHistory = (userId: string, wallet: string): CustomerLogin[] => {
   try {
-    window.localStorage.removeItem(`takasafe-logins:${userId}:${wallet}`);
-    const saved = window.localStorage.getItem(`takasafe-logins:${userId}`);
+    const safeKey = `takasafe-logins:${userId}`;
+    const legacyKey = `takasafe-logins:${userId}:${wallet}`;
+    const saved = window.localStorage.getItem(safeKey) || window.localStorage.getItem(legacyKey);
     const parsed: unknown = saved ? JSON.parse(saved) : [];
-    return Array.isArray(parsed) ? parsed.filter((item): item is CustomerLogin => typeof item?.timestamp === 'string') : [];
+    const history = Array.isArray(parsed) ? parsed.filter((item): item is CustomerLogin => typeof item?.timestamp === 'string') : [];
+    window.localStorage.setItem(safeKey, JSON.stringify(history));
+    window.localStorage.removeItem(legacyKey);
+    return history;
   } catch {
     return [];
   }

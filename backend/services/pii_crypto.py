@@ -10,7 +10,11 @@ from typing import Any, Dict
 
 _PREFIX = "enc:v1:"
 _AAD = b"takasafe-pii-v1"
-_SENSITIVE_FIELDS = {"phone", "mobile", "wallet", "nid", "nationalid", "national_id"}
+def _is_sensitive_field(field_name: Any) -> bool:
+    # Cover snake_case and camelCase API/audit keys (for example
+    # senderWallet, phone_number, nationalId) without relying on one schema.
+    normalized = "".join(character for character in str(field_name).lower() if character.isalnum())
+    return any(marker in normalized for marker in ("phone", "mobile", "wallet", "nationalid", "nid"))
 
 
 def _key_bytes() -> bytes:
@@ -56,7 +60,7 @@ def encrypt_pii_fields(value: Any) -> Any:
     if isinstance(value, dict):
         protected: Dict[str, Any] = {}
         for key, item in value.items():
-            if str(key).replace("-", "_").lower() in _SENSITIVE_FIELDS and item is not None:
+            if _is_sensitive_field(key) and item is not None:
                 protected[key] = encrypt_pii(str(item))
             else:
                 protected[key] = encrypt_pii_fields(item)
@@ -71,7 +75,7 @@ def decrypt_pii_fields(value: Any) -> Any:
     if isinstance(value, dict):
         decrypted: Dict[str, Any] = {}
         for key, item in value.items():
-            if str(key).replace("-", "_").lower() in _SENSITIVE_FIELDS and isinstance(item, str):
+            if _is_sensitive_field(key) and isinstance(item, str):
                 decrypted[key] = decrypt_pii(item)
             else:
                 decrypted[key] = decrypt_pii_fields(item)

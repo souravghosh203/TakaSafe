@@ -11,7 +11,7 @@ import { GoogleGenAI } from '@google/genai';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.GATEWAY_PORT || process.env.PORT || 3000;
 const require = createRequire(import.meta.url);
 const { WebSocketServer, WebSocket } = require('ws') as {
   WebSocketServer: new (options: { server: ReturnType<typeof createServer>; path: string }) => any;

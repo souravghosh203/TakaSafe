@@ -435,13 +435,24 @@ takasafe/
    PORT=3000
    ```
 
-4. **Start Development Server**:
+4. **Start the backend services** in two terminals:
+   ```bash
+   py -m venv .venv
+   .venv/Scripts/python.exe -m pip install -r backend/requirements.txt
+   .venv/Scripts/python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+   ```
+   In a second terminal, start the Node gateway that provides the sandbox payment endpoint and WebSocket stream:
+   ```bash
+   npm run dev:gateway
+   ```
+
+5. **Start the frontend** in a third terminal:
    ```bash
    npm run dev
    ```
-   Open your browser at `http://localhost:3000`.
+   Open the Vite URL printed in the terminal (normally `http://localhost:3000`; if occupied, Vite selects the next port). The development proxy sends model API requests to FastAPI and `/api/stream` plus `/api/bkash` to the Node gateway.
 
-5. **Build for Production**:
+6. **Build for Production**:
    ```bash
    npm run build
    npm run start
@@ -450,7 +461,7 @@ takasafe/
 ### Sandbox payments and live transaction stream
 
 - `POST /api/bkash/payment/create` accepts bKash Tokenized Checkout fields and returns a sandbox-format response. With no credentials it returns `mode: "MOCK_SANDBOX"` and never moves funds. To call the bKash sandbox, set `BKASH_AUTH_TOKEN` and `BKASH_APP_KEY` in `.env`; the server sends the request to `BKASH_CREATE_PAYMENT_URL` and uses `BKASH_CALLBACK_URL`.
-- The operator ticker connects to `ws://localhost:3000/api/stream` (or `wss` on HTTPS). It receives one synthetic transaction every two seconds and updates without a page refresh.
+- The operator ticker connects to `/api/stream` on the frontend origin (or `wss` on HTTPS); the local Vite proxy forwards it to the Node gateway. It receives one synthetic transaction every two seconds and updates without a page refresh.
 - To persist each stream event to Redis Streams, set `REDIS_STREAM_REST_URL` and `REDIS_STREAM_REST_TOKEN` to an Upstash Redis REST endpoint and token. Events are appended with `XADD` to `REDIS_STREAM_KEY` (default: `takasafe:transactions`). The WebSocket stream works without Redis configured.
 
 ### Transport and personal data protection

@@ -33,6 +33,7 @@ export function createNotification(userId: string, notification: Omit<TakaSafeNo
   if (notification.relatedEntityId && current.some((item) => item.relatedEntityId === notification.relatedEntityId && item.type === notification.type)) return;
   const next: TakaSafeNotification = {
     ...notification,
+    message: maskPhoneInText(notification.message),
     id: notification.id || (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`),
     createdAt: notification.createdAt || new Date().toISOString(),
     isRead: notification.isRead ?? false,
@@ -42,7 +43,10 @@ export function createNotification(userId: string, notification: Omit<TakaSafeNo
 }
 
 export function updateNotifications(userId: string, transform: (items: TakaSafeNotification[]) => TakaSafeNotification[]) {
-  const next = transform(readNotifications(userId));
+  const next = transform(readNotifications(userId)).map((item) => ({
+    ...item,
+    message: maskPhoneInText(item.message),
+  }));
   try { localStorage.setItem(storageKey(userId), JSON.stringify(next)); } catch { /* Keep current view responsive if storage is unavailable. */ }
   window.dispatchEvent(new CustomEvent('takasafe-notifications-changed', { detail: { userId } }));
 }
