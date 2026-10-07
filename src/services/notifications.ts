@@ -1,3 +1,5 @@
+import { maskPhoneInText } from '../utils/maskSensitive';
+
 export type NotificationType = 'TRANSACTION' | 'SECURITY' | 'ACCOUNT' | 'SYSTEM';
 
 export interface TakaSafeNotification {
@@ -15,7 +17,13 @@ const storageKey = (userId: string) => `takasafe-notifications:${userId}`;
 export function readNotifications(userId: string): TakaSafeNotification[] {
   try {
     const parsed = JSON.parse(localStorage.getItem(storageKey(userId)) || '[]');
-    return Array.isArray(parsed) ? parsed.slice(0, 100) : [];
+    if (!Array.isArray(parsed)) return [];
+    const safe = parsed.slice(0, 100).map((item) => ({
+      ...item,
+      message: typeof item?.message === 'string' ? maskPhoneInText(item.message) : '',
+    }));
+    localStorage.setItem(storageKey(userId), JSON.stringify(safe));
+    return safe;
   } catch { return []; }
 }
 

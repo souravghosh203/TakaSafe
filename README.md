@@ -453,6 +453,13 @@ takasafe/
 - The operator ticker connects to `ws://localhost:3000/api/stream` (or `wss` on HTTPS). It receives one synthetic transaction every two seconds and updates without a page refresh.
 - To persist each stream event to Redis Streams, set `REDIS_STREAM_REST_URL` and `REDIS_STREAM_REST_TOKEN` to an Upstash Redis REST endpoint and token. Events are appended with `XADD` to `REDIS_STREAM_KEY` (default: `takasafe:transactions`). The WebSocket stream works without Redis configured.
 
+### Transport and personal data protection
+
+- The static frontend is served over HTTPS by the hosting platform. Set `VITE_API_BASE_URL` to an HTTPS backend origin for production builds; production builds reject an HTTP API URL.
+- Configure the FastAPI service with `REQUIRE_HTTPS=true` behind a TLS-enabled hosting proxy. Set `TRUST_PROXY_HEADERS=true` only behind a trusted proxy and restrict `FORWARDED_ALLOW_IPS` to that proxy. The API redirects HTTP requests to HTTPS and emits HSTS on secure responses. Local development keeps HTTP enabled.
+- Generate a 32-byte encryption key with `py -c "import base64,secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())"`, store it as `PII_ENCRYPTION_KEY` in the deployment secret manager, and install `backend/requirements.txt`. AES-GCM encrypts phone, wallet, and NID fields before durable audit-log writes; the legacy Node CSV store encrypts its customer, login, and feedback files and migrates plaintext files on access. If encryption is unavailable, these paths fail closed instead of writing PII in plaintext. The active demo API keeps customer and login runtime state in memory, and does not submit registration NID values to the backend.
+- Frontend identity views mask Bangladesh mobile numbers to a short prefix and four-digit suffix (for example, `017****1234`) and mask unmasked NID values. Phone numbers are removed from legacy local-storage keys during migration; transfer-history phone-like values are stored masked.
+
 ---
 
 ## 🔒 Regulatory Compliance

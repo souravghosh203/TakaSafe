@@ -3,11 +3,14 @@ import time
 import uvicorn
 from collections import defaultdict, deque
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 from backend.api.scamshield import router as scamshield_router, model_service
 from backend.api.demo import router as demo_router
 from backend.services.demo_state import demo_state
+
+load_dotenv()
 
 app = FastAPI(
     title="TakaSafe ScamShield Real-Time ML Service",
@@ -36,6 +39,20 @@ request_windows = defaultdict(deque)
 
 @app.middleware("http")
 async def add_security_controls(request: Request, call_next):
+    is_production = (
+        os.getenv("ENVIRONMENT", "").strip().lower() == "production"
+        or os.getenv("NODE_ENV", "").strip().lower() == "production"
+        or bool(os.getenv("K_SERVICE"))
+    )
+    require_https_default = "true" if is_production else "false"
+    require_https = os.getenv("REQUIRE_HTTPS", require_https_default).strip().lower() in {"1", "true", "yes"}
+    trust_proxy_headers = os.getenv("TRUST_PROXY_HEADERS", "false").strip().lower() in {"1", "true", "yes"}
+    forwarded_proto = request.headers.get("x-forwarded-proto", "").split(",", 1)[0].strip().lower()
+    is_secure = request.url.scheme == "https" or (trust_proxy_headers and forwarded_proto == "https")
+    if require_https and not is_secure:
+        secure_url = request.url.replace(scheme="https")
+        return RedirectResponse(str(secure_url), status_code=308)
+
     client = request.client.host if request.client else "unknown"
     now = time.monotonic()
     window = request_windows[client]
@@ -52,6 +69,8 @@ async def add_security_controls(request: Request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     response.headers["Cache-Control"] = "no-store" if request.url.path.startswith("/api/") else response.headers.get("Cache-Control", "")
+    if is_secure:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
 app.include_router(demo_router)
@@ -84,4 +103,11 @@ def root():
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run("backend.main:app", host="0.0.0.0", port=port, reload=True)
+    uvicorn.run(
+        "backend.main:app",
+        host="0.0.0.0",
+        port=port,
+        reload=True,
+        proxy_headers=True,
+        forwarded_allow_ips=os.getenv("FORWARDED_ALLOW_IPS", "127.0.0.1"),
+    )

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AgentLiquidityNode } from '../../types';
+import { maskBangladeshPhone } from '../../utils/maskSensitive';
 import { CloudLightning, Waves, WifiOff, AlertOctagon, TrendingUp, TrendingDown, ShieldAlert, Truck, Check, RefreshCw } from 'lucide-react';
 
 interface DisasterResilienceSimulatorProps {
@@ -266,7 +267,7 @@ export const DisasterResilienceSimulator: React.FC<DisasterResilienceSimulatorPr
                     <td className="py-3 px-4">
                       <div className="font-bold text-slate-900 dark:text-white">{agent.name}</div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {agent.district} · {agent.phone}
+                        {agent.district} · {maskBangladeshPhone(agent.phone)}
                       </div>
                     </td>
                     <td className="py-3 px-4 text-right font-mono font-semibold text-slate-700 dark:text-slate-300">

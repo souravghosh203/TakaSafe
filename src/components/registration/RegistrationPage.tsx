@@ -5,6 +5,7 @@ import {
   ShieldCheck, Smartphone, Sparkles, UserRound, Upload, XCircle,
 } from 'lucide-react';
 import './RegistrationPage.css';
+import { maskBangladeshPhone } from '../../utils/maskSensitive';
 
 type Address = { division: string; district: string; upazila: string; detail: string };
 type RegistrationData = {
@@ -43,7 +44,7 @@ const blankRegistration = (initialEmail = ''): RegistrationData => ({
 });
 
 const isBangladeshMobile = (value: string) => /^1[3-9]\d{8}$/.test(value);
-const maskMobile = (value: string) => value.length >= 5 ? `+880 ${value.slice(0, 3)}•••••${value.slice(-2)}` : '+880 ••••••••••';
+const maskMobile = (value: string) => value.length >= 5 ? `+880 ${maskBangladeshPhone(value).slice(1)}` : '+880 ****';
 
 export const RegistrationPage: React.FC<Props> = ({ initialEmail = '', hideTopbar = false, lang, theme, onLogin, onDashboard, onOpenModal }) => {
   const isBn = lang === 'BN';
@@ -194,7 +195,7 @@ export const RegistrationPage: React.FC<Props> = ({ initialEmail = '', hideTopba
   };
 
   const field = (label: string, value: string, onChange: (value: string) => void, options: {
-    type?: string; placeholder?: string; required?: boolean; error?: string; max?: string; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+    type?: string; placeholder?: string; required?: boolean; error?: string; max?: string; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']; autoComplete?: string;
   } = {}) => (
     <label className="registration-field">
       <span>{label}{options.required && <b aria-hidden="true"> *</b>}</span>
@@ -206,6 +207,7 @@ export const RegistrationPage: React.FC<Props> = ({ initialEmail = '', hideTopba
         required={options.required}
         max={options.max}
         inputMode={options.inputMode}
+        autoComplete={options.autoComplete}
         aria-invalid={Boolean(options.error && (attempted || step === 3))}
       />
       {attempted && options.error && <span className="registration-error">{options.error}</span>}
@@ -383,7 +385,7 @@ export const RegistrationPage: React.FC<Props> = ({ initialEmail = '', hideTopba
 
             {step === 3 && <div className="step-panel">
               <div className="demo-notice"><ShieldCheck size={16} /><p><strong>{t('KYC preview only.', 'শুধু কেওয়াইসি প্রিভিউ।')}</strong> {t('Documents are not sent to a provider and cannot be verified here. This demo will never mark your identity as verified.', 'নথি কোনো সেবাদাতার কাছে পাঠানো বা এখানে যাচাই করা হয় না। এই ডেমোতে আপনার পরিচয় কখনো যাচাইকৃত দেখানো হবে না।')}</p></div>
-              {field(t('National ID (NID) number', 'জাতীয় পরিচয়পত্র নম্বর'), data.nid, (value) => { update('nid', value.replace(/\D/g, '').slice(0, 17)); setKycStatus('NOT_SUBMITTED'); }, { placeholder: t('10, 13, or 17 digits', '১০, ১৩ বা ১৭ সংখ্যা'), required: true, inputMode: 'numeric', error: isNidValid ? '' : t('Enter a 10, 13, or 17-digit NID number.', '১০, ১৩ বা ১৭ সংখ্যার জাতীয় পরিচয়পত্র নম্বর লিখুন।') })}
+              {field(t('National ID (NID) number', 'জাতীয় পরিচয়পত্র নম্বর'), data.nid, (value) => { update('nid', value.replace(/\D/g, '').slice(0, 17)); setKycStatus('NOT_SUBMITTED'); }, { type: 'password', autoComplete: 'off', placeholder: t('10, 13, or 17 digits', '১০, ১৩ বা ১৭ সংখ্যা'), required: true, inputMode: 'numeric', error: isNidValid ? '' : t('Enter a 10, 13, or 17-digit NID number.', '১০, ১৩ বা ১৭ সংখ্যার জাতীয় পরিচয়পত্র নম্বর লিখুন।') })}
               {!isNidValid && <span className="registration-error">{t('Enter a 10, 13, or 17-digit NID number.', '১০, ১৩ বা ১৭ সংখ্যার জাতীয় পরিচয়পত্র নম্বর লিখুন।')}</span>}
               <div className="upload-heading"><h3>{t('Identity images', 'পরিচয়পত্রের ছবি')}</h3><span>{t('All three are required for this preview', 'এই প্রিভিউর জন্য তিনটি ছবিই প্রয়োজন')}</span></div>
               <div className="upload-grid">

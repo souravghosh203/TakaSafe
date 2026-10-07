@@ -20,6 +20,7 @@ import { PolicyWeightsActionEngine } from './PolicyWeightsActionEngine';
 import { RegionalRiskHeatmapGrid } from './RegionalRiskHeatmapGrid';
 import { DailySuspiciousRiskTrendChart } from './DailySuspiciousRiskTrendChart';
 import { MLNotebookResultsView } from './MLNotebookResultsView';
+import { maskPhoneInText } from '../../utils/maskSensitive';
 import {
   ShieldCheck,
   AlertTriangle,
@@ -733,11 +734,11 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                       </td>
                       <td className="py-3 px-4">
                         <div className="font-bold text-slate-900 dark:text-white">{txn.senderName}</div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400">{txn.senderWallet}</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400">{maskPhoneInText(txn.senderWallet)}</div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="font-medium text-slate-800 dark:text-slate-200">{txn.receiverName}</div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">{txn.receiverWallet}</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">{maskPhoneInText(txn.receiverWallet)}</div>
                       </td>
                       <td className="py-3 px-4 text-right font-mono font-black text-slate-900 dark:text-white text-sm">
                         ৳{txn.amount.toLocaleString()}

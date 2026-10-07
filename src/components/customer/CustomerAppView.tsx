@@ -5,6 +5,7 @@ import { QRCodeScannerModal } from './QRCodeScannerModal';
 import { TakaSafeSovereignCard } from './TakaSafeSovereignCard';
 import { AI1PipelineVisualizer } from './ML1PipelineVisualizer';
 import { formatLocalizedNumber } from '../../utils/formatCurrency';
+import { maskBangladeshPhone, maskPhoneInText } from '../../utils/maskSensitive';
 import { AI1NotebookModal } from '../common/ML1NotebookModal';
 import { AnalysisTimeline } from '../scamshield/AnalysisTimeline';
 import { evaluateAI1AndDoubtCheck, AI1EvaluationResult } from '../../services/ai1ScoringEngine';
@@ -103,8 +104,9 @@ const getServiceFee = (service: string, target: string, amount: number): number 
 
 const loadTransferHistory = (userId: string, wallet: string): CustomerTransfer[] => {
   try {
-    const saved = window.localStorage.getItem(`takasafe-transfers:${userId}:${wallet}`)
-      || window.localStorage.getItem(`takasafe-transfers:${wallet}`);
+    window.localStorage.removeItem(`takasafe-transfers:${userId}:${wallet}`);
+    window.localStorage.removeItem(`takasafe-transfers:${wallet}`);
+    const saved = window.localStorage.getItem(`takasafe-transfers:${userId}`);
     const parsed: unknown = saved ? JSON.parse(saved) : [];
     return Array.isArray(parsed) ? parsed.filter((item): item is CustomerTransfer =>
       typeof item?.amount === 'number' && typeof item?.recipient === 'string' && typeof item?.timestamp === 'string'
@@ -116,7 +118,8 @@ const loadTransferHistory = (userId: string, wallet: string): CustomerTransfer[]
 
 const loadLoginHistory = (userId: string, wallet: string): CustomerLogin[] => {
   try {
-    const saved = window.localStorage.getItem(`takasafe-logins:${userId}:${wallet}`);
+    window.localStorage.removeItem(`takasafe-logins:${userId}:${wallet}`);
+    const saved = window.localStorage.getItem(`takasafe-logins:${userId}`);
     const parsed: unknown = saved ? JSON.parse(saved) : [];
     return Array.isArray(parsed) ? parsed.filter((item): item is CustomerLogin => typeof item?.timestamp === 'string') : [];
   } catch {
@@ -158,9 +161,10 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
   const [serviceError, setServiceError] = useState<string | null>(null);
   const [serviceReceipt, setServiceReceipt] = useState<string | null>(null);
   const [isServiceReview, setIsServiceReview] = useState<boolean>(false);
-  const balanceStorageKey = `takasafe-balance:${userId}:${customer.wallet}`;
+  const balanceStorageKey = `takasafe-balance:${userId}`;
   const [availableBalance, setAvailableBalance] = useState<number>(() => {
     try {
+      window.localStorage.removeItem(`takasafe-balance:${userId}:${customer.wallet}`);
       const savedBalance = Number(window.localStorage.getItem(balanceStorageKey));
       return window.localStorage.getItem(balanceStorageKey) !== null && Number.isFinite(savedBalance) && savedBalance >= 0
         ? savedBalance
@@ -212,7 +216,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
           return;
         }
         setLoginHistory(logins);
-        window.localStorage.setItem(`takasafe-logins:${userId}:${customer.wallet}`, JSON.stringify(logins));
+        window.localStorage.setItem(`takasafe-logins:${userId}`, JSON.stringify(logins));
       })
       .catch(() => { if (active) setLoginHistory(localLogins); });
     return () => { active = false; };
@@ -237,7 +241,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
           return;
         }
         setTransferHistory(history);
-        window.localStorage.setItem(`takasafe-transfers:${userId}:${customer.wallet}`, JSON.stringify(history));
+        window.localStorage.setItem(`takasafe-transfers:${userId}`, JSON.stringify(history.map((item) => ({ ...item, recipient: maskPhoneInText(item.recipient), reference: maskPhoneInText(item.reference) }))));
       })
       .catch(() => { if (active) setTransferHistory(localHistory); });
     return () => { active = false; };
@@ -252,7 +256,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
           .then(({ logins }: { logins: CustomerLogin[] }) => {
             if (!Array.isArray(logins)) return;
             setLoginHistory(logins);
-            try { window.localStorage.setItem(`takasafe-logins:${userId}:${customer.wallet}`, JSON.stringify(logins)); } catch { /* Keep refreshed history in memory. */ }
+          try { window.localStorage.setItem(`takasafe-logins:${userId}`, JSON.stringify(logins)); } catch { /* Keep refreshed history in memory. */ }
           }).catch(() => undefined);
         return;
       }
@@ -262,7 +266,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
         .then(({ history }: { history: CustomerTransfer[] }) => {
           if (!Array.isArray(history)) return;
           setTransferHistory(history);
-          try { window.localStorage.setItem(`takasafe-transfers:${userId}:${customer.wallet}`, JSON.stringify(history)); } catch { /* Keep the refreshed history in memory. */ }
+          try { window.localStorage.setItem(`takasafe-transfers:${userId}`, JSON.stringify(history.map((item) => ({ ...item, recipient: maskPhoneInText(item.recipient), reference: maskPhoneInText(item.reference) })))); } catch { /* Keep the refreshed history in memory. */ }
         })
         .catch(() => undefined);
     };
@@ -346,7 +350,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     createNotification(userId, {
       type: 'TRANSACTION',
       title: status === 'COMPLETED' ? 'Transaction completed' : 'Transaction proceeded',
-      message: `BDT ${transferAmount.toLocaleString()} ${direction === 'IN' ? 'received' : 'sent'}${transferRecipient ? ` ${direction === 'IN' ? 'from' : 'to'} ${transferRecipient}` : ''}.`,
+      message: `BDT ${transferAmount.toLocaleString()} ${direction === 'IN' ? 'received' : 'sent'}${transferRecipient ? ` ${direction === 'IN' ? 'from' : 'to'} ${maskPhoneInText(transferRecipient)}` : ''}.`,
       relatedEntityId: `${userId}-${record.timestamp}`,
     });
     const nextBalance = Math.max(0, availableBalance + (direction === 'IN' ? transferAmount : -(transferAmount + fee)));
@@ -359,7 +363,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
     }
     setTransferHistory(nextHistory);
     try {
-      window.localStorage.setItem(`takasafe-transfers:${userId}:${customer.wallet}`, JSON.stringify(nextHistory));
+      window.localStorage.setItem(`takasafe-transfers:${userId}`, JSON.stringify(nextHistory.map((item) => ({ ...item, recipient: maskPhoneInText(item.recipient), reference: maskPhoneInText(item.reference) }))));
     } catch {
       // Keep the current session's in-memory history if browser storage is unavailable.
     }
@@ -813,7 +817,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
             </span>
           </div>
           <h2 className="text-xl font-black text-slate-900 dark:text-white mt-1">
-            {customer.name} ({customer.wallet})
+            {customer.name} ({maskBangladeshPhone(customer.wallet)})
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Registered Base: {customer.homeDistrict} · Verified NID · Primary Device: {customer.knownDevices[0]}
@@ -1232,7 +1236,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
                     return (
                       <div key={`${transfer.timestamp}-${index}`} className="py-3 flex items-center justify-between gap-4">
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-800 truncate">{serviceName} · {transfer.recipient}</p>
+                          <p className="text-xs font-bold text-slate-800 truncate">{serviceName} · {maskPhoneInText(transfer.recipient)}</p>
                           <p className="text-[10px] text-slate-500 mt-0.5">{new Date(transfer.timestamp).toLocaleString()} {transfer.reference ? `· ${transfer.reference}` : ''}</p>
                         </div>
                         <div className="text-right shrink-0">
@@ -1339,7 +1343,7 @@ export const CustomerAppView: React.FC<CustomerAppViewProps> = ({
           <SecurityCenterPanel
             settings={securitySettings}
             events={[
-              ...transferHistory.map((transfer) => ({ at: transfer.timestamp, title: (transfer.riskScore ?? 0) >= 40 ? 'Transaction reviewed' : 'Transaction recorded', detail: `BDT ${transfer.amount.toLocaleString()} · ${transfer.recipient}`, risky: (transfer.riskScore ?? 0) >= 40 })),
+              ...transferHistory.map((transfer) => ({ at: transfer.timestamp, title: (transfer.riskScore ?? 0) >= 40 ? 'Transaction reviewed' : 'Transaction recorded', detail: `BDT ${transfer.amount.toLocaleString()} · ${maskPhoneInText(transfer.recipient)}`, risky: (transfer.riskScore ?? 0) >= 40 })),
               ...loginHistory.map((login) => ({ at: login.timestamp, title: 'Login recorded', detail: login.device ? 'Browser session recorded' : 'Session activity', risky: false })),
             ].sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).slice(0, 12)}
             score={Math.max(0, 100 - transferHistory.filter((transfer) => (transfer.riskScore ?? 0) >= 40 && Date.now() - Date.parse(transfer.timestamp) <= 30 * 86400000).length * 20)}
@@ -1547,7 +1551,7 @@ const SecurityCenterPanel: React.FC<{
       {error && <p role="alert" className="mt-3 text-xs font-semibold text-rose-700">{error}</p>}
     </section>
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#0F172A]"><h3 className="font-bold text-slate-900 dark:text-white">Transaction limits</h3><p className="mt-1 text-xs text-slate-500">Limits are enforced before the existing risk review.</p><div className="mt-4 grid gap-3 sm:grid-cols-3">{([['dailyLimit','Daily limit'],['singleTransactionLimit','Single transaction limit'],['confirmationThreshold','Confirm above']] as const).map(([field,label]) => <label key={field} className="text-xs font-semibold text-slate-600 dark:text-slate-300">{label}<div className="mt-1 flex items-center rounded-xl border border-slate-300 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-900"><span className="mr-2 text-slate-400">৳</span><input type="number" min="1" defaultValue={settings[field] ?? ''} onBlur={(event) => changeLimit(field, event.target.value)} placeholder="Not set" className="min-w-0 w-full bg-transparent py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-[#0054A6]" /></div></label>)}</div></section>
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#0F172A]"><h3 className="font-bold text-slate-900 dark:text-white">Trusted recipients</h3><p className="mt-1 text-xs text-slate-500">Trusted status affects one risk factor only. ScamShield checks still apply.</p><div className="mt-3 flex flex-wrap gap-2">{settings.trustedRecipients.map((item) => <button key={item} onClick={() => toggleTrusted(item)} title="Remove trusted status" className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-[#0054A6] dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200">✓ {item} ×</button>)}{settings.trustedRecipients.length === 0 && <p className="text-xs text-slate-500">No trusted recipients added.</p>}</div><div className="mt-3 flex gap-2"><input value={draft} onChange={(event) => setDraft(event.target.value)} aria-label="Recipient phone or wallet" placeholder="Recipient phone or wallet" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-900" /><button onClick={addTrusted} className="rounded-xl bg-[#0054A6] px-4 py-2 text-xs font-bold text-white">Add</button></div></section>
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#0F172A]"><h3 className="font-bold text-slate-900 dark:text-white">Trusted recipients</h3><p className="mt-1 text-xs text-slate-500">Trusted status affects one risk factor only. ScamShield checks still apply.</p><div className="mt-3 flex flex-wrap gap-2">{settings.trustedRecipients.map((item) => <button key={item} onClick={() => toggleTrusted(item)} title="Remove trusted status" className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-[#0054A6] dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200">✓ {maskPhoneInText(item)} ×</button>)}{settings.trustedRecipients.length === 0 && <p className="text-xs text-slate-500">No recipients marked trusted for this session.</p>}</div><div className="mt-3 flex gap-2"><input value={draft} onChange={(event) => setDraft(event.target.value)} aria-label="Recipient phone or wallet" placeholder="Recipient phone or wallet" className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-900" /><button onClick={addTrusted} className="rounded-xl bg-[#0054A6] px-4 py-2 text-xs font-bold text-white">Add</button></div></section>
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#0F172A]"><h3 className="font-bold text-slate-900 dark:text-white">Recent security activity</h3>{events.length ? <div className="mt-3 divide-y divide-slate-100 dark:divide-slate-800">{events.map((item,index) => <div key={`${item.at}-${index}`} className="flex items-start justify-between gap-3 py-3"><div className="flex gap-2"><span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${item.risky ? 'bg-amber-500' : 'bg-emerald-500'}`} /><div><p className="text-xs font-bold text-slate-800 dark:text-slate-100">{item.title}</p><p className="mt-0.5 text-[11px] text-slate-500">{item.detail}</p></div></div><time className="shrink-0 text-[10px] text-slate-400">{new Date(item.at).toLocaleString()}</time></div>)}</div> : <p className="mt-3 text-xs text-slate-500">No security activity recorded yet.</p>}</section>
   </div>;
 };

@@ -125,7 +125,13 @@ const PROFILE_STORAGE_PREFIX = 'takasafe-profile:';
 const loadQuickLoginProfiles = (): AuthUser[] => DEMO_PROFILES.map((profile) => {
   try {
     const saved = localStorage.getItem(`${PROFILE_STORAGE_PREFIX}${profile.id}`);
-    return saved ? { ...profile, ...JSON.parse(saved) } : profile;
+    if (!saved) return profile;
+    const safeProfile = JSON.parse(saved);
+    if (safeProfile && typeof safeProfile === 'object' && 'phone' in safeProfile) {
+      delete safeProfile.phone;
+      localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${profile.id}`, JSON.stringify(safeProfile));
+    }
+    return { ...profile, ...safeProfile, phone: profile.phone };
   } catch { return profile; }
 });
 
@@ -393,12 +399,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, onCancel, onRegis
             <div className="flex gap-2">
               <span className="inline-flex items-center rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs font-bold text-slate-700">+880</span>
               <input
-                type="tel"
+                type="password"
                 inputMode="numeric"
                 value={phone}
                 onChange={(event) => setPhone(event.target.value.replace(/[^\d+\s()-]/g, '').slice(0, 18))}
                 placeholder={t('01XXXXXXXXX', '০১XXXXXXXXX')}
-                autoComplete="tel-national"
+                autoComplete="off"
                 required
                 className="login-input w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0054A6] focus:border-transparent transition-all"
               />

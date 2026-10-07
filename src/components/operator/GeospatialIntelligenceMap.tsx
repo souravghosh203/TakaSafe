@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
+import { maskPhoneInText } from '../../utils/maskSensitive';
 import { RegionalRiskMetric, AgentLiquidityNode, Transaction } from '../../types';
 import {
   BANGLADESH_DIVISIONS_GEOJSON,
@@ -2289,7 +2290,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                             scoreLabel: 'Fused Risk',
                             extraData: {
                               'Txn ID': txn.id,
-                              Wallet: txn.receiverWallet,
+                              Wallet: maskPhoneInText(txn.receiverWallet),
                               'Mule Link': txn.isMuleConnected ? 'Connected (Net #17)' : 'Clean',
                             },
                           })

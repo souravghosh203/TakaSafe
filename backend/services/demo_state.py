@@ -16,6 +16,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, AsyncIterator, Deque, Dict, Iterable, List, Optional
 
+from backend.services.pii_crypto import encrypt_pii_fields
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = PROJECT_ROOT / "data"
@@ -174,10 +176,11 @@ class DemoState:
         try:
             DATA_DIR.mkdir(parents=True, exist_ok=True)
             with AUDIT_LOG_PATH.open("a", encoding="utf-8") as handle:
-                handle.write(json.dumps(entry, ensure_ascii=False, separators=(",", ":")) + "\n")
+                protected_entry = encrypt_pii_fields(entry)
+                handle.write(json.dumps(protected_entry, ensure_ascii=False, separators=(",", ":")) + "\n")
             self.persistence_available = True
-        except OSError:
-            # Read-only hosting must still be demonstrable; callers can expose this state.
+        except (OSError, ValueError):
+            # Never fall back to writing PII as plaintext when encryption is unavailable.
             self.persistence_available = False
         self.publish(
             "state-change",

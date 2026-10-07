@@ -38,7 +38,15 @@ const loadSavedProfile = (user: AuthUser | null): AuthUser | null => {
   if (!user) return null;
   try {
     const saved = localStorage.getItem(`${PROFILE_STORAGE_PREFIX}${user.id}`);
-    return saved ? { ...user, ...JSON.parse(saved) } : user;
+    if (!saved) return user;
+    const profile = JSON.parse(saved);
+    // Older demo builds saved the full mobile number in localStorage. Remove it
+    // during migration and always use the in-memory demo profile value instead.
+    if (profile && typeof profile === 'object' && 'phone' in profile) {
+      delete profile.phone;
+      localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${user.id}`, JSON.stringify(profile));
+    }
+    return { ...user, ...profile, phone: user.phone };
   } catch { return user; }
 };
 type AppView = 'OPERATOR' | 'CUSTOMER' | 'STORYLINE' | 'LOGIN';
@@ -194,7 +202,8 @@ export default function App() {
     }
     const customer = getCustomerProfile(currentUser);
     try {
-      const saved = localStorage.getItem(`takasafe-balance:${currentUser.id}:${customer.wallet}`);
+      localStorage.removeItem(`takasafe-balance:${currentUser.id}:${customer.wallet}`);
+      const saved = localStorage.getItem(`takasafe-balance:${currentUser.id}`);
       const amount = saved === null ? NaN : Number(saved);
       setDashboardBalance(Number.isFinite(amount) && amount >= 0 ? amount : customer.balance);
     } catch {
@@ -205,8 +214,9 @@ export default function App() {
   const recordCustomerLogin = (user: AuthUser) => {
     if (user.role !== 'USER') return;
     const timestamp = new Date().toISOString();
-    const storageKey = `takasafe-logins:${user.id}:${user.phone}`;
+    const storageKey = `takasafe-logins:${user.id}`;
     try {
+      localStorage.removeItem(`takasafe-logins:${user.id}:${user.phone}`);
       const prior = JSON.parse(localStorage.getItem(storageKey) || '[]');
       const logins = [...(Array.isArray(prior) ? prior : []), { timestamp, device: navigator.userAgent }].slice(-200);
       localStorage.setItem(storageKey, JSON.stringify(logins));
@@ -664,7 +674,8 @@ export default function App() {
             relatedEntityId: `profile-${Date.now()}`,
           });
           try {
-            localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${currentUser.id}`, JSON.stringify(profile));
+            const safeProfile = { name: profile.name, email: profile.email, avatar: profile.avatar };
+            localStorage.setItem(`${PROFILE_STORAGE_PREFIX}${currentUser.id}`, JSON.stringify(safeProfile));
             showToast('Profile saved in this browser.');
           } catch { showToast('Profile updated for this session, but browser storage is unavailable.'); }
         }}

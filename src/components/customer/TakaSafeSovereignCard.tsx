@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CustomerBaseline } from '../../types';
 import { Eye, EyeOff } from 'lucide-react';
 import { formatLocalizedNumber } from '../../utils/formatCurrency';
+import { maskBangladeshPhone } from '../../utils/maskSensitive';
 
 interface TakaSafeSovereignCardProps {
   customer: CustomerBaseline;
@@ -14,13 +15,12 @@ export const TakaSafeSovereignCard: React.FC<TakaSafeSovereignCardProps> = ({
 }) => {
   const [isBalanceVisible, setIsBalanceVisible] = useState<boolean>(true);
 
-  // Format wallet into a 4-cluster luxury card number format
-  // e.g. 01711-239481 -> 3759 0171 1239 9481
-  const cleanWallet = customer.wallet.replace(/\D/g, '');
+  // Keep the demo card readable while exposing only a short phone suffix.
   const prefix = '3759';
-  const part1 = cleanWallet.slice(0, 4) || '0171';
-  const part2 = cleanWallet.slice(4, 8) || '1239';
-  const part3 = cleanWallet.slice(8) || '9481';
+  const maskedWallet = maskBangladeshPhone(customer.wallet) || '017****9481';
+  const part1 = maskedWallet.slice(0, 4);
+  const part2 = maskedWallet.slice(4, -4);
+  const part3 = maskedWallet.slice(-4);
 
   return (
     <div className="relative group select-none">

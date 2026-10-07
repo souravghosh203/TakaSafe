@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useId, useRef } from 'react';
 import { Transaction } from '../../types';
+import { maskPhoneInText } from '../../utils/maskSensitive';
 import {
   ArrowRight,
   ShieldAlert,
@@ -1038,7 +1039,7 @@ export const MoneyPathInvestigationGraph: React.FC<MoneyPathInvestigationGraphPr
 
               <div className="flex justify-between text-slate-300">
                 <span className="text-slate-400">Wallet / ID:</span>
-                <span className="font-mono font-semibold text-white">{hoveredNode.walletOrId}</span>
+                <span className="font-mono font-semibold text-white">{maskPhoneInText(hoveredNode.walletOrId)}</span>
               </div>
 
               <div className="flex justify-between text-slate-300">
@@ -1104,7 +1105,7 @@ export const MoneyPathInvestigationGraph: React.FC<MoneyPathInvestigationGraphPr
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                {selectedNode.agentName || selectedNode.entityType} • {selectedNode.walletOrId}
+                {selectedNode.agentName || selectedNode.entityType} • {maskPhoneInText(selectedNode.walletOrId)}
               </p>
             </div>
           </div>

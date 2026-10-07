@@ -3,6 +3,7 @@ import { Transaction, CustomerBaseline, AuthUser } from '../../types';
 import { useModalPresence } from '../../hooks/useModalPresence';
 import { MoneyPathInvestigationGraph } from './MoneyPathInvestigationGraph';
 import { CustomerAnomalyComparisonMatrix } from './CustomerAnomalyComparisonMatrix';
+import { maskPhoneInText } from '../../utils/maskSensitive';
 import {
   X,
   Sparkles,
@@ -83,7 +84,7 @@ export const InvestigationModal: React.FC<InvestigationModalProps> = ({
     } catch (err) {
       console.warn('Backend unavailable, generating client-side report:', err);
       const fallbackReport = `### Executive Summary
-At 03:20 AM, customer Rafiqul Islam (Wallet \`${transaction.senderWallet}\`) attempted an outbound transfer of **৳ ${transaction.amount.toLocaleString()}** to wallet \`${transaction.receiverWallet}\`. TakaSafe's Transaction Guardian and Behavioural Anomaly models classified this event as **${transaction.riskBand} Risk (Score: ${transaction.fusedRiskScore}/100)**.
+At 03:20 AM, customer Rafiqul Islam (Wallet \`${maskPhoneInText(transaction.senderWallet)}\`) attempted an outbound transfer of **৳ ${transaction.amount.toLocaleString()}** to wallet \`${maskPhoneInText(transaction.receiverWallet)}\`. TakaSafe's Transaction Guardian and Behavioural Anomaly models classified this event as **${transaction.riskBand} Risk (Score: ${transaction.fusedRiskScore}/100)**.
 
 ### SHAP Feature Attribution Breakdown
 1. **Transaction Amount Anomaly (+31% contribution):** The requested amount of ৳${transaction.amount.toLocaleString()} is significantly higher than customer 90-day baseline (৳1,500).

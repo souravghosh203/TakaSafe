@@ -9,6 +9,7 @@ import {
 } from '../../types';
 import { SAMPLE_QR_PRESETS } from '../../data/mockData';
 import { formatLocalizedNumber } from '../../utils/formatCurrency';
+import { maskBangladeshPhone, maskNationalId } from '../../utils/maskSensitive';
 import {
   QrCode,
   Camera,
@@ -99,9 +100,9 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
         targetWalletId: customer.wallet,
         accountHolder: customer.name,
         provider: 'TakaSafe / upay',
-        accountNumberMasked: customer.wallet,
+        accountNumberMasked: maskBangladeshPhone(customer.wallet),
         type: 'MFS_WALLET',
-        nid: customer.nationalIdMasked,
+        nid: maskNationalId(customer.nationalIdMasked),
         timestamp: new Date().toISOString(),
       });
 
@@ -865,9 +866,9 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
 
               <div>
                 <span className="font-black text-slate-900 text-base block">{customer.name}</span>
-                <span className="font-mono text-xs text-slate-600 block mt-0.5">{customer.wallet}</span>
+                <span className="font-mono text-xs text-slate-600 block mt-0.5">{maskBangladeshPhone(customer.wallet)}</span>
                 <span className="text-[10px] text-slate-400 block mt-1">
-                  National ID: {customer.nationalIdMasked} · Tier 2 Limit: ৳300,000/mo
+                  National ID: {maskNationalId(customer.nationalIdMasked)} · Tier 2 Limit: ৳300,000/mo
                 </span>
               </div>
             </div>
@@ -886,7 +887,7 @@ export const QRCodeScannerModal: React.FC<QRCodeScannerModalProps> = ({
               {myQRCodeDataUrl && (
                 <a
                   href={myQRCodeDataUrl}
-                  download={`TakaSafe-QR-${customer.wallet}.png`}
+                  download={`TakaSafe-QR-${maskBangladeshPhone(customer.wallet)}.png`}
                   className="flex items-center gap-1.5 px-4 py-2 bg-[#0054A6] hover:bg-[#004284] text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-xs"
                 >
                   <Download className="w-4 h-4 text-amber-300" />

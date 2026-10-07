@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Transaction, CustomerBaseline } from '../../types';
+import { maskPhoneInText } from '../../utils/maskSensitive';
 import {
   TrendingUp,
   Clock,
@@ -202,7 +203,7 @@ export const CustomerAnomalyComparisonMatrix: React.FC<CustomerAnomalyComparison
       historicalSubtextBn: `${customerProfile.frequentRecipients.length} জন নিয়মিত ও বিশ্বস্ত প্রাপক রেকর্ডভুক্ত`,
       currentLabelEn: 'Designated Payee Target',
       currentLabelBn: 'বর্তমান প্রাপকের তথ্য',
-      currentValue: `${transaction.receiverName} (${transaction.receiverWallet})`,
+      currentValue: `${transaction.receiverName} (${maskPhoneInText(transaction.receiverWallet)})`,
       currentSubtextEn: transaction.isMuleConnected
         ? 'Flagged Node W302 in Mule Syndicate #17 · Immediate OTC cash-out hop'
         : 'First-time payee with zero transacting history',

@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import path from 'path';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
+import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
@@ -65,6 +66,41 @@ const customerLoginsCsv = path.resolve(process.cwd(), 'dataset', 'customer_login
 const alertFeedbackCsv = path.resolve(process.cwd(), 'dataset', 'alert_feedback.csv');
 const customerTransactionHeaders = ['user_id', 'wallet', 'amount', 'recipient', 'timestamp', 'reference', 'status', 'risk_score', 'service_type', 'direction', 'fee'];
 const customerTransactionThreatHeaders = [...customerTransactionHeaders, 'is_threat', 'suspicious_reason', 'device'];
+const encryptedFilePrefix = 'TSPII1:';
+const getPiiEncryptionKey = () => {
+  const encoded = process.env.PII_ENCRYPTION_KEY || '';
+  const key = Buffer.from(encoded, 'base64url');
+  if (key.length !== 32) throw new Error('PII_ENCRYPTION_KEY must be URL-safe base64 for a 32-byte key');
+  return key;
+};
+const encryptFileContents = (filePath: string, plaintext: string) => {
+  const nonce = randomBytes(12);
+  const cipher = createCipheriv('aes-256-gcm', getPiiEncryptionKey(), nonce);
+  cipher.setAAD(Buffer.from(path.basename(filePath), 'utf8'));
+  const ciphertext = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+  return `${encryptedFilePrefix}${Buffer.concat([nonce, cipher.getAuthTag(), ciphertext]).toString('base64')}`;
+};
+const writeProtectedText = async (filePath: string, plaintext: string) => {
+  await fs.writeFile(filePath, encryptFileContents(filePath, plaintext), 'utf8');
+};
+const readProtectedText = async (filePath: string) => {
+  const stored = await fs.readFile(filePath, 'utf8');
+  if (!stored.startsWith(encryptedFilePrefix)) {
+    // Migrate any existing plaintext customer CSV as soon as it is accessed.
+    if (stored) await writeProtectedText(filePath, stored);
+    return stored;
+  }
+  const payload = Buffer.from(stored.slice(encryptedFilePrefix.length), 'base64');
+  if (payload.length < 28) throw new Error(`Encrypted PII file is corrupt: ${path.basename(filePath)}`);
+  const decipher = createDecipheriv('aes-256-gcm', getPiiEncryptionKey(), payload.subarray(0, 12));
+  decipher.setAAD(Buffer.from(path.basename(filePath), 'utf8'));
+  decipher.setAuthTag(payload.subarray(12, 28));
+  return Buffer.concat([decipher.update(payload.subarray(28)), decipher.final()]).toString('utf8');
+};
+const appendProtectedText = async (filePath: string, addition: string) => {
+  const existing = await readProtectedText(filePath).catch((error: NodeJS.ErrnoException) => error.code === 'ENOENT' ? '' : Promise.reject(error));
+  await writeProtectedText(filePath, `${existing}${addition}`);
+};
 const toCsvCell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
 const parseCsvLine = (line: string): string[] => {
   const cells: string[] = [];
@@ -85,7 +121,7 @@ app.get('/api/customer-logins/:userId', async (req: Request, res: Response) => {
   const userId = String(req.params.userId || '').trim();
   if (!userId || userId.length > 64) return res.status(400).json({ error: 'Invalid user ID' });
   try {
-    const csv = await fs.readFile(customerLoginsCsv, 'utf8').catch((error: NodeJS.ErrnoException) => {
+    const csv = await readProtectedText(customerLoginsCsv).catch((error: NodeJS.ErrnoException) => {
       if (error.code === 'ENOENT') return '';
       throw error;
     });
@@ -109,7 +145,7 @@ app.post('/api/customer-logins/:userId', async (req: Request, res: Response) => 
   }
   try {
     let alert: Record<string, unknown> | null = null;
-    const txnCsv = await fs.readFile(customerTransactionsCsv, 'utf8').catch((error: NodeJS.ErrnoException) => error.code === 'ENOENT' ? '' : Promise.reject(error));
+    const txnCsv = await readProtectedText(customerTransactionsCsv).catch((error: NodeJS.ErrnoException) => error.code === 'ENOENT' ? '' : Promise.reject(error));
     const txnLines = txnCsv.split(/\r?\n/).filter(Boolean);
     if (txnLines.length > 1) {
       const txnHeaders = parseCsvLine(txnLines.shift()!);
@@ -126,7 +162,7 @@ app.post('/api/customer-logins/:userId', async (req: Request, res: Response) => 
         const devices = ['Samsung Galaxy A54', 'Xiaomi Redmi Note 12', 'Infinix Hot 30', 'iPhone 13'];
         const alertDevice = devices[[...userId].reduce((sum, char) => sum + char.charCodeAt(0), 0) % devices.length];
         const updated = records.map((row) => row === txn ? { ...row, is_threat: 'true', suspicious_reason: reason, device: alertDevice } : row);
-        await fs.writeFile(customerTransactionsCsv, `${customerTransactionThreatHeaders.join(',')}\r\n${updated.map((row) => customerTransactionThreatHeaders.map((header) => toCsvCell(row[header] || '')).join(',')).join('\r\n')}\r\n`, 'utf8');
+        await writeProtectedText(customerTransactionsCsv, `${customerTransactionThreatHeaders.join(',')}\r\n${updated.map((row) => customerTransactionThreatHeaders.map((header) => toCsvCell(row[header] || '')).join(',')).join('\r\n')}\r\n`);
         alert = { amount: Number(txn.amount), timestamp: txn.timestamp, device: alertDevice, reason };
         publishServerEvent('state-change', { kind: 'suspicious-transaction', userId });
       }
@@ -137,7 +173,7 @@ app.post('/api/customer-logins/:userId', async (req: Request, res: Response) => 
     try {
       if ((await fs.stat(customerLoginsCsv)).size === 0) needsHeader = true;
       else {
-        const existing = await fs.readFile(customerLoginsCsv, 'utf8');
+        const existing = await readProtectedText(customerLoginsCsv);
         const [headerLine, ...oldLines] = existing.split(/\r?\n/).filter(Boolean);
         const oldHeaders = parseCsvLine(headerLine);
         if (!oldHeaders.includes('device')) {
@@ -146,12 +182,12 @@ app.post('/api/customer-logins/:userId', async (req: Request, res: Response) => 
             const oldRow = Object.fromEntries(oldHeaders.map((header, index) => [header, oldCells[index] || '']));
             return [oldRow.user_id, oldRow.wallet, oldRow.timestamp, ''].map(toCsvCell).join(',');
           });
-          await fs.writeFile(customerLoginsCsv, `${headers.join(',')}\r\n${migrated.join('\r\n')}${migrated.length ? '\r\n' : ''}`, 'utf8');
+          await writeProtectedText(customerLoginsCsv, `${headers.join(',')}\r\n${migrated.join('\r\n')}${migrated.length ? '\r\n' : ''}`);
         }
       }
     } catch (error: any) { if (error.code === 'ENOENT') needsHeader = true; else throw error; }
     const values = [userId, wallet.trim(), date.toISOString(), device];
-    await fs.appendFile(customerLoginsCsv, `${needsHeader ? `${headers.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`, 'utf8');
+    await appendProtectedText(customerLoginsCsv, `${needsHeader ? `${headers.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`);
     publishServerEvent('state-change', { kind: 'customer-login', userId });
     res.json({ success: true, alert });
   } catch (error: any) {
@@ -161,7 +197,7 @@ app.post('/api/customer-logins/:userId', async (req: Request, res: Response) => 
 
 app.get('/api/alert-feedback', async (_req: Request, res: Response) => {
   try {
-    const csv = await fs.readFile(alertFeedbackCsv, 'utf8').catch((error: NodeJS.ErrnoException) => {
+    const csv = await readProtectedText(alertFeedbackCsv).catch((error: NodeJS.ErrnoException) => {
       if (error.code === 'ENOENT') return '';
       throw error;
     });
@@ -191,7 +227,7 @@ app.post('/api/alert-feedback', async (req: Request, res: Response) => {
     catch (error: any) { if (error.code === 'ENOENT') needsHeader = true; else throw error; }
     const headers = ['timestamp', 'case_id', 'transaction_id', 'analyst', 'outcome', 'risk_score', 'notes'];
     const values = [new Date().toISOString(), caseId.trim(), transactionId.trim(), analyst.trim(), outcome, Number(riskScore), notes];
-    await fs.appendFile(alertFeedbackCsv, `${needsHeader ? `${headers.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`, 'utf8');
+    await appendProtectedText(alertFeedbackCsv, `${needsHeader ? `${headers.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`);
     publishServerEvent('state-change', { kind: 'alert-feedback', caseId: caseId.trim() });
     res.json({ success: true });
   } catch (error: any) {
@@ -203,7 +239,7 @@ app.get('/api/customer-history/:wallet', async (req: Request, res: Response) => 
     const wallet = String(req.params.wallet || '').trim();
   if (!wallet || wallet.length > 64) return res.status(400).json({ error: 'Invalid wallet' });
   try {
-    const csv = await fs.readFile(customerTransactionsCsv, 'utf8').catch((error: NodeJS.ErrnoException) => {
+    const csv = await readProtectedText(customerTransactionsCsv).catch((error: NodeJS.ErrnoException) => {
       if (error.code === 'ENOENT') return '';
       throw error;
     });
@@ -229,7 +265,7 @@ app.get('/api/recipient-risk/:recipient', async (req: Request, res: Response) =>
   const recipient = String(req.params.recipient || '').replace(/\D/g, '');
   if (!recipient || recipient.length > 32) return res.status(400).json({ error: 'Invalid recipient' });
   try {
-    const csv = await fs.readFile(customerTransactionsCsv, 'utf8').catch((error: NodeJS.ErrnoException) => {
+    const csv = await readProtectedText(customerTransactionsCsv).catch((error: NodeJS.ErrnoException) => {
       if (error.code === 'ENOENT') return '';
       throw error;
     });
@@ -286,7 +322,7 @@ app.post('/api/customer-history/:wallet', async (req: Request, res: Response) =>
     try {
       if ((await fs.stat(customerTransactionsCsv)).size === 0) needsHeader = true;
       else {
-        const existing = await fs.readFile(customerTransactionsCsv, 'utf8');
+        const existing = await readProtectedText(customerTransactionsCsv);
         const [headerLine, ...oldLines] = existing.split(/\r?\n/).filter(Boolean);
         const oldHeaders = parseCsvLine(headerLine);
         if (customerTransactionThreatHeaders.some((header) => !oldHeaders.includes(header))) {
@@ -300,7 +336,7 @@ app.post('/api/customer-history/:wallet', async (req: Request, res: Response) =>
             ]
               .map(toCsvCell).join(',');
           });
-          await fs.writeFile(customerTransactionsCsv, `${customerTransactionThreatHeaders.join(',')}\r\n${migrated.join('\r\n')}${migrated.length ? '\r\n' : ''}`, 'utf8');
+          await writeProtectedText(customerTransactionsCsv, `${customerTransactionThreatHeaders.join(',')}\r\n${migrated.join('\r\n')}${migrated.length ? '\r\n' : ''}`);
         }
       }
     } catch (error: any) { if (error.code === 'ENOENT') needsHeader = true; else throw error; }
@@ -309,7 +345,7 @@ app.post('/api/customer-history/:wallet', async (req: Request, res: Response) =>
       Math.max(0, Math.min(100, Number(riskScore))), serviceType, direction, Number(fee), '', '', '',
     ];
     const content = `${needsHeader ? `${customerTransactionThreatHeaders.join(',')}\r\n` : ''}${values.map(toCsvCell).join(',')}\r\n`;
-    await fs.appendFile(customerTransactionsCsv, content, 'utf8');
+    await appendProtectedText(customerTransactionsCsv, content);
     publishServerEvent('state-change', { kind: 'customer-transaction', timestamp: date.toISOString() });
     res.json({ success: true });
   } catch (error: any) {
@@ -416,7 +452,7 @@ app.get('/api/events', (req: Request, res: Response) => {
 
 app.get('/api/suspicious-transactions', async (_req: Request, res: Response) => {
   try {
-    const csv = await fs.readFile(customerTransactionsCsv, 'utf8').catch((error: NodeJS.ErrnoException) => error.code === 'ENOENT' ? '' : Promise.reject(error));
+    const csv = await readProtectedText(customerTransactionsCsv).catch((error: NodeJS.ErrnoException) => error.code === 'ENOENT' ? '' : Promise.reject(error));
     const lines = csv.split(/\r?\n/).filter(Boolean);
     const headers = lines.length ? parseCsvLine(lines.shift()!) : customerTransactionThreatHeaders;
     const transactions = lines.map(parseCsvLine).map((cells) => Object.fromEntries(headers.map((header, index) => [header, cells[index] || ''])))
@@ -982,7 +1018,7 @@ app.post('/api/scamshield/decision', async (req: Request, res: Response) => {
   // Log to alert feedback CSV
   try {
     const feedbackRow = `${decisionId},${timestamp},SCAMSHIELD_CUSTOMER,${receiver_id},${decision},${risk_score},${toCsvCell(notes || `User chose ${decision}`)},${confirmed_override}\r\n`;
-    await fs.appendFile(alertFeedbackCsv, feedbackRow, 'utf8').catch(() => {});
+    await appendProtectedText(alertFeedbackCsv, feedbackRow).catch(() => {});
   } catch {
     // ignore
   }
