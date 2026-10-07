@@ -15,7 +15,9 @@ import {
   BookOpen,
   Activity,
   Code2,
+  BarChart3,
 } from 'lucide-react';
+import { MLNotebookResultsView } from '../operator/MLNotebookResultsView';
 
 interface AI1NotebookModalProps {
   isOpen: boolean;
@@ -198,7 +200,7 @@ export const AI1NotebookModal: React.FC<AI1NotebookModalProps> = ({
   lang = 'EN',
 }) => {
   const { isMounted, isExiting } = useModalPresence(isOpen);
-  const [activeTab, setActiveTab] = useState<'CODE' | 'THEORY' | 'METRICS'>('CODE');
+  const [activeTab, setActiveTab] = useState<'RESULTS' | 'CODE' | 'THEORY' | 'METRICS'>('RESULTS');
   const [copied, setCopied] = useState<boolean>(false);
 
   if (!isMounted) return null;
@@ -302,11 +304,24 @@ export const AI1NotebookModal: React.FC<AI1NotebookModalProps> = ({
         </div>
 
         {/* Tab Switcher */}
-        <div className="px-6 pt-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 bg-slate-50/60 dark:bg-slate-900/60 shrink-0">
+        <div className="px-6 pt-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 bg-slate-50/60 dark:bg-slate-900/60 shrink-0 overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => setActiveTab('RESULTS')}
+            className={`px-3.5 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+              activeTab === 'RESULTS'
+                ? 'border-[#0054A6] text-[#0054A6] dark:text-blue-400 bg-white dark:bg-slate-900 rounded-t-lg'
+                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <BarChart3 className="w-3.5 h-3.5 text-amber-500" />
+            <span>ML Notebook Result</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setActiveTab('CODE')}
-            className={`px-3.5 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'CODE'
                 ? 'border-[#0054A6] text-[#0054A6] dark:text-blue-400 bg-white dark:bg-slate-900 rounded-t-lg'
                 : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
@@ -345,6 +360,12 @@ export const AI1NotebookModal: React.FC<AI1NotebookModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto flex-1 space-y-4">
+          {activeTab === 'RESULTS' && (
+            <div className="space-y-4">
+              <MLNotebookResultsView lang={lang} />
+            </div>
+          )}
+
           {activeTab === 'CODE' && (
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs text-slate-500">

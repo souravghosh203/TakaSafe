@@ -39,6 +39,7 @@ import {
   Globe,
   Award,
 } from 'lucide-react';
+import { MLNotebookResultsView } from '../operator/MLNotebookResultsView';
 
 interface UpayInfoModalProps {
   modalType: string | null;
@@ -593,13 +594,22 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
                 <span className="font-bold block">Team 3AM Runtime:</span>
                 <span>Md. Tanvir Hasan (Chief Risk Analyst & Lead) · Md. Sadman Al Islam Shabab (Model Architecture Lead) · Sourov Kumar (SOC Operations)</span>
               </div>
-              <a
-                href="/api/notebook/ai1"
-                download="TakaSafe_AI1_LightGBM_Conformal_DoubtCheck.ipynb"
-                className="shrink-0 px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold text-[11px] rounded-lg transition-colors flex items-center gap-1 w-fit"
-              >
-                <span>AI-1 Notebook (.ipynb)</span>
-              </a>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <a
+                  href="/api/notebook/xgboost"
+                  download="xgboost_fraud_detection.ipynb"
+                  className="shrink-0 px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-[11px] rounded-lg transition-colors flex items-center gap-1 w-fit shadow-xs"
+                >
+                  <span>XGBoost (.ipynb)</span>
+                </a>
+                <a
+                  href="/api/notebook/ai1"
+                  download="TakaSafe_ML1_LightGBM_Conformal_DoubtCheck.ipynb"
+                  className="shrink-0 px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-950 font-bold text-[11px] rounded-lg transition-colors flex items-center gap-1 w-fit"
+                >
+                  <span>AI-1 Conformal (.ipynb)</span>
+                </a>
+              </div>
             </div>
           </div>
         );
@@ -964,6 +974,14 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
           </div>
         );
 
+      case 'ML_NOTEBOOK':
+      case 'ML_RESULTS':
+        return (
+          <div className="space-y-4">
+            <MLNotebookResultsView lang={lang} />
+          </div>
+        );
+
       default:
         return (
           <div className="space-y-3 text-xs text-slate-700">
@@ -983,6 +1001,8 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
     switch (displayedModalType) {
       case 'ABSTRACT':
       case 'RESEARCH_NOTE': return lang === 'BN' ? 'অফিসিয়াল রিসার্চ অ্যাবস্ট্রাক্ট ও SDG' : 'Official Project Abstract & UN SDGs';
+      case 'ML_NOTEBOOK':
+      case 'ML_RESULTS': return lang === 'BN' ? 'মেশিন লার্নিং নোটবুক ফলাফল ও বেঞ্চমার্ক' : 'ML Notebook Result & Model Evaluation';
       case 'ABOUT_US': return 'About TakaSafe';
       case 'PREPAID_CARD': return 'TakaSafe Prepaid Cards';
       case 'SERVICE_LOCATIONS': return 'Service Locations & ATM Finder';
@@ -1001,7 +1021,9 @@ export const UpayInfoModal: React.FC<UpayInfoModalProps> = ({
   };
 
   const modalMaxWidth =
-    displayedModalType === 'ABSTRACT' || displayedModalType === 'RESEARCH_NOTE'
+    displayedModalType === 'ML_NOTEBOOK' || displayedModalType === 'ML_RESULTS'
+      ? 'max-w-5xl'
+      : displayedModalType === 'ABSTRACT' || displayedModalType === 'RESEARCH_NOTE'
       ? 'max-w-3xl'
       : displayedModalType === 'LIVE_CHAT'
       ? 'max-w-xl'
