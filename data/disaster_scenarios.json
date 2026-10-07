@@ -1,0 +1,14 @@
+{
+  "label": "Synthetic Demo Data — Simulation",
+  "source": "SYNTHETIC",
+  "scenarios": [
+    {
+      "id": "SCN-DEMO-CYCLONE-01",
+      "name": "Coastal cyclone liquidity simulation",
+      "affected_region": "Barishal",
+      "demand_multiplier": 1.72,
+      "recommended_agent_support": "Dispatch BDT 130,000 demo float to AGT-DEMO-101",
+      "priority_score": 88
+    }
+  ]
+}

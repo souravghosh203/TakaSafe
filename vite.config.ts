@@ -1,10 +1,12 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig} from 'vite';
+import {defineConfig, loadEnv} from 'vite';
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
   const base = process.env.VITE_BASE_PATH || '/';
+  const backendUrl = env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
   return {
     base,
@@ -22,6 +24,12 @@ export default defineConfig(() => {
       hmr: process.env.DISABLE_HMR !== 'true',
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      proxy: {
+        '/api': {
+          target: backendUrl,
+          changeOrigin: true,
+        },
+      },
     },
   };
 });

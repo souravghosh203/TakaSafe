@@ -1,0 +1,56 @@
+{
+  "label": "Synthetic Demo Data",
+  "source": "SYNTHETIC",
+  "transactions": [
+    {
+      "id": "TXN-DEMO-1001",
+      "user_id": "demo-customer-rafiqul",
+      "wallet": "01711-239481",
+      "amount": 80000,
+      "recipient": "01988-510294",
+      "timestamp": "2026-10-01T03:20:00+06:00",
+      "reference": "Synthetic high-risk transfer scenario",
+      "status": "HELD",
+      "risk_score": 94,
+      "service_type": "SEND_MONEY",
+      "direction": "OUT",
+      "fee": 0,
+      "is_threat": true,
+      "suspicious_reason": "Synthetic scenario: unusual amount, nocturnal activity, new device, and demo watchlist link.",
+      "device": "Infinix Hot 30 (demo device)"
+    },
+    {
+      "id": "TXN-DEMO-1002",
+      "user_id": "demo-customer-rafiqul",
+      "wallet": "01711-239481",
+      "amount": 1450,
+      "recipient": "01710-445566",
+      "timestamp": "2026-10-01T14:10:00+06:00",
+      "reference": "Synthetic family transfer",
+      "status": "COMPLETED",
+      "risk_score": 8,
+      "service_type": "SEND_MONEY",
+      "direction": "OUT",
+      "fee": 5,
+      "is_threat": false,
+      "device": "Known demo device"
+    },
+    {
+      "id": "TXN-DEMO-1003",
+      "user_id": "demo-customer-salma",
+      "wallet": "01855-222333",
+      "amount": 24000,
+      "recipient": "01988-510294",
+      "timestamp": "2026-10-01T03:12:00+06:00",
+      "reference": "Synthetic watchlist fan-in scenario",
+      "status": "HELD",
+      "risk_score": 88,
+      "service_type": "SEND_MONEY",
+      "direction": "OUT",
+      "fee": 0,
+      "is_threat": true,
+      "suspicious_reason": "Synthetic scenario: repeated inbound transfers to a demo watchlist wallet.",
+      "device": "New demo device"
+    }
+  ]
+}

@@ -19,6 +19,7 @@ import { RiskDistributionDonutChart } from './RiskDistributionDonutChart';
 import { PolicyWeightsActionEngine } from './PolicyWeightsActionEngine';
 import { RegionalRiskHeatmapGrid } from './RegionalRiskHeatmapGrid';
 import { DailySuspiciousRiskTrendChart } from './DailySuspiciousRiskTrendChart';
+import { MLNotebookResultsView } from './MLNotebookResultsView';
 import {
   ShieldCheck,
   AlertTriangle,
@@ -28,6 +29,7 @@ import {
   Globe,
   Sliders,
   FileCheck2,
+  FileCode2,
   Search,
   ExternalLink,
   Lock,
@@ -456,6 +458,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
           { id: 'RESILIENCE', label: '7. Disaster Resilience Mode', icon: CloudLightning },
           { id: 'POLICY', label: '8. Policy Weights & Action Engine', icon: Sliders },
           { id: 'AUDIT', label: '9. Audit Logs & Compliance', icon: FileCheck2 },
+          { id: 'ML_NOTEBOOK', label: '10. ML Notebook Result', icon: FileCode2 },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -928,6 +931,19 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
           </div>
         </div>
       )}
+
+        {/* Tab 10: ML Notebook Result */}
+        {activeTab === 'ML_NOTEBOOK' && (
+          <div className="space-y-6">
+            <MLNotebookResultsView
+              lang={lang}
+              onOpenInvestigation={(txnId) => {
+                const found = liveTransactions.find((t) => t.id === txnId);
+                if (found) onOpenInvestigation(found);
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Compliance PDF/Print Report Modal */}

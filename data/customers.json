@@ -1,0 +1,20 @@
+{
+  "label": "Synthetic Demo Data",
+  "source": "SYNTHETIC",
+  "customers": [
+    {
+      "id": "demo-customer-rafiqul",
+      "wallet": "01711-239481",
+      "display_name": "Rafiqul Islam (Synthetic Persona)",
+      "average_amount": 1500,
+      "usual_hours": "09:00-21:00"
+    },
+    {
+      "id": "demo-customer-salma",
+      "wallet": "01855-222333",
+      "display_name": "Salma Akter (Synthetic Persona)",
+      "average_amount": 2200,
+      "usual_hours": "08:00-22:00"
+    }
+  ]
+}

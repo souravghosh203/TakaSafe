@@ -10,6 +10,7 @@ from backend.models.schemas import (
 from backend.services.risk_engine import RiskEngine
 from backend.services.scamshield_model import ScamShieldModelService
 from backend.services.feature_processor import FeatureProcessor
+from backend.services.demo_state import demo_state, utc_now
 
 router = APIRouter(prefix="/api/scamshield", tags=["ScamShield"])
 
@@ -17,9 +18,6 @@ router = APIRouter(prefix="/api/scamshield", tags=["ScamShield"])
 model_service = ScamShieldModelService()
 feature_processor = FeatureProcessor()
 risk_engine = RiskEngine(model_service=model_service, feature_processor=feature_processor)
-
-# Decision ledger
-decisions_log = []
 
 @router.get("/health", response_model=HealthResponse)
 def get_health():
@@ -58,7 +56,7 @@ def verify_recipient(payload: VerifyRecipientRequest):
 @router.post("/decision", response_model=DecisionResponse)
 def record_decision(payload: DecisionRequest):
     decision_id = f"DEC-{uuid.uuid4().hex[:8].upper()}"
-    timestamp = datetime.utcnow().isoformat() + "Z"
+    timestamp = utc_now()
     
     entry = {
         "decision_id": decision_id,
@@ -70,11 +68,24 @@ def record_decision(payload: DecisionRequest):
         "notes": payload.notes,
         "timestamp": timestamp
     }
-    decisions_log.append(entry)
+    # Customer choices are runtime-only.  The append-only JSONL record is an
+    # audit trail, not a substitute for production transaction persistence.
+    demo_state.operator_decisions[decision_id] = entry
+    demo_state.record_audit(
+        actor="Demo customer",
+        action="SCAMSHIELD_DECISION",
+        transaction_id=payload.receiver_id,
+        decision=payload.decision,
+        reason=payload.notes or f"Customer selected {payload.decision} after ScamShield guidance.",
+        model_version=model_service.model_type,
+        extras={"entityType": "CUSTOMER_DECISION", "riskScore": payload.risk_score},
+    )
     
     return DecisionResponse(
         success=True,
         decision_id=decision_id,
         logged_at=timestamp,
-        action_recorded=payload.decision
+        action_recorded=payload.decision,
+        audit_recorded=True,
+        audit_persistence_available=demo_state.persistence_available,
     )

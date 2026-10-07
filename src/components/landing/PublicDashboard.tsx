@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowDownLeft, ArrowRight, ArrowUpRight, Check, ChevronDown, CreditCard, Globe, Info, MapPin, Menu, Moon, Newspaper, Phone, Search, ShieldCheck, Sparkles, Star, Sun, X } from 'lucide-react';
+import { ArrowDownLeft, ArrowRight, ArrowUpRight, Check, ChevronDown, CreditCard, FileCode2, Globe, Info, MapPin, Menu, Moon, Newspaper, Phone, Search, ShieldCheck, Sparkles, Star, Sun, X } from 'lucide-react';
 import './PublicDashboard.css';
 import { DashboardAssistant } from '../common/DashboardAssistant';
 import { UpayFooter } from '../common/UpayFooter';
@@ -16,6 +16,7 @@ interface PublicDashboardProps {
 }
 
 const serviceItems = [
+  { label: 'ML Notebook Result', labelBn: 'মেশিন লার্নিং নোটবুক ফলাফল', icon: FileCode2, modal: 'ML_NOTEBOOK' },
   { label: 'Project Abstract & SDGs', labelBn: 'প্রকল্পের সারসংক্ষেপ ও SDG', icon: Sparkles, modal: 'ABSTRACT' },
   { label: 'About Us', labelBn: 'আমাদের সম্পর্কে', icon: Info, modal: 'ABOUT_US' },
   { label: 'Products & Campaigns', labelBn: 'পণ্য ও ক্যাম্পেইন', icon: Sparkles, target: 'products' },
