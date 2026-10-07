@@ -49,7 +49,7 @@ export const LiveWebSocketTicker: React.FC<LiveWebSocketTickerProps> = ({
 
   const createSandboxPayment = async () => {
     setIsCreatingPayment(true);
-    setPaymentResult('Calling Upay sandbox…');
+    setPaymentResult('Calling bKash sandbox…');
     try {
       const response = await fetch('/api/bkash/payment/create', {
         method: 'POST',
@@ -179,10 +179,10 @@ export const LiveWebSocketTicker: React.FC<LiveWebSocketTickerProps> = ({
             onClick={createSandboxPayment}
             disabled={isCreatingPayment}
             className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
-            title={paymentResult || 'Create a BDT 100 Upay sandbox-format payment'}
+            title={paymentResult || 'Create a BDT 100 bKash sandbox payment'}
           >
             <CreditCard className="w-3.5 h-3.5" />
-            <span>{isCreatingPayment ? 'Calling…' : 'Upay Sandbox'}</span>
+            <span>{isCreatingPayment ? 'Calling…' : 'bKash Sandbox'}</span>
           </button>
 
           {/* Simulate High-Risk Attack Spike Button */}
@@ -216,7 +216,7 @@ export const LiveWebSocketTicker: React.FC<LiveWebSocketTickerProps> = ({
           </div>
         </div>
       </div>
-      {paymentResult && <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-1 text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate">Upay sandbox payment: {paymentResult}</div>}
+      {paymentResult && <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-1 text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate">bKash sandbox payment: {paymentResult}</div>}
     </div>
   );
 };
