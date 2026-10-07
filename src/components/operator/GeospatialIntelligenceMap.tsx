@@ -2193,20 +2193,8 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                         })
                       }
                       onMouseLeave={() => setHoveredEntity(null)}
-                      className="cursor-pointer transition-transform duration-200 ease-out hover:scale-125"
+                      className="cursor-pointer transition-opacity duration-150 ease-out hover:opacity-80"
                     >
-                      {/* Pulse halo for high threat clusters */}
-                      {isHighThreat && (
-                        <circle
-                          r="15"
-                          fill="none"
-                          stroke="#EF4444"
-                          strokeWidth="1.4"
-                          opacity="0.65"
-                          className="animate-pulse"
-                        />
-                      )}
-
                       {/* District Node Body */}
                       <circle
                         r={isSelected ? 8.5 : 5.5}
@@ -2269,18 +2257,8 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                           })
                         }
                         onMouseLeave={() => setHoveredEntity(null)}
-                        className="cursor-pointer transition-transform duration-200 ease-out hover:scale-135"
+                        className="cursor-pointer transition-opacity duration-150 ease-out hover:opacity-80"
                       >
-                        {isCrit && (
-                          <circle
-                            r="11"
-                            fill="none"
-                            stroke="#EF4444"
-                            strokeWidth="1.5"
-                            opacity="0.7"
-                            className="animate-pulse"
-                          />
-                        )}
                         <rect
                           x={-4.5}
                           y={-4.5}
@@ -2317,7 +2295,7 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                           })
                         }
                         onMouseLeave={() => setHoveredEntity(null)}
-                        className="cursor-pointer transition-transform duration-200 ease-out hover:scale-135"
+                        className="cursor-pointer transition-opacity duration-150 ease-out hover:opacity-80"
                       >
                         <circle
                           r={isSelected ? 6.5 : 4.5}
@@ -2364,32 +2342,8 @@ export const GeospatialIntelligenceMap: React.FC<GeospatialIntelligenceMapProps>
                         })
                       }
                       onMouseLeave={() => setHoveredEntity(null)}
-                      className="cursor-pointer transition-transform duration-200 ease-out hover:scale-135"
+                      className="cursor-pointer transition-opacity duration-150 ease-out hover:opacity-80"
                     >
-                      {/* Radar pulse for critical agent depletion */}
-                      {isDepleted && (
-                        <>
-                          <circle
-                            r="15"
-                            fill="none"
-                            stroke="#EF4444"
-                            strokeWidth="1.5"
-                            opacity="0.6"
-                            className="animate-pulse"
-                            style={{ animationDuration: '2s' }}
-                          />
-                          <circle
-                            r="22"
-                            fill="none"
-                            stroke="#F59E0B"
-                            strokeWidth="1"
-                            opacity="0.3"
-                            className="animate-pulse"
-                            style={{ animationDuration: '3s' }}
-                          />
-                        </>
-                      )}
-
                       {/* Selected Agent Reticle Ring */}
                       {isSelected && (
                         <circle
