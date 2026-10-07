@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Transaction } from '../../types';
 import {
   Radio,
@@ -14,6 +14,7 @@ import {
   ArrowRight,
   Flame,
   CheckCircle,
+  CreditCard,
 } from 'lucide-react';
 
 interface LiveWebSocketTickerProps {
@@ -23,6 +24,10 @@ interface LiveWebSocketTickerProps {
   onSimulateSpike: () => void;
   onOpenComplianceReport: () => void;
   onDownloadCSV: () => void;
+  streamStatus: 'CONNECTING' | 'LIVE' | 'RECONNECTING';
+  streamEventCount: number;
+  isStreamPaused: boolean;
+  onToggleStream: () => void;
   lang: 'EN' | 'BN';
 }
 
@@ -33,19 +38,34 @@ export const LiveWebSocketTicker: React.FC<LiveWebSocketTickerProps> = ({
   onSimulateSpike,
   onOpenComplianceReport,
   onDownloadCSV,
+  streamStatus,
+  streamEventCount,
+  isStreamPaused,
+  onToggleStream,
   lang,
 }) => {
-  const [latency, setLatency] = useState<number>(9);
-  const [eventCount, setEventCount] = useState<number>(142);
-  const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [paymentResult, setPaymentResult] = useState('');
+  const [isCreatingPayment, setIsCreatingPayment] = useState(false);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setLatency(Math.floor(7 + Math.random() * 6));
-      if (!isPaused) setEventCount((prev) => prev + 1);
-    }, 4500);
-    return () => clearInterval(timer);
-  }, [isPaused]);
+  const createSandboxPayment = async () => {
+    setIsCreatingPayment(true);
+    setPaymentResult('Calling bKash sandbox…');
+    try {
+      const response = await fetch('/api/bkash/payment/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: '100.00', payerReference: 'TAKASAFE-DASHBOARD-DEMO' }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Payment request failed');
+      const result = data.response || {};
+      setPaymentResult(`${data.mode}: ${result.paymentID || result.statusMessage || 'payment response received'}`);
+    } catch (error) {
+      setPaymentResult(error instanceof Error ? error.message : 'Payment request failed');
+    } finally {
+      setIsCreatingPayment(false);
+    }
+  };
 
   const isHighRisk = latestTransaction && (latestTransaction.fusedRiskScore >= 75 || latestTransaction.riskBand === 'CRITICAL' || latestTransaction.riskBand === 'HIGH');
 
@@ -77,20 +97,22 @@ export const LiveWebSocketTicker: React.FC<LiveWebSocketTickerProps> = ({
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-[11px] font-mono shadow-2xs">
             <span className="relative flex h-2 w-2">
               <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                isPaused ? 'bg-amber-400' : 'bg-emerald-400 animate-ping'
+                streamStatus === 'LIVE' && !isStreamPaused ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'
               }`} />
               <span className={`relative inline-flex rounded-full h-2 w-2 ${
-                isPaused ? 'bg-amber-500' : 'bg-emerald-500'
+                streamStatus === 'LIVE' && !isStreamPaused ? 'bg-emerald-500' : 'bg-amber-500'
               }`} />
             </span>
             <span className="text-slate-500 dark:text-slate-400 font-bold">WS:</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold">{isPaused ? 'PAUSED' : 'STREAMING'}</span>
+            <span className={`${streamStatus === 'LIVE' && !isStreamPaused ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'} font-bold`}>
+              {isStreamPaused ? 'PAUSED' : streamStatus}
+            </span>
             <span className="text-slate-400 dark:text-slate-600">·</span>
-            <span className="text-slate-600 dark:text-slate-300 font-semibold">{latency}ms</span>
+            <span className="text-slate-600 dark:text-slate-300 font-semibold">2s</span>
           </div>
 
           <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 hidden xl:inline">
-            wss://guardian.stream.takasafe.internal
+            {streamEventCount} events · /api/stream
           </span>
         </div>
 
@@ -146,11 +168,21 @@ export const LiveWebSocketTicker: React.FC<LiveWebSocketTickerProps> = ({
         <div className="flex items-center gap-2 shrink-0">
           {/* Pause / Resume Ticker */}
           <button
-            onClick={() => setIsPaused(!isPaused)}
+            onClick={onToggleStream}
             className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer shadow-2xs"
-            title={isPaused ? 'Resume live WebSocket stream' : 'Pause live WebSocket stream'}
+            title={isStreamPaused ? 'Resume live WebSocket stream' : 'Pause live WebSocket stream'}
           >
-            {isPaused ? <Play className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Pause className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />}
+            {isStreamPaused ? <Play className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Pause className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />}
+          </button>
+
+          <button
+            onClick={createSandboxPayment}
+            disabled={isCreatingPayment}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
+            title={paymentResult || 'Create a BDT 100 bKash sandbox-format payment'}
+          >
+            <CreditCard className="w-3.5 h-3.5" />
+            <span>{isCreatingPayment ? 'Calling…' : 'bKash Sandbox'}</span>
           </button>
 
           {/* Simulate High-Risk Attack Spike Button */}
@@ -184,6 +216,7 @@ export const LiveWebSocketTicker: React.FC<LiveWebSocketTickerProps> = ({
           </div>
         </div>
       </div>
+      {paymentResult && <div className="border-t border-slate-200 dark:border-slate-800 px-4 py-1 text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate">bKash create payment: {paymentResult}</div>}
     </div>
   );
 };

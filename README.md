@@ -447,6 +447,12 @@ takasafe/
    npm run start
    ```
 
+### Sandbox payments and live transaction stream
+
+- `POST /api/bkash/payment/create` accepts bKash Tokenized Checkout fields and returns a sandbox-format response. With no credentials it returns `mode: "MOCK_SANDBOX"` and never moves funds. To call the bKash sandbox, set `BKASH_AUTH_TOKEN` and `BKASH_APP_KEY` in `.env`; the server sends the request to `BKASH_CREATE_PAYMENT_URL` and uses `BKASH_CALLBACK_URL`.
+- The operator ticker connects to `ws://localhost:3000/api/stream` (or `wss` on HTTPS). It receives one synthetic transaction every two seconds and updates without a page refresh.
+- To persist each stream event to Redis Streams, set `REDIS_STREAM_REST_URL` and `REDIS_STREAM_REST_TOKEN` to an Upstash Redis REST endpoint and token. Events are appended with `XADD` to `REDIS_STREAM_KEY` (default: `takasafe:transactions`). The WebSocket stream works without Redis configured.
+
 ---
 
 ## 🔒 Regulatory Compliance

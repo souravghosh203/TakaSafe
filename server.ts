@@ -1,6 +1,8 @@
 import express from 'express';
 import type { Request, Response } from 'express';
 import path from 'path';
+import { createServer } from 'node:http';
+import { createRequire } from 'node:module';
 import { promises as fs } from 'node:fs';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
@@ -9,6 +11,12 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const require = createRequire(import.meta.url);
+const { WebSocketServer, WebSocket } = require('ws') as {
+  WebSocketServer: new (options: { server: ReturnType<typeof createServer>; path: string }) => any;
+  WebSocket: { OPEN: number };
+};
+let liveWebSocketServer: any = null;
 const eventClients = new Set<Response>();
 let eventSequence = 0;
 const recentEvents: Array<{ id: number; name: string; data: Record<string, unknown> }> = [];
@@ -21,6 +29,33 @@ const publishServerEvent = (name: string, data: Record<string, unknown>) => {
   for (const client of eventClients) {
     try { client.write(frame); } catch { eventClients.delete(client); }
   }
+};
+
+const appendToRedisStream = async (event: Record<string, unknown>) => {
+  const redisUrl = process.env.REDIS_STREAM_REST_URL?.replace(/\/+$/, '');
+  const redisToken = process.env.REDIS_STREAM_REST_TOKEN;
+  if (!redisUrl || !redisToken) return;
+  const streamKey = process.env.REDIS_STREAM_KEY || 'takasafe:transactions';
+  const serialized = JSON.stringify(event);
+  try {
+    const response = await fetch(`${redisUrl}/xadd/${encodeURIComponent(streamKey)}/*/event/${encodeURIComponent(serialized)}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${redisToken}` },
+      signal: AbortSignal.timeout(2500),
+    });
+    if (!response.ok) console.warn(`[Redis Streams] XADD failed: HTTP ${response.status}`);
+  } catch (error) {
+    console.warn('[Redis Streams] XADD unavailable:', error instanceof Error ? error.message : error);
+  }
+};
+
+const publishLiveTransaction = (transaction: Record<string, unknown>) => {
+  const event = { type: 'transaction', transaction, emittedAt: new Date().toISOString() };
+  const payload = JSON.stringify(event);
+  for (const client of liveWebSocketServer?.clients || []) {
+    if (client.readyState === WebSocket.OPEN) client.send(payload);
+  }
+  void appendToRedisStream(event);
 };
 
 app.use(express.json({ limit: '2mb' }));
@@ -937,6 +972,73 @@ app.post('/api/scamshield/decision', async (req: Request, res: Response) => {
   });
 });
 
+// bKash Tokenized Checkout create-payment adapter. Credentials are kept server-side;
+// without them the route returns a deterministic sandbox-format mock response.
+app.post('/api/bkash/payment/create', async (req: Request, res: Response) => {
+  const { amount = '100.00', payerReference = 'TAKASAFE-DEMO', merchantInvoiceNumber } = req.body || {};
+  const amountText = String(amount);
+  const numericAmount = Number(amountText);
+  const reference = String(payerReference).trim();
+  if (!/^\d+(\.\d{1,2})?$/.test(amountText) || !Number.isFinite(numericAmount) || numericAmount <= 0 || numericAmount > 100000 || !reference || reference.length > 64) {
+    return res.status(400).json({ error: 'amount must be a positive amount up to 100000 BDT and payerReference must be 1-64 characters' });
+  }
+
+  const createPaymentUrl = process.env.BKASH_CREATE_PAYMENT_URL || 'https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout/create';
+  const authToken = process.env.BKASH_AUTH_TOKEN;
+  const appKey = process.env.BKASH_APP_KEY;
+  const callbackURL = process.env.BKASH_CALLBACK_URL || 'https://merchantdemo.sandbox.bka.sh/callback';
+  const requestBody = {
+    mode: '0011',
+    payerReference: reference,
+    callbackURL,
+    amount: numericAmount.toFixed(2),
+    currency: 'BDT',
+    intent: 'sale',
+    merchantInvoiceNumber: String(merchantInvoiceNumber || `TAKASAFE-${Date.now()}`).slice(0, 50),
+  };
+
+  if (authToken && appKey) {
+    try {
+      const upstream = await fetch(createPaymentUrl, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          Authorization: authToken,
+          'X-APP-Key': appKey,
+        },
+        body: JSON.stringify(requestBody),
+        signal: AbortSignal.timeout(12000),
+      });
+      const responseBody = await upstream.json().catch(() => ({ error: 'bKash returned a non-JSON response' }));
+      return res.status(upstream.ok ? 200 : upstream.status).json({ provider: 'bKash', mode: 'SANDBOX', request: requestBody, response: responseBody });
+    } catch (error) {
+      return res.status(502).json({ provider: 'bKash', mode: 'SANDBOX', error: error instanceof Error ? error.message : 'bKash sandbox request failed' });
+    }
+  }
+
+  return res.json({
+    provider: 'bKash',
+    mode: 'MOCK_SANDBOX',
+    request: requestBody,
+    response: {
+      paymentID: `TS-${Date.now()}`,
+      bkashURL: `${callbackURL}?demoPayment=${encodeURIComponent(requestBody.merchantInvoiceNumber)}`,
+      callbackURL,
+      successCallbackURL: callbackURL,
+      failureCallbackURL: callbackURL,
+      cancellationCallbackURL: callbackURL,
+      amount: requestBody.amount,
+      currency: requestBody.currency,
+      intent: requestBody.intent,
+      merchantInvoiceNumber: requestBody.merchantInvoiceNumber,
+      transactionStatus: 'Initiated',
+      statusCode: '0000',
+      statusMessage: 'Sandbox payment created (mock; no funds moved)',
+    },
+  });
+});
+
 // Setup Vite Middlewares in dev mode, or static file serving in production
 async function startServer() {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -962,8 +1064,53 @@ async function startServer() {
     });
   }
 
-  app.listen(Number(PORT), '0.0.0.0', () => {
+  const server = createServer(app);
+  liveWebSocketServer = new WebSocketServer({ server, path: '/api/stream' });
+  liveWebSocketServer.on('connection', (socket: any) => {
+    socket.send(JSON.stringify({ type: 'stream-status', status: 'connected', intervalMs: 2000 }));
+  });
+
+  let transactionSequence = 0;
+  const streamSenders = ['Rafiq Uddin', 'Nusrat Jahan', 'Karim Mia', 'Tania Akter', 'Hasan Mahmud'];
+  const streamRecipients = ['Local Merchant', 'Family Wallet', 'Agent Counter', 'Savings Wallet', 'Utility Provider'];
+  const streamLocations = ['Dhaka', 'Chattogram', 'Sylhet', 'Barishal', 'Rajshahi'];
+  setInterval(() => {
+    transactionSequence += 1;
+    const risk = Math.floor(8 + Math.random() * 89);
+    const riskBand = risk >= 81 ? 'CRITICAL' : risk >= 61 ? 'HIGH' : risk >= 31 ? 'MEDIUM' : 'LOW';
+    const senderIndex = Math.floor(Math.random() * streamSenders.length);
+    const timestamp = new Date().toISOString();
+    publishLiveTransaction({
+      id: `LIVE-${Date.now()}-${transactionSequence}`,
+      timestamp,
+      senderWallet: `01${String(700000000 + Math.floor(Math.random() * 99999999)).slice(0, 9)}`,
+      senderName: streamSenders[senderIndex],
+      senderLocation: streamLocations[senderIndex],
+      senderDevice: 'Sandbox stream simulator',
+      receiverWallet: `01${String(800000000 + Math.floor(Math.random() * 99999999)).slice(0, 9)}`,
+      receiverName: streamRecipients[Math.floor(Math.random() * streamRecipients.length)],
+      receiverLocation: streamLocations[Math.floor(Math.random() * streamLocations.length)],
+      amount: Math.floor(150 + Math.random() * 49850),
+      fee: 0,
+      channel: 'TakaSafe App',
+      status: riskBand === 'CRITICAL' ? 'HELD' : 'COMPLETED',
+      fusedRiskScore: risk,
+      riskBand,
+      fraudProb: Number((risk / 100).toFixed(2)),
+      anomalyProb: Number((Math.random() * risk / 100).toFixed(2)),
+      networkRisk: Number((Math.random() * risk / 100).toFixed(2)),
+      velocityRisk: Number((Math.random() * risk / 100).toFixed(2)),
+      deviceRisk: Number((Math.random() * risk / 100).toFixed(2)),
+      isMuleConnected: riskBand === 'CRITICAL' && Math.random() > 0.5,
+      shapFeatures: [],
+      source: 'synthetic-live-stream',
+    });
+  }, 2000);
+
+  server.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`TakaSafe Server running on http://0.0.0.0:${PORT}`);
+    console.log('Live transaction WebSocket available at /api/stream (synthetic event every 2 seconds)');
+    console.log(process.env.REDIS_STREAM_REST_URL ? 'Redis Streams sink enabled' : 'Redis Streams sink disabled (set REDIS_STREAM_REST_URL and REDIS_STREAM_REST_TOKEN)');
   });
 }
 

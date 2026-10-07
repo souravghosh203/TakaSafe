@@ -78,6 +78,9 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   const [liveTransactions, setLiveTransactions] = useState<Transaction[]>(transactions);
   const [latestTickerTxn, setLatestTickerTxn] = useState<Transaction | null>(transactions[0] || null);
   const [isTickerFlashing, setIsTickerFlashing] = useState<boolean>(false);
+  const [streamStatus, setStreamStatus] = useState<'CONNECTING' | 'LIVE' | 'RECONNECTING'>('CONNECTING');
+  const [streamEventCount, setStreamEventCount] = useState(0);
+  const [isStreamPaused, setIsStreamPaused] = useState(false);
   const [isComplianceModalOpen, setIsComplianceModalOpen] = useState<boolean>(false);
   const [analyticsHorizon, setAnalyticsHorizon] = useState<'BOTH' | 'INTRADAY' | '30D'>('BOTH');
   const [alertFeedback, setAlertFeedback] = useState<Array<{ outcome: string }>>([]);
@@ -110,17 +113,46 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
     }
   }, [transactions]);
 
-  // Periodic simulated live stream stream event
+  // Receive scored transaction events from the server WebSocket stream.
   useEffect(() => {
-    const streamInterval = setInterval(() => {
-      // Cycle or simulate a live event occasionally to make the WebSocket feed feel authentic
-      if (liveTransactions.length > 0) {
-        const randomTxn = liveTransactions[Math.floor(Math.random() * Math.min(liveTransactions.length, 5))];
-        setLatestTickerTxn(randomTxn);
-      }
-    }, 9000);
-    return () => clearInterval(streamInterval);
-  }, [liveTransactions]);
+    let socket: WebSocket | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+    let disposed = false;
+    const connect = () => {
+      if (disposed) return;
+      setStreamStatus((current) => current === 'CONNECTING' ? current : 'RECONNECTING');
+      const scheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      socket = new WebSocket(`${scheme}//${window.location.host}/api/stream`);
+      socket.onopen = () => setStreamStatus('LIVE');
+      socket.onmessage = (message) => {
+        let event: { type?: string; transaction?: Transaction };
+        try { event = JSON.parse(message.data); } catch { return; }
+        if (event.type !== 'transaction' || !event.transaction) return;
+        setStreamEventCount((count) => count + 1);
+        if (isStreamPaused) return;
+        const transaction = event.transaction;
+        setLiveTransactions((previous) => [transaction, ...previous.filter((item) => item.id !== transaction.id)].slice(0, 500));
+        setLatestTickerTxn(transaction);
+        if (transaction.fusedRiskScore >= 75 || transaction.riskBand === 'CRITICAL' || transaction.riskBand === 'HIGH') {
+          setIsTickerFlashing(true);
+          window.setTimeout(() => setIsTickerFlashing(false), 2500);
+        }
+      };
+      socket.onclose = () => {
+        if (!disposed) {
+          setStreamStatus('RECONNECTING');
+          reconnectTimer = setTimeout(connect, 1500);
+        }
+      };
+      socket.onerror = () => socket?.close();
+    };
+    connect();
+    return () => {
+      disposed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      socket?.close();
+    };
+  }, [isStreamPaused]);
 
   // Flash ticker when high-risk transaction is intercepted
   const triggerTickerFlash = (txn: Transaction) => {
@@ -332,6 +364,10 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
         onSimulateSpike={handleSimulateAttackSpike}
         onOpenComplianceReport={() => setIsComplianceModalOpen(true)}
         onDownloadCSV={handleDownloadAuditCSV}
+        streamStatus={streamStatus}
+        streamEventCount={streamEventCount}
+        isStreamPaused={isStreamPaused}
+        onToggleStream={() => setIsStreamPaused((paused) => !paused)}
         lang={lang}
       />
 
