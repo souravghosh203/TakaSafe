@@ -49,7 +49,7 @@ export const LiveWebSocketTicker: React.FC<LiveWebSocketTickerProps> = ({
 
   const createSandboxPayment = async () => {
     setIsCreatingPayment(true);
-    setPaymentResult('Calling bKash sandbox…');
+    setPaymentResult('Calling Upay sandbox…');
     try {
       const response = await fetch('/api/bkash/payment/create', {
         method: 'POST',
